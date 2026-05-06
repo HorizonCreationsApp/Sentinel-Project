@@ -1,0 +1,18 @@
+name: Sentinel Project — Keep Alive Supabase
+on:
+  schedule:
+    - cron: '0 8 */4 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Auth
+        run: |
+          curl -X POST \
+            'https://bbvtpfczaeffolmarkqj.supabase.co/auth/v1/token?grant_type=password' \
+            -H 'apikey: sb_publishable_0_QwAxwoz6uqsTO8RWoBhQ_oTROvPVv' \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"ferrafrederic@yahoo.fr","password":"${{ secrets.SUPABASE_PASSWORD }}"}'
+          echo "Ping Supabase OK — projet maintenu actif"
