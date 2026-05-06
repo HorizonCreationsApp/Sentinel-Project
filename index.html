@@ -1,0 +1,3197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,shrink-to-fit=no">
+<title>Sentinel Project</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ccircle cx='16' cy='10' r='3' fill='none' stroke='white' stroke-width='2.2'/%3E%3Cpath d='M10 22 Q10 17 16 17 Q22 17 22 22' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='rgba(255,255,255,0.25)' stroke-width='1'/%3E%3C/svg%3E"/>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ══ ÉCRAN DE CONNEXION — charte Sentinel Project ══ */
+#auth-screen{
+  position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(155deg,#0f172a 0%,#1e3558 45%,#0f1f3d 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+  overflow:hidden;
+}
+#auth-screen.hidden{display:none;}
+
+.auth-card{
+  background:#131e35;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:36px 32px 28px;
+  width:100%;max-width:360px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:16px;
+}
+
+/* Logo */
+.auth-logo{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:2px;}
+.auth-logo-icon{
+  width:52px;height:52px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:26px;box-shadow:0 4px 16px rgba(37,99,235,.4);
+}
+.auth-logo-text{font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:-.3px;}
+.auth-logo-badge{
+  font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:#2563eb;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.25);
+  border-radius:20px;padding:2px 10px;font-family:'DM Mono',monospace;
+}
+
+/* Séparateur */
+.auth-sep{height:1px;background:rgba(255,255,255,.07);margin:2px 0;}
+
+/* Champs */
+.auth-field{display:flex;flex-direction:column;gap:5px;}
+.auth-field label{
+  font-size:10px;font-weight:600;color:#94a3b8;
+  letter-spacing:.6px;text-transform:uppercase;
+}
+.auth-field input{
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:10px 12px;
+  font-size:13px;font-family:'DM Sans',sans-serif;
+  color:#f1f5f9;outline:none;transition:border-color .15s,background .15s;
+}
+.auth-field input::placeholder{color:#475569;}
+.auth-field input:focus{
+  border-color:#2563eb;
+  background:rgba(37,99,235,.08);
+}
+
+/* Case "Se souvenir de moi" */
+.auth-remember{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:11px;color:#94a3b8;user-select:none;
+}
+.auth-remember input[type=checkbox]{
+  width:14px;height:14px;accent-color:#2563eb;cursor:pointer;flex-shrink:0;
+}
+.auth-remember:hover{color:#cbd5e1;}
+
+/* Bouton connexion */
+.auth-btn{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#fff;border:none;border-radius:8px;
+  padding:12px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 14px rgba(37,99,235,.35);margin-top:2px;
+}
+.auth-btn:hover{opacity:.92;}
+.auth-btn:active{transform:scale(.98);}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* Message d'erreur */
+.auth-err{
+  font-size:11px;color:#fca5a5;
+  background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);
+  border-radius:6px;padding:8px 10px;text-align:center;display:none;
+}
+.auth-err.show{display:block;}
+
+/* Footer */
+.auth-footer{
+  font-size:9.5px;color:#475569;text-align:center;line-height:1.6;
+  border-top:1px solid rgba(255,255,255,.06);padding-top:12px;margin-top:2px;
+}
+
+/* Spinner */
+.auth-spinner{
+  width:15px;height:15px;
+  border:2px solid rgba(255,255,255,.25);
+  border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Écran création mot de passe (lien invitation) */
+#setpwd-screen{
+  position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(155deg,#0f172a 0%,#1e3558 45%,#0f1f3d 100%);
+  display:none;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+}
+#setpwd-screen.on{display:flex;}
+
+/* Bouton déconnexion */
+#logout-btn{display:none!important}
+#chgpwd-btn{display:none!important}
+/* Modale changement mot de passe */
+#chgpwd-modal{
+  position:fixed;inset:0;z-index:9998;
+  background:rgba(15,23,42,.7);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+}
+#chgpwd-modal.on{display:flex;}
+.chgpwd-card{
+  background:#131e35;border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:28px 28px 22px;width:100%;max-width:340px;
+  display:flex;flex-direction:column;gap:14px;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+
+/* ══ CSS APP SENTINEL PROJECT ══ */
+:root{
+  --w:#fff;--bg:#f1f5f9;--bgs:#f8fafc;--bdr:#e2e8f0;--bdrm:#cbd5e1;
+  --t9:#0f172a;--t7:#334155;--t5:#64748b;--t3:#94a3b8;
+  --blue:#2563eb;--bluel:#eff6ff;--green:#059669;--amber:#d97706;--red:#dc2626;--violet:#7c3aed;--cyan:#0891b2;
+  --ss:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sm:0 4px 14px rgba(0,0,0,.09);--sl:0 12px 32px rgba(0,0,0,.13);
+  --r:8px;--tbw:126px;--pw:262px;--tbh:48px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;overflow:hidden;touch-action:manipulation}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t9);height:100%;overflow:hidden;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+
+/* TOPBAR */
+#topbar{height:var(--tbh);background:var(--w);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0;z-index:700;box-shadow:var(--ss)}
+.logo{font-size:13px;font-weight:700;color:var(--t9);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.logo-dot{width:7px;height:7px;background:var(--blue);border-radius:50%;animation:blink 2.5s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.logo-copy{font-size:9px;font-weight:400;color:var(--t5);white-space:nowrap}
+.tbsep{width:1px;height:20px;background:var(--bdr);flex-shrink:0}
+#proj-label{font-size:10px;color:var(--t5);font-family:'DM Mono',monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbsp{flex:1;min-width:0}
+/* Recherche adresse */
+#addr-wrap{position:relative;flex:1;max-width:220px;min-width:80px}
+#addr-in{width:100%;padding:5px 10px;border:1px solid var(--bdr);border-radius:20px;font-size:11px;color:var(--t9);background:var(--bg);outline:none}
+#addr-in:focus{border-color:var(--blue);background:var(--w)}
+#addr-in::placeholder{color:var(--t3)}
+#addr-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--w);border:1px solid var(--bdr);border-radius:var(--r);box-shadow:var(--sm);z-index:9999;display:none;max-height:200px;overflow-y:auto}
+#addr-results .ar-item{padding:7px 10px;font-size:11px;color:var(--t7);cursor:pointer;border-bottom:1px solid var(--bdr)}
+#addr-results .ar-item:last-child{border-bottom:none}
+#addr-results .ar-item:hover{background:var(--bg)}
+/* Boutons topbar */
+.tb-ico-btn{width:32px;height:32px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;flex-shrink:0;transition:all .13s}
+.tb-ico-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--bluel)}
+.spill{font-size:9px;font-family:'DM Mono',monospace;color:var(--t5);background:var(--bg);border:1px solid var(--bdr);border-radius:20px;padding:2px 7px;white-space:nowrap}
+.spill strong{color:var(--t9);font-weight:500}
+
+/* MAIN */
+#main{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* RECENTRER — toujours fixe */
+#reset-btn{position:fixed!important;top:10px!important;left:50%!important;-webkit-transform:translateX(-50%) translateZ(0)!important;transform:translateX(-50%) translateZ(0)!important;z-index:99999!important;background:var(--w);border:1.5px solid var(--bdrm);color:var(--t7);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:7px 16px;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,.15);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;will-change:transform}
+#reset-btn:hover{background:var(--bg);border-color:var(--blue);color:var(--blue)}
+
+/* TOOLBAR */
+#toolbar{width:var(--tbw);background:var(--w);border-right:1px solid var(--bdr);display:flex;flex-direction:column;align-items:stretch;padding:8px 6px;gap:2px;flex-shrink:0;box-shadow:var(--ss);z-index:500;overflow-y:auto}
+#toolbar::-webkit-scrollbar{width:3px}
+#toolbar::-webkit-scrollbar-thumb{background:var(--bdr)}
+.tsep{height:1px;background:var(--bdr);margin:5px 0;flex-shrink:0}
+.tb{display:flex;align-items:center;gap:7px;padding:7px 8px;border:1px solid transparent;background:transparent;color:var(--t5);border-radius:var(--r);transition:all .13s;flex-shrink:0;text-align:left;width:100%}
+.tb:hover{background:var(--bg);color:var(--t9);border-color:var(--bdr)}
+.tb .tbi{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.tb .tbl{font-size:11px;font-weight:500;line-height:1.2;flex:1}
+.tb .tbs{font-size:9px;color:var(--t3);display:block;font-weight:400;margin-top:1px}
+.tb .cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
+.tb.on{color:var(--w)!important;border-color:transparent!important}
+.tb.on .tbs{color:rgba(255,255,255,.65)!important}
+.tb.on .cdot{border-color:rgba(255,255,255,.4)!important}
+[data-t=nav].on{background:var(--blue)}[data-t=imp].on{background:var(--cyan)}
+[data-t=ruler].on{background:#0891b2}[data-t=poly].on{background:var(--amber)}
+[data-t=circ].on{background:var(--green)}[data-t=pt].on{background:var(--red)}
+[data-t=emoji].on{background:#f59e0b}[data-t=pen].on{background:var(--violet)}
+[data-t=txt].on{background:var(--t9)}[data-t=edit].on{background:#475569}
+[data-t=del].on{background:var(--red)}
+
+/* Palette couleurs */
+#cbar{padding:8px 6px;border-top:1px solid var(--bdr);background:var(--w);flex-shrink:0;display:none}
+#cbar.on{display:block}
+#cbar .cb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:5px}
+#swatches{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.csw{width:19px;height:19px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .12s;flex-shrink:0}
+.csw:hover{transform:scale(1.2)}.csw.sel{border-color:var(--t9)}
+#cc{width:23px;height:23px;border:1px solid var(--bdr);border-radius:50%;cursor:pointer;padding:0;background:none;overflow:hidden}
+#cc::-webkit-color-swatch-wrapper{padding:0}#cc::-webkit-color-swatch{border:none;border-radius:50%}
+
+/* MAP */
+#map{flex:1;height:100%;z-index:1;background:#dde3ea}
+#main.cross #map{cursor:crosshair!important}
+#main.penmode #map{cursor:crosshair!important}
+
+/* PANEL */
+#panel{width:var(--pw);background:var(--w);border-left:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;box-shadow:var(--ss)}
+#panel-top{flex-shrink:0}
+#panel-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+#panel-scroll::-webkit-scrollbar{width:5px}
+#panel-scroll::-webkit-scrollbar-track{background:var(--bg)}
+#panel-scroll::-webkit-scrollbar-thumb{background:var(--bdrm);border-radius:3px}
+#panel-scroll::-webkit-scrollbar-thumb:hover{background:var(--t5)}
+.ps{padding:10px 12px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.pst{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--t5);margin-bottom:7px}
+
+/* Drop zone carte */
+.idrop{border:2px dashed var(--bdr);border-radius:var(--r);padding:6px;text-align:center;cursor:pointer;transition:all .15s}
+.idrop:hover,.idrop.ov{border-color:var(--cyan);background:#f0f9ff}
+.idrop .iico{font-size:15px;margin-bottom:1px}
+.idrop .itxt{font-size:10px;color:var(--t5);line-height:1.3}
+.idrop .itxt strong{color:var(--t9);display:block;font-size:10.5px}
+.ibox{margin-top:4px;padding:4px 7px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;display:flex;gap:5px;align-items:flex-start}
+.ibox span:first-child{font-size:11px;flex-shrink:0}.ibox p{font-size:9px;color:#92400e;line-height:1.4}
+
+/* Calques */
+#map-layers{flex-shrink:0}
+.mli{padding:8px 12px 9px;border-bottom:1px solid var(--bdr);background:var(--w)}
+.mli.tile{background:#f0f9ff}
+.mlt{display:flex;align-items:center;gap:6px}
+.mln{flex:1;font-size:11px;font-weight:500;color:var(--t9);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mlv,.mld{width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.mlv:hover{border-color:var(--blue);background:var(--bluel)}.mld{border-color:transparent;color:var(--t3)}.mld:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
+.mord{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.mord button{width:20px;height:13px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:8px;border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.mord button:hover{border-color:var(--blue);color:var(--blue)}
+.mlo{display:flex;align-items:center;gap:6px;margin-top:5px}
+.mlo label{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);white-space:nowrap}
+.mlo input[type=range]{flex:1;height:3px;accent-color:var(--blue);cursor:pointer}
+.opv{font-size:9px;font-family:'DM Mono',monospace;color:var(--t5);width:24px;text-align:right}
+
+/* Fonds de carte en ligne */
+#tile-layers{flex-shrink:0;border-bottom:1px solid var(--bdr);padding:9px 12px 10px}
+.tile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:6px}
+.tile-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:1.5px solid var(--bdr);background:var(--w);border-radius:5px;cursor:pointer;transition:all .13s;font-size:8px;font-weight:500;color:var(--t7);text-align:center;line-height:1.2}
+.tile-btn .tico{font-size:14px;display:block}
+.tile-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--bluel)}
+.tile-btn.active{border-color:var(--blue);color:var(--blue);background:var(--bluel);font-weight:700}
+.url-cfg-row{display:flex;flex-wrap:wrap;gap:3px;border-top:1px solid var(--bdr);padding-top:5px;margin-top:4px}
+.url-cfg-btn{padding:2px 6px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:8px;border-radius:3px;cursor:pointer;transition:all .12s}
+.url-cfg-btn:hover{border-color:var(--amber);color:var(--amber);background:#fffbeb}
+
+/* Projet */
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.abtn{padding:8px 5px;border:1px solid var(--bdr);background:var(--w);color:var(--t7);font-size:10px;font-weight:500;border-radius:var(--r);text-align:center;transition:all .13s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.abtn .ai{font-size:14px}
+.abtn:hover{background:var(--bg);border-color:var(--bdrm);color:var(--t9)}
+.abtn.ex{border-color:var(--green);color:var(--green);background:#f0fdf4}.abtn.ex:hover{background:#dcfce7}
+.abtn.ld{border-color:var(--amber);color:var(--amber);background:#fffbeb}.abtn.ld:hover{background:#fef3c7}
+.abtn.geo{border-color:var(--cyan);color:var(--cyan);background:#f0f9ff}.abtn.geo:hover{background:#e0f2fe}
+.abtn.clr{border-color:var(--red);color:var(--red);background:#fff5f5}.abtn.clr:hover{background:#fee2e2}
+
+/* Annotations */
+#ann-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px}
+#ann-filter{font-size:10px;border:1px solid var(--bdr);background:var(--w);color:var(--t7);border-radius:4px;padding:3px 6px;cursor:pointer;outline:none}
+#ann-filter:focus{border-color:var(--blue)}
+#del-all-ann{font-size:9px;padding:3px 7px;border:1px solid var(--red);background:#fff5f5;color:var(--red);border-radius:4px;cursor:pointer;display:none}
+#ann-list{flex-shrink:0;padding:6px 9px 10px}
+.ae{font-size:11px;color:var(--t3);text-align:center;padding:14px 0;font-family:'DM Mono',monospace}
+.ali{display:flex;align-items:flex-start;gap:6px;padding:6px 7px;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:4px;background:var(--w);cursor:pointer;transition:all .11s}
+.ali:hover{border-color:var(--bdrm);background:var(--bg)}
+.ali.ali-active{border-color:var(--blue);background:var(--bluel);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+.abar{width:3px;height:24px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.ainf{flex:1;min-width:0}
+.an{font-size:11px;font-weight:500;color:var(--t9)}
+.am{font-size:10px;color:var(--t5);font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ann-op{display:flex;align-items:center;gap:4px;margin-top:3px}
+.ann-op input[type=range]{flex:1;height:3px;cursor:pointer}
+.ann-op span{font-size:9px;font-family:'DM Mono',monospace;color:var(--t5);width:22px;text-align:right}
+.abtns{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.adel{width:20px;height:20px;border:1px solid transparent;background:transparent;color:var(--t3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.adel:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
+.aeye{width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.aeye:hover{border-color:var(--blue);color:var(--blue);background:var(--bluel)}
+
+/* POPUPS LEAFLET */
+.leaflet-popup-content-wrapper{background:var(--w)!important;border:1px solid var(--bdr)!important;border-radius:10px!important;box-shadow:var(--sl)!important;color:var(--t9)!important;font-family:'DM Sans',sans-serif!important;padding:0!important}
+.leaflet-popup-tip-container{display:none!important}
+.leaflet-popup-content{margin:0!important;padding:0!important;max-height:70vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.leaflet-popup-close-button{color:var(--t5)!important;top:9px!important;right:9px!important;font-size:17px!important;z-index:10}
+.pop{padding:14px;min-width:235px}
+@media screen and (max-height:500px){
+  .leaflet-popup-content{max-height:55vh}
+}
+@media screen and (max-height:380px){
+  .leaflet-popup-content{max-height:45vh}
+}
+.ptt{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t5);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pr{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--t5);margin-bottom:4px}
+.pr strong{font-weight:600;color:var(--t9);font-family:'DM Mono',monospace;font-size:11px}
+.pl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t5);margin-top:9px;margin-bottom:3px}
+.pin{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--t9);font-family:'DM Mono',monospace;font-size:12px;padding:6px 8px;border-radius:6px;outline:none;transition:border-color .13s}
+.pin:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+.pin::placeholder{color:var(--t3)}
+.pbr{display:flex;gap:6px;margin-top:10px}
+.pb{flex:1;padding:6px 6px;border:1px solid var(--bdr);background:var(--w);color:var(--t7);font-size:11px;font-weight:500;border-radius:6px;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:3px;transition:all .13s}
+.pb:hover{background:var(--bg);border-color:var(--bdrm);color:var(--t9)}
+.pb.pri{background:var(--blue);border-color:var(--blue);color:var(--w)}.pb.pri:hover{background:#1d4ed8}
+.pb.suc{background:var(--green);border-color:var(--green);color:var(--w)}
+.pb.dan{background:var(--red);border-color:var(--red);color:var(--w)}
+.qrwrap{margin-top:9px;display:flex;justify-content:center;padding:9px;background:var(--bg);border-radius:8px;border:1px solid var(--bdr)}
+.qrwrap img{display:block;width:110px;height:110px;border-radius:4px}
+.pdfz{border:2px dashed var(--bdr);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all .13s;background:var(--bg);margin-top:4px}
+.pdfz:hover,.pdfz.ov{border-color:var(--blue);background:var(--bluel)}
+.pdfz .pico{font-size:14px}.pdfz .ptxt{font-size:9px;color:var(--t5);margin-top:2px}
+.pfat{display:flex;align-items:center;gap:5px;margin-top:5px;padding:5px 7px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:10px;color:var(--green);font-weight:500}
+.pfn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'DM Mono',monospace;font-size:9px}
+.pfrm{border:none;background:none;color:var(--t3);cursor:pointer;font-size:12px;padding:0}.pfrm:hover{color:var(--red)}
+.gps-section{margin-top:9px;border-top:1px solid var(--bdr);padding-top:9px;display:none}
+.gps-section.open{display:block}
+
+/* Leaflet tooltip */
+.stt{background:var(--w)!important;border:1px solid var(--bdr)!important;color:var(--t9)!important;font-family:'DM Mono',monospace!important;font-size:11px!important;font-weight:500!important;border-radius:4px!important;padding:3px 8px!important;box-shadow:var(--ss)!important}
+.stt::before{display:none!important}
+
+/* Rayon label */
+.rlbl{background:var(--w);border:1.5px solid var(--green);color:var(--green);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px;white-space:nowrap;box-shadow:var(--ss)}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;background:rgba(15,23,42,.32);z-index:8000;display:none;align-items:center;justify-content:center}
+.mbg.on{display:flex}
+.mbox2{background:var(--w);border-radius:12px;box-shadow:var(--sl);padding:20px;width:290px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.mtit{font-size:14px;font-weight:600;color:var(--t9);margin-bottom:5px}
+.msub{font-size:12px;color:var(--t5);margin-bottom:13px;line-height:1.5}
+.mbtns{display:flex;flex-direction:column;gap:7px}
+.mbn{padding:10px 13px;border:1.5px solid var(--bdr);background:var(--w);border-radius:var(--r);font-size:13px;font-weight:500;color:var(--t7);text-align:left;transition:all .13s;display:flex;align-items:center;gap:9px}
+.mbn:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
+.mbn .mico{font-size:18px;flex-shrink:0}.mbn .mdsc{font-size:10px;color:var(--t3);display:block;margin-top:1px;font-weight:400}
+.mcancel{margin-top:8px;width:100%;padding:8px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:12px;border-radius:6px}
+.mcancel:hover{background:var(--bg);color:var(--t9)}
+.mrow{margin-bottom:8px}
+.mlbl2{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t5);margin-bottom:3px}
+.min{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--t9);font-family:'DM Mono',monospace;font-size:12px;padding:7px 9px;border-radius:6px;outline:none}
+.min:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+.mgrid{display:flex;gap:8px;margin-top:11px}
+.mok{flex:1;padding:9px;background:var(--blue);border:none;color:var(--w);font-weight:600;font-size:13px;border-radius:6px}.mok:hover{background:#1d4ed8}
+.mko{flex:1;padding:9px;background:var(--w);border:1px solid var(--bdr);color:var(--t7);font-size:13px;border-radius:6px}.mko:hover{background:var(--bg)}
+
+/* Modal emoji sélecteur */
+.emoji-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
+.emoji-pick{width:46px;height:46px;border:2px solid var(--bdr);background:var(--w);border-radius:var(--r);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .13s}
+.emoji-pick:hover{border-color:var(--blue);background:var(--bluel)}
+.emoji-pick.sel{border-color:var(--amber);background:#fffbeb;box-shadow:0 0 0 2px rgba(245,158,11,.2)}
+
+/* Géolocalisation marker */
+.geolocme{width:14px;height:14px;background:var(--blue);border:3px solid var(--w);border-radius:50%;box-shadow:0 0 0 3px rgba(37,99,235,.3)}
+
+/* Toast */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(68px);background:var(--t9);color:var(--w);font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:20px;z-index:9999;transition:transform .24s ease;pointer-events:none;box-shadow:var(--sl);white-space:nowrap}
+#toast.on{transform:translateX(-50%) translateY(0)}
+
+/* Drop overlay global */
+#gdo{position:fixed;inset:0;background:rgba(37,99,235,.07);border:3px dashed var(--blue);z-index:7000;display:none;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;color:var(--blue);pointer-events:none}
+#gdo.on{display:flex}
+
+/* ── Poignées d'édition Leaflet.Draw — design moderne ── */
+.leaflet-editing-icon{
+  border-radius:50%!important;
+  background:#ffffff!important;
+  border:2.5px solid #2563eb!important;
+  box-shadow:0 1px 4px rgba(0,0,0,0.25)!important;
+  width:12px!important;height:12px!important;
+  margin-left:-6px!important;margin-top:-6px!important;
+  cursor:crosshair!important;
+}
+.leaflet-touch .leaflet-editing-icon{
+  width:16px!important;height:16px!important;
+  margin-left:-8px!important;margin-top:-8px!important;
+}
+
+/* ── Panneau Cartes IGN ── */
+.ign-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}
+.ign-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ign-btn{display:flex;flex-direction:column;align-items:flex-start;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:8px;background:var(--w);cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;transition:all .15s;gap:1px;width:100%}
+.ign-btn:hover{border-color:var(--blue);background:var(--bluel)}
+.ign-btn.active{border-color:var(--blue);background:var(--bluel);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+.ign-btn.drone{border-color:#f59e0b}
+.ign-btn.drone.active{border-color:#d97706;background:#fffbeb;box-shadow:0 0 0 2px rgba(245,158,11,.2)}
+.ign-btn.ign-wms{border-color:#bae6fd}
+.ign-btn.ign-wms.active{border-color:#0891b2;background:#f0f9ff;box-shadow:0 0 0 2px rgba(8,145,178,.15)}
+.ign-name{font-size:12px;font-weight:600;color:var(--t9);line-height:1.3}
+.ign-desc{font-size:10px;color:var(--t5);line-height:1.3}
+.ign-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;margin-top:2px}
+.ign-badge.new{background:#dcfce7;color:#166534}
+.ign-badge.drone-b{background:#fef3c7;color:#92400e}
+
+</style>
+</head>
+<body>
+
+<!-- ══ ÉCRAN DE CONNEXION SUPABASE ══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🛰</div>
+      <div class="auth-logo-text">Sentinel Project</div>
+      <div class="auth-logo-badge">Accès sécurisé · V1</div>
+    </div>
+    <div class="auth-sep"></div>
+    <div class="auth-field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="auth-email" placeholder="votre@email.com" autocomplete="email"
+        onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()"/>
+    </div>
+    <div class="auth-field">
+      <label>Mot de passe</label>
+      <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <label class="auth-remember">
+      <input type="checkbox" id="auth-remember" checked/>
+      Se souvenir de moi
+    </label>
+    <div class="auth-err" id="auth-err"></div>
+    <button class="auth-btn" id="auth-submit" onclick="doLogin()">
+      <span id="auth-btn-lbl">Se connecter</span>
+    </button>
+    <div style="text-align:center;margin-top:-4px">
+      <button onclick="openForgotPwd()" style="background:none;border:none;color:#64748b;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0">
+        Mot de passe oublié ?
+      </button>
+    </div>
+    <div class="auth-footer">
+      Accès réservé aux utilisateurs autorisés.<br>
+      © 2026 Frédéric Ferra — Tous droits réservés
+    </div>
+  </div>
+</div><!-- /auth-screen -->
+
+<!-- ══ MODALE MOT DE PASSE OUBLIÉ — hors auth-screen, z-index supérieur ══ -->
+<div id="forgot-modal" style="position:fixed;inset:0;z-index:999999;background:rgba(15,23,42,.92);display:none;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;">
+  <div class="auth-card" style="max-width:340px">
+    <div class="auth-logo" style="margin-bottom:0">
+      <div class="auth-logo-text" style="font-size:14px">🔑 Réinitialiser le mot de passe</div>
+    </div>
+    <div class="auth-sep"></div>
+    <p style="font-size:12px;color:#94a3b8;margin:0;line-height:1.6">
+      Entrez votre adresse e-mail. Vous recevrez un lien pour créer un nouveau mot de passe.
+    </p>
+    <div class="auth-field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="forgot-email" placeholder="votre@email.com"
+        onkeydown="if(event.key==='Enter')doForgotPwd()"/>
+    </div>
+    <div class="auth-err" id="forgot-err"></div>
+    <div id="forgot-ok" style="display:none;font-size:12px;color:#059669;background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.3);border-radius:6px;padding:8px 10px;text-align:center">
+      ✓ Email envoyé ! Vérifiez votre boîte mail.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="auth-btn" onclick="doForgotPwd()" id="forgot-submit" style="flex:1">
+        <span id="forgot-lbl">Envoyer le lien</span>
+      </button>
+      <button onclick="closeForgotPwd()" style="background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:0 16px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
+<button id="chgpwd-btn" onclick="openChgPwd()" title="Changer mon mot de passe">
+  🔑 Mot de passe
+</button>
+
+<!-- Bouton déconnexion (visible une fois connecté) -->
+<button id="logout-btn" onclick="doLogout()" title="Se déconnecter">
+  👤 <span id="logout-user"></span> · Déconnexion
+</button>
+
+<!-- Modale changement mot de passe -->
+<div id="chgpwd-modal">
+  <div class="chgpwd-card">
+    <div class="auth-logo" style="margin-bottom:0">
+      <div class="auth-logo-text" style="font-size:14px">🔑 Changer mon mot de passe</div>
+    </div>
+    <div class="auth-sep"></div>
+    <div class="auth-field">
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="chgpwd-new" placeholder="Minimum 6 caractères"
+        onkeydown="if(event.key==='Enter')document.getElementById('chgpwd-confirm').focus()"/>
+    </div>
+    <div class="auth-field">
+      <label>Confirmer le mot de passe</label>
+      <input type="password" id="chgpwd-confirm" placeholder="Répétez le mot de passe"
+        onkeydown="if(event.key==='Enter')doChgPwd()"/>
+    </div>
+    <div class="auth-err" id="chgpwd-err"></div>
+    <div style="display:flex;gap:8px;margin-top:2px">
+      <button class="auth-btn" onclick="doChgPwd()" id="chgpwd-submit" style="flex:1">
+        <span id="chgpwd-lbl">Enregistrer</span>
+      </button>
+      <button onclick="closeChgPwd()" style="background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:0 16px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ÉCRAN CRÉATION MOT DE PASSE (invitation / reset) ══ -->
+<div id="setpwd-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🛰</div>
+      <div class="auth-logo-text">Sentinel Project</div>
+      <div class="auth-logo-badge">Activation de votre accès</div>
+    </div>
+    <div class="auth-sep"></div>
+    <div class="auth-field">
+      <label>Choisissez votre mot de passe</label>
+      <input type="password" id="setpwd-input" placeholder="Minimum 6 caractères"
+        onkeydown="if(event.key==='Enter')document.getElementById('setpwd-confirm').focus()"/>
+    </div>
+    <div class="auth-field">
+      <label>Confirmez le mot de passe</label>
+      <input type="password" id="setpwd-confirm" placeholder="Répétez le mot de passe"
+        onkeydown="if(event.key==='Enter')doSetPassword()"/>
+    </div>
+    <div class="auth-err" id="setpwd-err"></div>
+    <button class="auth-btn" id="setpwd-submit" onclick="doSetPassword()">
+      <span id="setpwd-btn-lbl">Activer mon accès</span>
+    </button>
+    <div class="auth-footer">
+      Une fois activé, vous pourrez vous connecter avec votre email et ce mot de passe.<br>
+      © 2026 Frédéric Ferra — Sentinel Project
+    </div>
+  </div>
+</div>
+
+
+<button id="reset-btn" onclick="resetView()">⊹ Recentrer</button>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Sentinel Project <span style="font-size:10px;font-weight:500;color:var(--blue);letter-spacing:.5px">V1</span>
+    <span class="logo-copy">© 2026 Tous droits réservés</span>
+    <button class="tb-ico-btn" onclick="document.getElementById('legal-modal').classList.add('on')" title="Mentions légales" style="width:22px;height:22px;font-size:11px;font-weight:600">⚖</button>
+  </div>
+  <div class="tbsep"></div>
+  <div id="proj-label">Aucun projet</div>
+  <div class="tbsp"></div>
+  <!-- Recherche adresse -->
+  <div id="addr-wrap">
+    <input id="addr-in" type="text" placeholder="🔍 Rechercher une adresse…" oninput="addrSearch(this.value)" onkeydown="if(event.key==='Escape')closeAddrResults()"/>
+    <div id="addr-results"></div>
+  </div>
+  <!-- Géolocalisation -->
+  <button class="tb-ico-btn" onclick="geolocate()" title="Me localiser">📍</button>
+  <div class="tbsep"></div>
+  <span class="spill" id="sc" style="display:none">—</span>
+  <span class="spill">Z <strong id="sz">6</strong></span>
+  <span class="spill"><strong id="so">0</strong> obj</span>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TOOLBAR -->
+  <div id="toolbar">
+    <div id="mobile-hint" style="display:none;padding:7px 8px;background:#fffbeb;border-bottom:1px solid #fde68a;font-size:9.5px;color:#92400e;line-height:1.4;text-align:center">
+      💡 Pour une meilleure expérience,<br>activez le <strong>Mode ordinateur</strong><br>dans votre navigateur mobile
+    </div>
+    <button class="tb on" data-t="nav" onclick="setTool('nav')"><span class="tbi">↖</span><span class="tbl">Navigation<span class="tbs">Déplacer / Zoomer</span></span></button>
+    <div class="tsep"></div>
+    <button class="tb" data-t="imp" onclick="document.getElementById('map-fi').click()"><span class="tbi">🗺</span><span class="tbl">Importer<span class="tbs">JPEG/PNG + JGW</span></span></button>
+    <div class="tsep"></div>
+    <button class="tb" data-t="ruler" onclick="setTool('ruler')"><span class="tbi">📐</span><span class="tbl">Règle<span class="tbs">Distance · Double-clic fin</span></span><span class="cdot" id="cd-ruler" style="background:#0891b2"></span></button>
+    <button class="tb" data-t="poly"  onclick="setTool('poly')"><span class="tbi">⬟</span><span class="tbl">Surface<span class="tbs">Mesure polygone</span><span class="tbs" style="color:var(--t3);font-size:9px">Double-clic : fin</span></span><span class="cdot" id="cd-poly" style="background:#d97706"></span></button>
+    <button class="tb" data-t="circ"  onclick="setTool('circ')"><span class="tbi">◎</span><span class="tbl">Cercle<span class="tbs">Mesure rayon</span></span><span class="cdot" id="cd-circ" style="background:#059669"></span></button>
+    <button class="tb" data-t="pt"    onclick="openPtModal()"><span class="tbi">📍</span><span class="tbl">Point GPS<span class="tbs">Lien + ressource</span></span><span class="cdot" id="cd-pt" style="background:#dc2626"></span></button>
+    <button class="tb" data-t="emoji" onclick="openEmojiModal()"><span class="tbi">🏷</span><span class="tbl">Point carte<span class="tbs">25 marqueurs</span></span><span class="cdot" id="cd-emoji" style="background:#f59e0b"></span></button>
+    <button class="tb" data-t="pen"   onclick="setTool('pen')"><span class="tbi">✏</span><span class="tbl">Crayon<span class="tbs">Dessin libre</span></span><span class="cdot" id="cd-pen" style="background:#7c3aed"></span></button>
+    <button class="tb" data-t="txt"   onclick="setTool('txt')"><span class="tbi">T</span><span class="tbl">Texte<span class="tbs">Annotation</span></span><span class="cdot" id="cd-txt" style="background:#0f172a"></span></button>
+    <div class="tsep"></div>
+    <button class="tb" data-t="edit" onclick="toggleEdit()"><span class="tbi">⚙</span><span class="tbl">Éditer<span class="tbs">Modifier formes</span></span></button>
+    <div id="cbar">
+      <div class="cb-lbl">Couleur</div>
+      <div id="swatches"></div>
+      <div style="display:flex;align-items:center;gap:5px"><input type="color" id="cc" value="#2563eb" oninput="setCustomColor(this.value)"/><span style="font-size:9px;color:var(--t5)">Libre</span></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- PANEL -->
+  <div id="panel">
+    <div id="panel-top"></div>
+    <div id="panel-scroll">
+      <!-- Cartes locales — dans la zone scrollable pour mobile -->
+      <div class="ps">
+        <div class="pst">Cartes locales</div>
+        <div class="idrop" id="map-drop" onclick="document.getElementById('map-fi').click()" ondragover="mdo(event)" ondragleave="mdl(event)" ondrop="mdd(event)">
+          <div class="iico">🗺</div>
+          <div class="itxt"><strong>JPEG/PNG + .JGW</strong>Sélectionner les 2 fichiers ensemble</div>
+        </div>
+        <div class="ibox"><span>ℹ️</span><p>Ctrl+clic pour sélectionner .jpeg ET .jgw simultanément. Sans .jgw, les mesures ne seront pas à l'échelle.</p></div>
+        <input type="file" id="map-fi" accept=".jpg,.jpeg,.png,.tif,.tiff,.jgw" multiple style="display:none" onchange="handleMapFiles(event)"/>
+      </div>
+      <div id="map-layers"></div>
+      <!-- Fonds de carte en ligne -->
+      <div id="tile-layers">
+        <div class="pst" style="margin-bottom:5px">Fonds en ligne <span style="font-weight:400;color:var(--t3);font-size:8px;text-transform:none;letter-spacing:0">· Internet requis</span></div>
+        <div class="tile-grid">
+          <button class="tile-btn" id="tb-osm"  onclick="toggleTile('osm')"><span class="tico">🗺</span>OSM<span style="color:var(--t3)">Rues</span></button>
+          <button class="tile-btn" id="tb-sat"  onclick="toggleTile('sat')"><span class="tico">🛰</span>Satellite<span style="color:var(--t3)">IGN Ortho</span></button>
+          <button class="tile-btn" id="tb-plan" onclick="toggleTile('plan')"><span class="tico">📋</span>IGN Plan<span style="color:var(--t3)">Géoportail</span></button>
+          <button class="tile-btn" id="tb-topo" onclick="toggleTile('topo')"><span class="tico">⛰</span>Topo<span style="color:var(--t3)">Relief</span></button>
+          <button class="tile-btn" id="tb-cad"  onclick="toggleTile('cad')"><span class="tico">🏠</span>Cadastre<span style="color:var(--t3)">Parcelles</span></button>
+          <button class="tile-btn" id="tb-dfci" onclick="toggleTile('dfci')"><span class="tico">🔥</span>DFCI<span style="color:var(--t3)">Zoom 10+</span></button>
+        </div>
+        <button class="tile-btn" id="tb-ign-all" onclick="openIgnPanel()" style="width:100%;margin-top:3px;flex-direction:row;gap:6px;justify-content:center;background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border-color:#2563eb;padding:7px 8px"><span class="tico" style="font-size:16px">🇫🇷</span><span style="font-weight:700;font-size:11px">Cartes IGN</span></button>
+        <div class="url-cfg-row">
+          <span style="font-size:8px;color:var(--t3);align-self:center">URL :</span>
+          <button class="url-cfg-btn" onclick="openUrlEdit('osm')">🗺 OSM</button>
+          <button class="url-cfg-btn" onclick="openUrlEdit('sat')">🛰 Sat.</button>
+          <button class="url-cfg-btn" onclick="openUrlEdit('plan')">📋 IGN Plan</button>
+          <button class="url-cfg-btn" onclick="openUrlEdit('topo')">⛰ Topo</button>
+          <button class="url-cfg-btn" onclick="openUrlEdit('cad')">🏠 Cadastre</button>
+          <button class="url-cfg-btn" onclick="openUrlEdit('dfci')">🔥 DFCI</button>
+        </div>
+      </div>
+      <!-- Projet -->
+      <div class="ps">
+        <div class="pst">Projet</div>
+        <div class="agrid">
+          <button class="abtn ex"  onclick="exportProject()"><span class="ai">💾</span>Exporter</button>
+          <button class="abtn ld"  onclick="document.getElementById('proj-fi').click()"><span class="ai">📂</span>Charger</button>
+          <button class="abtn geo" onclick="exportGeoJSON()"><span class="ai">🌐</span>GeoJSON</button>
+          <button class="abtn clr" onclick="openResetModal()"><span class="ai">🔄</span>Réinitialiser</button>
+        </div>
+        <input type="file" id="proj-fi" accept=".json" style="display:none" onchange="loadProject(event)"/>
+      </div>
+      <!-- Annotations -->
+      <div class="ps" style="padding-bottom:6px">
+        <div id="ann-header">
+          <div class="pst" style="margin-bottom:0">Annotations <span id="ac" style="font-weight:400;color:var(--t3)"></span></div>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <button id="ann-eye-all" onclick="toggleAllAnn()" title="Afficher/Masquer toutes les annotations" style="font-size:14px;border:1px solid var(--bdr);background:var(--w);border-radius:4px;cursor:pointer;padding:2px 6px;color:var(--t5)" title="Tout afficher/masquer">👁</button>
+            <select id="ann-filter" onchange="updateList()">
+              <option value="all">Tous</option>
+              <option value="ruler">Règles</option>
+              <option value="poly">Polygones</option>
+              <option value="circ">Cercles</option>
+              <option value="pt">Points GPS</option>
+              <option value="emoji">Points carte</option>
+              <option value="pen">Crayons</option>
+              <option value="txt">Textes</option>
+            </select>
+            <button id="del-all-ann" onclick="openDelAllModal()">🗑 Tout supprimer</button>
+          </div>
+        </div>
+      </div>
+      <div id="ann-list"></div>
+    </div>
+    <!-- Boutons auth collés en bas du panel — hors zone scrollable -->
+    <div id="auth-footer" style="display:none;flex-shrink:0;border-top:1px solid var(--bdr);background:var(--w);padding:6px 8px;flex-direction:column;gap:4px">
+      <button onclick="openChgPwd()" style="width:100%;background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 8px;font-size:10.5px;font-weight:600;color:var(--t5);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;transition:all .15s" onmouseover="this.style.borderColor='#2563eb';this.style.color='#2563eb'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t5)'">🔑 Mot de passe</button>
+      <button onclick="doLogout()" style="width:100%;background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 8px;font-size:10.5px;font-weight:600;color:var(--t5);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;transition:all .15s" onmouseover="this.style.borderColor='#dc2626';this.style.color='#dc2626'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t5)'">👤 <span id="auth-footer-user" style="max-width:120px;overflow:hidden;text-overflow:ellipsis"></span> · Déconnexion</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Point GPS : choix visuel/GPS -->
+<div class="mbg" id="pt-modal">
+  <div class="mbox2">
+    <div class="mtit">📍 Ajouter un point GPS</div>
+    <div class="msub">Comment positionner ce point ?</div>
+    <div class="mbtns">
+      <button class="mbn" onclick="startVisPt()"><span class="mico">🖱</span><span><b>Position visuelle</b><span class="mdsc">Cliquer sur la carte</span></span></button>
+      <button class="mbn" onclick="openGpsMod()"><span class="mico">📡</span><span><b>Coordonnées GPS</b><span class="mdsc">Saisir lat / lng (WGS84 ou EPSG:3857)</span></span></button>
+    </div>
+    <button class="mcancel" onclick="closePtModal()">Annuler</button>
+  </div>
+</div>
+
+<!-- GPS coords input -->
+<div class="mbg" id="gps-modal">
+  <div class="mbox2">
+    <div class="mtit">📡 Coordonnées GPS</div>
+    <div style="font-size:11px;color:var(--t5);margin:5px 0 12px;line-height:1.5">Format WGS84 : <b>Latitude</b> puis <b>Longitude</b><br><span style="color:var(--t3);font-size:10px">Ex: 42.51561 / 3.13669 (Cap Bear) · EPSG:3857 accepté</span></div>
+    <div class="mrow"><div class="mlbl2">Latitude</div><input class="min" type="number" id="gps-lat" placeholder="42.51561" step="0.000001"/></div>
+    <div class="mrow"><div class="mlbl2">Longitude</div><input class="min" type="number" id="gps-lng" placeholder="3.13669" step="0.000001"/></div>
+    <div style="font-size:10px;color:var(--t4);text-align:center;margin:6px 0 4px">— ou en une ligne —</div>
+    <div class="mrow"><div class="mlbl2" style="font-size:10px;line-height:1.3">Une ligne<br><span style="color:var(--t3)">(Google Maps)</span></div><input class="min" type="text" id="gps-oneline" placeholder="42.559419, 3.029096 ou 42°33′33.9″N 3°01′44.8″E" oninput="parseGpsOneLine()"/></div>
+    <div id="gps-oneline-err" style="font-size:10px;color:var(--red);margin:2px 8px 0;display:none"></div>
+    <div class="mgrid"><button class="mko" onclick="closeGpsMod()">Annuler</button><button class="mok" onclick="placePtGPS()">Placer</button></div>
+  </div>
+</div>
+
+<!-- Emoji sélecteur -->
+<div class="mbg" id="emoji-modal">
+  <div class="mbox2" style="width:320px">
+    <div class="mtit">🏷 Choisir un marqueur</div>
+    <div class="emoji-grid" id="emoji-grid"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      <span style="font-size:11px;color:var(--t5)">Couleur de fond :</span>
+      <div id="emoji-swatches" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      <input type="color" id="emoji-cc" value="#f59e0b" style="width:24px;height:24px;border:1px solid var(--bdr);border-radius:50%;cursor:pointer;padding:0;background:none;overflow:hidden"/>
+    </div>
+    <div class="mgrid" style="margin-top:12px">
+      <button class="mko" onclick="closeEmojiModal()">Annuler</button>
+      <button class="mok" id="emoji-ok-btn" onclick="openEmojiPlaceModal()" disabled>Placer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Point carte : choix placement visuel ou GPS -->
+<div class="mbg" id="emoji-place-modal">
+  <div class="mbox2">
+    <div class="mtit">🏷 Positionner le marqueur</div>
+    <div class="msub">Comment positionner ce point carte ?</div>
+    <div class="mbtns">
+      <button class="mbn" onclick="startEmojiPlace()"><span class="mico">🖱</span><span><b>Position visuelle</b><span class="mdsc">Cliquer sur la carte</span></span></button>
+      <button class="mbn" onclick="openEmojiGpsMod()"><span class="mico">📡</span><span><b>Coordonnées GPS</b><span class="mdsc">Saisir lat / lng ou coller une ligne</span></span></button>
+    </div>
+    <button class="mcancel" onclick="closeEmojiPlaceModal()">Annuler</button>
+  </div>
+</div>
+
+<!-- Point carte GPS coords input -->
+<div class="mbg" id="emoji-gps-modal">
+  <div class="mbox2">
+    <div class="mtit">📡 Coordonnées GPS — Point carte</div>
+    <div style="font-size:11px;color:var(--t5);margin:5px 0 12px;line-height:1.5">Format WGS84 : <b>Latitude</b> puis <b>Longitude</b></div>
+    <div class="mrow"><div class="mlbl2">Latitude</div><input class="min" type="number" id="egps-lat" placeholder="42.51561" step="0.000001"/></div>
+    <div class="mrow"><div class="mlbl2">Longitude</div><input class="min" type="number" id="egps-lng" placeholder="3.13669" step="0.000001"/></div>
+    <div style="font-size:10px;color:var(--t4);text-align:center;margin:6px 0 4px">— ou en une ligne —</div>
+    <div class="mrow"><div class="mlbl2" style="font-size:10px;line-height:1.3">Une ligne<br><span style="color:var(--t3)">(Google Maps)</span></div><input class="min" type="text" id="egps-oneline" placeholder="42.559419, 3.029096 ou 42°33′33.9″N 3°01′44.8″E" oninput="parseEmojiGpsOneLine()"/></div>
+    <div id="egps-oneline-err" style="font-size:10px;color:var(--red);margin:2px 8px 0;display:none"></div>
+    <div class="mgrid"><button class="mko" onclick="closeEmojiGpsMod()">Annuler</button><button class="mok" onclick="placeEmojiGPS()">Placer</button></div>
+  </div>
+</div>
+
+<!-- Nom projet avant export -->
+<div class="mbg" id="name-modal">
+  <div class="mbox2">
+    <div class="mtit">💾 Exporter le projet</div>
+    <div style="font-size:11px;color:var(--t5);margin:5px 0 12px;line-height:1.5">Un seul fichier <b>.json</b> contenant tout (carte, annotations, ressources).</div>
+    <div class="mrow"><div class="mlbl2">Nom du projet</div><input class="min" type="text" id="name-in" placeholder="Ex: Chantier_Nord_2025" onkeydown="if(event.key==='Enter')doExport()"/></div>
+    <div class="mgrid"><button class="mko" onclick="closeNameModal()">Annuler</button><button class="mok" onclick="doExport()">Exporter</button></div>
+  </div>
+</div>
+
+<!-- Réinitialiser -->
+<div class="mbg" id="reset-modal">
+  <div class="mbox2">
+    <div style="font-size:26px;text-align:center;margin-bottom:8px">⚠️</div>
+    <div class="mtit" style="text-align:center">Réinitialiser le projet</div>
+    <div style="font-size:12px;color:var(--t5);text-align:center;margin:9px 0 18px;line-height:1.6">Toutes les annotations, mesures et cartes seront supprimées.<br><span style="font-size:11px;color:var(--t3)">Action irréversible.</span></div>
+    <div class="mgrid"><button class="mko" onclick="closeResetModal()">Non, annuler</button><button class="mok" style="background:var(--red)" onclick="confirmReset()">Oui, réinitialiser</button></div>
+  </div>
+</div>
+
+<!-- Supprimer toutes annotations -->
+<div class="mbg" id="del-all-modal">
+  <div class="mbox2">
+    <div style="font-size:26px;text-align:center;margin-bottom:8px">🗑</div>
+    <div class="mtit" style="text-align:center">Supprimer toutes les annotations</div>
+    <div style="font-size:12px;color:var(--t5);text-align:center;margin:9px 0 18px;line-height:1.6">Les calques de fond de carte ne seront pas affectés.</div>
+    <div class="mgrid"><button class="mko" onclick="closeDelAllModal()">Non, annuler</button><button class="mok" style="background:var(--red)" onclick="confirmDelAll()">Oui, supprimer</button></div>
+  </div>
+</div>
+
+<!-- Modal édition URL -->
+<div class="mbg" id="url-modal">
+  <div class="mbox2" style="width:320px">
+    <div class="mtit">⚙ Modifier l'URL</div>
+    <div id="url-modal-desc" style="font-size:11px;color:var(--t5);margin:5px 0 12px;line-height:1.5"></div>
+    <div class="mrow"><div class="mlbl2">URL du service de tuiles</div><textarea class="min" id="url-modal-input" rows="4" style="resize:vertical;font-size:11px"></textarea></div>
+    <div style="font-size:9px;color:var(--t3);margin-top:4px">Utiliser {z} {x} {y} pour les coordonnées de tuiles.</div>
+    <div class="mgrid" style="margin-top:10px"><button class="mko" onclick="closeUrlEdit()">Annuler</button><button class="mok" onclick="saveUrlEdit()">Enregistrer</button></div>
+    <button onclick="resetUrlEdit()" style="margin-top:6px;width:100%;padding:6px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:11px;border-radius:6px;cursor:pointer">↺ Restaurer l'URL d'origine</button>
+  </div>
+</div>
+
+<!-- Modal géolocalisation manuelle -->
+<div class="mbg" id="geoloc-modal">
+  <div class="mbox2" style="width:310px">
+    <div class="mtit">📍 Aller à ma position</div>
+    <div style="font-size:11px;color:var(--t5);margin:6px 0 13px;line-height:1.6">
+      Saisissez <b>l'un</b> des formats suivants :<br>
+      <span style="color:var(--t9)">① Coordonnées GPS</span> <span style="color:var(--t3)">ex: 42.516, 3.134</span><br>
+      <span style="color:var(--t9)">② Adresse</span> <span style="color:var(--t3)">ex: 10 rue de la Paix, Paris</span><br>
+      <span style="color:var(--t9)">③ Lien Google Maps</span> <span style="color:var(--t3)">ex: maps.app.goo.gl/…</span>
+    </div>
+    <div class="mrow">
+      <div class="mlbl2">Coordonnées, adresse ou lien</div>
+      <input class="min" type="text" id="geoloc-coords" placeholder="43.123, 3.456 — adresse — lien Google Maps"
+        onkeydown="if(event.key==='Enter')applyGeolocManual()"/>
+    </div>
+    <div id="geoloc-error" style="font-size:11px;color:var(--red);margin-top:5px;display:none;white-space:pre-line;line-height:1.6"></div>
+    <div id="geoloc-loading" style="font-size:11px;color:var(--blue);margin-top:5px;display:none">⏳ Résolution du lien en cours…</div>
+    <div class="mgrid" style="margin-top:12px">
+      <button class="mko" onclick="document.getElementById('geoloc-modal').classList.remove('on')">Annuler</button>
+      <button class="mok" onclick="applyGeolocManual()">Aller ici →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mentions légales -->
+<div class="mbg" id="legal-modal">
+  <div class="mbox2" style="width:370px">
+    <div class="mtit">⚖ Mentions légales, Droits &amp; Avertissements</div>
+    <div style="font-size:11px;color:var(--t7);line-height:1.8;margin-top:10px">
+
+      <b style="color:var(--t9)">Sentinel Project</b><br>
+      Application web cartographique à usage professionnel.<br><br>
+
+      <b>Auteur et titulaire unique des droits :</b><br>
+      Frédéric Ferra, né le 30 mars 1990 à Perpignan (France).<br><br>
+
+      <b>Protection des droits d'auteur :</b><br>
+      Cette application constitue une œuvre originale protégée par le droit d'auteur au titre de la <i>Convention de Berne pour la protection des œuvres littéraires et artistiques</i> (applicable dans plus de 180 États), de l'Accord sur les ADPIC/TRIPS (OMC), ainsi que du Code de la propriété intellectuelle français (L.111-1 et s.). Cette protection est mondiale et automatique dès la création.<br><br>
+
+      <b>Réservation de tous droits :</b><br>
+      Frédéric Ferra se réserve l'intégralité des droits patrimoniaux et moraux, incluant sans limitation : reproduction, représentation, distribution, adaptation, traduction, exploitation commerciale, cession et sous-licence. Toute utilisation, reproduction, diffusion ou revente — même partielle — sans autorisation écrite préalable est strictement interdite et expose son auteur à des poursuites civiles et/ou pénales.<br><br>
+
+      <b>⚠ Avertissement d'usage — Limitation de responsabilité :</b><br>
+      Sentinel Project est un <b>outil d'aide à la prise de décision</b>. Il ne saurait en aucun cas se substituer à l'analyse d'un expert métier, d'un professionnel qualifié ou d'une vérification de terrain. Les informations affichées (coordonnées GPS, mesures, fonds de carte, annotations) peuvent être inexactes, obsolètes ou comporter des erreurs techniques. Il appartient à chaque utilisateur de <b>vérifier systématiquement la pertinence et la cohérence des données</b> avant toute décision opérationnelle. L'auteur décline toute responsabilité en cas de mauvais usage, d'erreur d'interprétation ou de préjudice résultant de l'utilisation de cette application, par l'utilisateur initial ou tout tiers ayant accès au projet partagé.<br>
+      Les fonds de carte (OpenStreetMap, IGN, Géoportail, etc.) sont fournis par des services tiers indépendants. Leurs URLs d'accès sont susceptibles d'évoluer sans préavis, ce qui peut entraîner l'indisponibilité temporaire ou définitive de certains fonds de carte. L'auteur ne saurait être tenu responsable de toute interruption de ces services tiers ni de leurs conséquences sur l'utilisation de l'application.<br><br>
+
+      <b>Droit applicable &amp; juridiction :</b><br>
+      Droit français — Tribunal judiciaire de Perpignan (France).<br>
+      <b>Territoire de protection :</b> Mondial (Convention de Berne + ADPIC).<br>
+      <b>Date de création :</b> 2026 — <b>Dernière mise à jour :</b> 2026 — <b>© 2026 Frédéric Ferra. Tous droits réservés.</b>
+    </div>
+    <button class="mcancel" style="margin-top:12px" onclick="document.getElementById('legal-modal').classList.remove('on')">Fermer</button>
+  </div>
+</div>
+
+<div id="gdo">Déposer JSON, GeoJSON ou image</div>
+<div id="toast"></div>
+
+<!-- ── PANNEAU CARTES IGN ── -->
+<div class="mbg" id="ign-modal" onclick="if(event.target===this)closeIgnPanel()">
+  <div class="mbox2" style="width:420px;max-height:88vh;display:flex;flex-direction:column">
+    <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
+      <span>🇫🇷 Cartes IGN — Géoportail</span>
+      <button onclick="closeIgnPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t5);line-height:1">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--t5);margin:4px 0 10px;line-height:1.4">Cliquez sur une couche pour l'activer/désactiver sur la carte. Les couches actives s'ajoutent à vos fonds existants.</div>
+    <div id="ign-layers-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;padding-right:4px"></div>
+    <div style="margin-top:12px;font-size:10px;color:var(--t3);text-align:center">Source : IGN Géoplateforme · Licence Ouverte Etalab 2.0 · © IGN</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   SENTINEL PROJECT V1 — © Frédéric Ferra
+   Tous droits réservés
+═══════════════════════════════════════════════════ */
+
+// ── 1. CARTE ──
+const map = L.map('map',{center:[46.8,2.3],zoom:6,zoomControl:false,tap:false,maxZoom:25});
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.control.scale({position:'bottomleft',imperial:false}).addTo(map);
+// Pane pour les images importées (JPEG/PNG+JGW) — zIndex 250 :
+// au-dessus des tuiles (tilePane=200) mais SOUS le guide de dessin L.Draw (overlayPane=400)
+// Ce pane règle le bug mobile : pendant le tracé, le guide L.Draw reste visible au-dessus du JPEG.
+map.createPane('mapImages');
+map.getPane('mapImages').style.zIndex=250;
+map.getPane('mapImages').style.pointerEvents='none';
+map.getContainer().style.userSelect='none';
+map.getContainer().style.webkitUserSelect='none';
+
+// Pane dédié pour les annotations finales — zIndex 650 = au-dessus de tout
+map.createPane('annotations');
+map.getPane('annotations').style.zIndex=650;
+
+// ── 2. TILE DEFS (avant toute utilisation) ──
+const GW='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+const TILE_DEFS={
+  osm:  {label:'OSM Rues',    icon:'🗺', url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',                              opts:{maxZoom:19,attribution:'© OpenStreetMap'}},
+  sat:  {label:'Satellite',   icon:'🛰', url:GW+'&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&FORMAT=image/jpeg',
+         opts:{maxZoom:19,maxNativeZoom:19,attribution:'© IGN — BD ORTHO (Licence Ouverte Etalab)'}},
+  plan: {label:'IGN Plan',    icon:'📋', url:GW+'&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&FORMAT=image/png',                   opts:{maxZoom:19,maxNativeZoom:19,attribution:'© IGN'}},
+  topo: {label:'Topo',        icon:'⛰', url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                               opts:{maxZoom:17,maxNativeZoom:17,attribution:'© OpenTopoMap'}},
+  cad:  {label:'Cadastre',    icon:'🏠', url:GW+'&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&FORMAT=image/png',                opts:{maxZoom:20,maxNativeZoom:20,opacity:.8,attribution:'© IGN'}},
+  // DFCI : nom technique correct = GEOGRAPHICALGRIDSYSTEM.DFCI (source : geoservices.ign.fr)
+  dfci: {label:'DFCI',        icon:'🔥', url:GW+'&LAYER=GEOGRAPHICALGRIDSYSTEM.DFCI&FORMAT=image/png',
+         opts:{maxZoom:18,maxNativeZoom:18,attribution:'© IGN'}}
+};
+let activeTiles={};
+const TILE_URLS_ORIG={};
+Object.entries(TILE_DEFS).forEach(([k,v])=>{TILE_URLS_ORIG[k]=v.url;});
+let urlEditKey=null;
+
+// Fonctions édition URL
+function openUrlEdit(key){
+  urlEditKey=key; const def=TILE_DEFS[key];
+  document.getElementById('url-modal-desc').innerHTML=`<b>${def.icon} ${def.label}</b> — modifiez si ce fond ne s'affiche plus.<br>
+    <a href="https://www.google.com/search?q=${encodeURIComponent(def.label+' tile URL XYZ leaflet 2024')}" target="_blank" style="color:var(--blue);font-size:10px">🔍 Rechercher une URL à jour →</a>`;
+  document.getElementById('url-modal-input').value=def.url;
+  document.getElementById('url-modal').classList.add('on');
+}
+function closeUrlEdit(){
+  document.getElementById('url-modal').classList.remove('on');
+  delete document.getElementById('url-modal').dataset.ignMode;
+  urlEditKey=null;_ignUrlEditId=null;
+}
+function saveUrlEdit(){
+  const modal=document.getElementById('url-modal');
+  const u=document.getElementById('url-modal-input').value.trim();if(!u){showToast('⚠ URL vide');return;}
+  if(modal.dataset.ignMode==='1'&&_ignUrlEditId){
+    if(ignActiveLayers[_ignUrlEditId]){
+      const entry=ignActiveLayers[_ignUrlEditId];
+      map.removeLayer(entry.layer);
+      const tl=L.tileLayer(u,{opacity:entry.layer.options.opacity||1,minZoom:entry.ldef.minZoom||6,maxZoom:entry.ldef.maxZoom||19,maxNativeZoom:entry.ldef.maxZoom||19,attribution:'© IGN Géoplateforme',zIndex:entry.layer.options.zIndex||100});
+      tl.addTo(map);try{fg.bringToFront();}catch(e){}
+      entry.layer=tl;renderML();
+    }
+    closeUrlEdit();showToast('✓ URL IGN mise à jour');return;
+  }
+  if(!urlEditKey)return;
+  TILE_DEFS[urlEditKey].url=u;
+  if(activeTiles[urlEditKey]){map.removeLayer(activeTiles[urlEditKey].layer);delete activeTiles[urlEditKey];const b=document.getElementById('tb-'+urlEditKey);if(b)b.classList.remove('active');renderML();setTimeout(()=>toggleTile(urlEditKey),150);}
+  closeUrlEdit();showToast('✓ URL mise à jour');
+}
+function resetUrlEdit(){
+  const modal=document.getElementById('url-modal');
+  if(modal.dataset.ignMode==='1'&&_ignUrlEditId){
+    let ldef=null;Object.values(IGN_LAYERS).forEach(arr=>arr.forEach(l=>{if(l.id===_ignUrlEditId)ldef=l;}));
+    if(ldef){document.getElementById('url-modal-input').value=ignTileUrl(ldef);showToast('↺ URL IGN restaurée');}
+    return;
+  }
+  if(!urlEditKey)return;
+  TILE_DEFS[urlEditKey].url=TILE_URLS_ORIG[urlEditKey];
+  document.getElementById('url-modal-input').value=TILE_URLS_ORIG[urlEditKey];
+  showToast('↺ URL restaurée');
+}
+
+// ── 3. ÉTAT ──
+const fg=new L.FeatureGroup([],{pane:'annotations'}).addTo(map);
+let anns=[],mapLayers=[],cnt=0,tool='nav',drawer=null,projName='';
+const TC={ruler:'#0891b2',poly:'#d97706',circ:'#059669',pt:'#dc2626',emoji:'#f59e0b',pen:'#7c3aed',txt:'#0f172a'};
+const SWCOLS=['#dc2626','#d97706','#f59e0b','#059669','#0891b2','#2563eb','#7c3aed','#0f172a','#6b7280','#ffffff'];
+const EMOJIS=['🌉','🚗','🏠','🌲','🚂','⚡','💧','🚧','⛽','🏥','🏫','🏪','🚁','⚓','🔥','⚠️','📡','🛤️','🅿️','🏗️','🌊','🦅','⛺','🗼','🎯'];
+let selectedEmoji=null;
+let emojiColor='#f59e0b';
+let geolocMarker=null;
+
+// ── 4. PALETTE ──
+function buildSwatches(){
+  const c=document.getElementById('swatches');c.innerHTML='';
+  SWCOLS.forEach(col=>{const d=document.createElement('div');d.className='csw';d.style.background=col;if(col==='#ffffff')d.style.border='2px solid #e2e8f0';d.onclick=()=>{setToolColor(col);selSwatch(d);};c.appendChild(d);});
+}
+buildSwatches();
+function selSwatch(el){document.querySelectorAll('.csw').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
+function setToolColor(col){
+  if(tool in TC){
+    TC[tool]=col;
+    const cd=document.getElementById('cd-'+tool);if(cd)cd.style.background=col;
+    // Mettre à jour le drawer en cours si actif (cercle ou polygone)
+    if(drawer&&drawer.options&&drawer.options.shapeOptions){
+      drawer.options.shapeOptions.color=col;
+      drawer.options.shapeOptions.fillColor=col;
+      // Forcer le re-rendu du guide de dessin
+      if(drawer._shape)try{drawer._shape.setStyle({color:col,fillColor:col});}catch(e){}
+    }
+  }
+  document.getElementById('cc').value=col;
+}
+function setCustomColor(col){setToolColor(col);document.querySelectorAll('.csw').forEach(s=>s.classList.remove('sel'));}
+function showCbar(show){document.getElementById('cbar').classList.toggle('on',show);if(show){const col=TC[tool]||'#2563eb';document.getElementById('cc').value=col;}}
+
+// Emoji swatches
+function buildEmojiSwatches(){
+  const c=document.getElementById('emoji-swatches');c.innerHTML='';
+  ['#f59e0b','#dc2626','#059669','#2563eb','#7c3aed','#0f172a'].forEach(col=>{
+    const d=document.createElement('div');d.className='csw';d.style.background=col;d.style.width='20px';d.style.height='20px';
+    if(col==='#0f172a')d.style.border='2px solid #e2e8f0';
+    d.onclick=()=>{emojiColor=col;document.getElementById('emoji-cc').value=col;document.querySelectorAll('#emoji-swatches .csw').forEach(s=>s.classList.remove('sel'));d.classList.add('sel');};
+    c.appendChild(d);
+  });
+}
+buildEmojiSwatches();
+document.getElementById('emoji-cc').addEventListener('input',e=>{emojiColor=e.target.value;document.querySelectorAll('#emoji-swatches .csw').forEach(s=>s.classList.remove('sel'));});
+
+// Emoji grid
+function buildEmojiGrid(){
+  const g=document.getElementById('emoji-grid');g.innerHTML='';
+  EMOJIS.forEach(em=>{
+    const b=document.createElement('button');b.className='emoji-pick';b.textContent=em;
+    b.onclick=()=>{selectedEmoji=em;document.querySelectorAll('.emoji-pick').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');document.getElementById('emoji-ok-btn').disabled=false;};
+    g.appendChild(b);
+  });
+}
+buildEmojiGrid();
+
+// ── 5. GÉOLOCALISATION ──
+function geolocate(){
+  // Tenter d'abord la géolocalisation automatique, même sur file://
+  // (fonctionne sur PC, peut fonctionner sur certains Android selon la config)
+  if(!navigator.geolocation){
+    openGeolocManual('Géolocalisation non disponible sur ce navigateur.');
+    return;
+  }
+  showToast('📍 Localisation en cours…');
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=pos.coords.latitude,lng=pos.coords.longitude;
+      map.setView([lat,lng],17);
+      if(geolocMarker)map.removeLayer(geolocMarker);
+      const _coordStr=`${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      geolocMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="geolocme"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(map);
+      geolocMarker.bindPopup(`<div class="pop">
+        <div class="ptt" style="padding-right:22px">📍 Vous êtes ici</div>
+        <div class="pr"><span>Lat</span><strong>${lat.toFixed(6)}°</strong></div>
+        <div class="pr"><span>Lng</span><strong>${lng.toFixed(6)}°</strong></div>
+        <div class="pbr" style="margin-top:8px;gap:6px">
+          <button class="pb" onclick="cpTxt('${_coordStr}')" title="Copier les coordonnées">📋 Copier GPS</button>
+          <button class="pb dan" onclick="removeGeolocMarker()">✕ Supprimer</button>
+        </div>
+      </div>`).openPopup();
+      showToast(`✓ Localisé : ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    },
+    err=>{
+      // Échec → ouvrir la saisie manuelle avec message explicatif
+      let reason='';
+      if(err.code===1)reason='Permission refusée — autorisez la localisation dans les réglages de votre navigateur.';
+      else if(err.code===2)reason='Signal GPS indisponible. Vérifiez que la localisation est activée sur votre appareil.';
+      else if(err.code===3)reason='Délai dépassé — signal trop faible.';
+      else if(window.location.protocol==='file:')reason='Localisation automatique bloquée en mode fichier local (file://).';
+      openGeolocManual(reason);
+    },
+    {enableHighAccuracy:true,timeout:5000,maximumAge:0}
+  );
+}
+
+function openGeolocManual(reason){
+  const errEl=document.getElementById('geoloc-error');
+  if(errEl){errEl.textContent=reason?'ℹ '+reason:'';errEl.style.display=reason?'':'none';}
+  const inp=document.getElementById('geoloc-coords');
+  if(inp)inp.value='';
+  document.getElementById('geoloc-modal').classList.add('on');
+  setTimeout(()=>{const inp=document.getElementById('geoloc-coords');if(inp)inp.focus();},150);
+}
+
+function applyGeolocManual(){
+  const raw=document.getElementById('geoloc-coords').value.trim();
+  const errEl=document.getElementById('geoloc-error');
+  const loadEl=document.getElementById('geoloc-loading');
+  const showErr=msg=>{errEl.textContent=msg;errEl.style.display='';loadEl.style.display='none';};
+  const showLoad=()=>{loadEl.style.display='';errEl.style.display='none';};
+  const hideLoad=()=>{loadEl.style.display='none';};
+
+  if(!raw){showErr('⚠ Veuillez saisir des coordonnées, une adresse ou un lien.');return;}
+
+  // ── CAS 1 : URL Google Maps (toutes formes) ──
+  if(raw.includes('google.com/maps')||raw.includes('maps.app.goo.gl')||raw.includes('goo.gl/maps')){
+
+    // Fonction d'extraction depuis une URL longue Google Maps
+    function extractFromLongUrl(url){
+      const patterns=[
+        /[!@](-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+        /\!3d(-?\d+\.?\d*)\!4d(-?\d+\.?\d*)/,
+        /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        /place\/[^/]+\/@?(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        /\/(-?\d+\.\d{4,}),(-?\d+\.\d{4,})/,
+      ];
+      for(const p of patterns){
+        const m=url.match(p);
+        if(m){
+          const la=parseFloat(m[1]),lo=parseFloat(m[2]);
+          if(!isNaN(la)&&!isNaN(lo)&&la>=-90&&la<=90&&lo>=-180&&lo<=180)return{lat:la,lng:lo};
+        }
+      }
+      return null;
+    }
+
+    // Si c'est déjà une URL longue, extraire directement
+    if(raw.includes('google.com/maps')){
+      const coords=extractFromLongUrl(raw);
+      if(coords){placeOnMap(coords.lat,coords.lng,'📍 Google Maps');return;}
+      showErr('⚠ Impossible d\'extraire les coordonnées de ce lien Google Maps. Ouvrez-le dans votre navigateur, attendez le chargement, puis copiez l\'URL de la barre d\'adresse et collez-la ici.');return;
+    }
+
+    // Lien court (maps.app.goo.gl / goo.gl/maps) → ouverture automatique + guide généraliste
+    showLoad();
+    // Ouvrir le lien dans un nouvel onglet pour que l'utilisateur récupère l'URL longue
+    setTimeout(()=>{
+      try{window.open(raw,'_blank','noopener');}catch(e){}
+      hideLoad();
+      showErr('🔗 Le lien a été ouvert dans un nouvel onglet.\n• Attendez le chargement complet de la page\n• Copiez l\'URL affichée dans la barre d\'adresse\n• Collez-la ici\n\n📱 Sur mobile, si l\'application de cartographie s\'ouvre à la place du navigateur :\n• Copiez votre lien GPS\n• Ouvrez votre navigateur web\n• Collez le lien dans la barre d\'adresse et laissez charger\n• Copiez l\'URL obtenue et collez-la ici');
+    },300);
+    return;
+  }
+
+  // ── CAS 2 : coordonnées GPS directes ──
+  // Remplacer séparateurs multiples, chercher deux nombres
+  const cleaned=raw.replace(/[;|]/g,' ').replace(/,/g,' ').trim();
+  const nums=cleaned.split(/\s+/).map(Number).filter(n=>!isNaN(n));
+  if(nums.length>=2){
+    let lat=nums[0],lng=nums[1];
+    if(Math.abs(lat)>90||Math.abs(lng)>180){const[x,y]=merc2ll(lng,lat);lat=x;lng=y;}
+    if(lat>=-90&&lat<=90&&lng>=-180&&lng<=180){placeOnMap(lat,lng,'📍 Coordonnées GPS');return;}
+  }
+
+  // ── CAS 3 : adresse texte → Nominatim ──
+  showLoad();
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(raw)}`,{headers:{'Accept-Language':'fr'}})
+    .then(r=>r.json())
+    .then(data=>{
+      hideLoad();
+      if(!data||!data.length){showErr('⚠ Adresse introuvable. Essayez avec plus de détails ou entrez des coordonnées GPS.');return;}
+      const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
+      placeOnMap(lat,lng,'📍 '+data[0].display_name.split(',').slice(0,2).join(', '));
+    })
+    .catch(()=>{hideLoad();showErr('⚠ Erreur réseau — vérifiez votre connexion internet.');});
+}
+
+function placeOnMap(lat,lng,label){
+  document.getElementById('geoloc-modal').classList.remove('on');
+  map.setView([lat,lng],17);
+  if(geolocMarker)map.removeLayer(geolocMarker);
+  const coordStr=`${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  geolocMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="geolocme"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(map);
+  geolocMarker.bindPopup(`<div class="pop">
+    <div class="ptt" style="padding-right:22px">${label}</div>
+    <div class="pr"><span>Lat</span><strong>${lat.toFixed(6)}°</strong></div>
+    <div class="pr"><span>Lng</span><strong>${lng.toFixed(6)}°</strong></div>
+    <div class="pbr" style="margin-top:8px;gap:6px">
+      <button class="pb" onclick="cpTxt('${coordStr}')" title="Copier les coordonnées (format Google Maps)">📋 Copier GPS</button>
+      <button class="pb dan" onclick="removeGeolocMarker()">✕ Supprimer</button>
+    </div>
+  </div>`).openPopup();
+  showToast(`✓ ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+}
+function removeGeolocMarker(){
+  if(geolocMarker){map.removeLayer(geolocMarker);geolocMarker=null;}
+  map.closePopup();
+}
+
+// ── 6. RECHERCHE D'ADRESSE (Nominatim) ──
+let addrTimer=null;
+// Marqueur de recherche d'adresse (cible temporaire)
+let searchMarker=null;
+
+function placeSearchMarker(lat,lng,label){
+  if(searchMarker){map.removeLayer(searchMarker);searchMarker=null;}
+
+  // Même style que le point de localisation GPS : point bleu avec contour blanc
+  const icon=L.divIcon({
+    className:'',
+    html:'<div class="geolocme"></div>',
+    iconSize:[14,14],iconAnchor:[7,7],popupAnchor:[0,-12]
+  });
+
+  searchMarker=L.marker([lat,lng],{icon,interactive:true}).addTo(map);
+
+  const popup=`<div class="pop" style="min-width:210px">
+    <div class="ptt" style="margin-bottom:8px;padding-right:22px">📍 ${label}</div>
+    <div class="pr"><span>Lat</span><strong>${lat.toFixed(6)}°</strong></div>
+    <div class="pr"><span>Lng</span><strong>${lng.toFixed(6)}°</strong></div>
+    <div class="pbr" style="margin-top:10px;gap:6px">
+      <button class="pb" onclick="cpTxt('${lat.toFixed(6)},${lng.toFixed(6)}')">📋 Copier coords</button>
+      <button class="pb dan" onclick="removeSearchMarker()">✕ Supprimer</button>
+    </div>
+  </div>`;
+
+  searchMarker.bindPopup(popup,{maxWidth:260}).openPopup();
+}
+
+function removeSearchMarker(){
+  if(searchMarker){map.removeLayer(searchMarker);searchMarker=null;}
+  map.closePopup();
+}
+
+function addrSearch(q){
+  clearTimeout(addrTimer);
+  const res=document.getElementById('addr-results');
+  if(q.length<3){res.style.display='none';return;}
+  addrTimer=setTimeout(()=>{
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=fr&q=${encodeURIComponent(q)}`,{headers:{'Accept-Language':'fr'}})
+      .then(r=>r.json()).then(data=>{
+        if(!data.length){res.style.display='none';return;}
+        res.innerHTML='';
+        data.forEach(d=>{
+          const it=document.createElement('div');it.className='ar-item';
+          it.textContent=d.display_name.split(',').slice(0,3).join(', ');
+          it.onclick=()=>{
+            const lat=+d.lat,lng=+d.lon;
+            res.style.display='none';
+            document.getElementById('addr-in').value='';
+            // Zoom 18 pour une adresse précise, 14 pour une ville/commune
+            const z=(d.type==='house'||d.type==='building'||d.type==='road'||d.addresstype==='road')?18:16;
+            map.setView([lat,lng],z);
+            // Placer le marqueur cible après le zoom
+            setTimeout(()=>placeSearchMarker(lat,lng,d.display_name.split(',').slice(0,2).join(', ')),150);
+          };
+          res.appendChild(it);
+        });
+        res.style.display='block';
+      }).catch(()=>{});
+  },400);
+}
+function closeAddrResults(){document.getElementById('addr-results').style.display='none';}
+document.addEventListener('click',e=>{if(!e.target.closest('#addr-wrap'))closeAddrResults();});
+
+// ── 7. GESTIONNAIRE D'OUTILS ──
+const DRAW_TOOLS=['ruler','poly','circ','pt','pen','txt','emoji'];
+
+function setTool(t){
+  stopAll();
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('main').classList.remove('cross','penmode');
+  if(tool===t&&t!=='nav'){tool='nav';document.querySelector('[data-t=nav]').classList.add('on');setLI(true);showCbar(false);return;}
+  tool=t;
+  const btn=document.querySelector(`[data-t="${t}"]`);if(btn)btn.classList.add('on');
+  showCbar(DRAW_TOOLS.includes(t));
+  // Bloquer les interactions sur les annotations quand un outil actif
+  setLI(t==='nav'||t==='edit');
+  if(t==='ruler'){document.getElementById('main').classList.add('cross');startRuler();}
+  if(t==='poly') {document.getElementById('main').classList.add('cross');startPoly();}
+  if(t==='circ') {document.getElementById('main').classList.add('cross');startCirc();}
+  if(t==='pen')  {document.getElementById('main').classList.add('penmode');startPen();}
+  if(t==='txt')  {document.getElementById('main').classList.add('cross');map.once('click',placeTxt);}
+}
+function stopAll(){
+  if(drawer){try{drawer.disable();}catch(e){}drawer=null;}
+  // Nettoyage du polygone custom
+  if(_polyCleanup){try{_polyCleanup();}catch(e){}}_polyCleanup=null;
+  stopRuler();clearRG();stopPen();
+  map.off('click',placeTxt);map.off('click',_ptVisClick);map.off('click',_emojiClick);
+  if(editH&&editH.enabled())editH.disable();
+  if(delH&&delH.enabled())delH.disable();
+}
+// setLI : active/désactive l'interactivité de TOUTES les couches dans fg
+// C'est la seule méthode fiable cross-browser pour bloquer les clics sur les annotations
+// pendant qu'un outil est actif.
+// Pour poly/circ : L.Draw désactive déjà le dragging de la carte, pas besoin d'autre chose.
+function setLI(on){
+  fg.eachLayer(l=>{
+    try{
+      if(l.setStyle){
+        // Polylines, polygones, cercles → interactive via setStyle
+        l.setStyle({interactive:on});
+        if(l._path)l._path.style.pointerEvents=on?'auto':'none';
+      }
+      if(l._icon){
+        // Markers → pointer-events sur l'icône
+        l._icon.style.pointerEvents=on?'auto':'none';
+      }
+      if(l._shadow){
+        l._shadow.style.pointerEvents=on?'auto':'none';
+      }
+    }catch(e){}
+  });
+  // Aussi les panes CSS pour les markers
+  const mPane=map.getPane('markerPane');
+  if(mPane)mPane.style.pointerEvents=on?'auto':'none';
+}
+
+// ── 8. RÈGLE ──
+let rPts=[],rSegs=[],rDots=[],rOn=false;
+function startRuler(){rOn=true;rPts=[];rSegs=[];rDots=[];map.on('click',rClick);map.on('dblclick',rEnd);}
+function stopRuler(){if(!rOn)return;rOn=false;map.off('click',rClick);map.off('dblclick',rEnd);}
+function clearRG(){rDots.forEach(d=>map.removeLayer(d));rSegs.forEach(s=>map.removeLayer(s));rDots=[];rSegs=[];}
+function rClick(e){
+  if(!rOn)return;rPts.push(e.latlng);
+  rDots.push(L.circleMarker(e.latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations'}).addTo(map));
+  if(rPts.length>1){rSegs.push(L.polyline([rPts.at(-2),e.latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.8,pane:'annotations'}).addTo(map));
+    let t=0;for(let i=1;i<rPts.length;i++)t+=rPts[i-1].distanceTo(rPts[i]);}
+}
+function rEnd(e){
+  if(!rOn)return;stopRuler();
+  let total=0;for(let i=1;i<rPts.length;i++)total+=rPts[i-1].distanceTo(rPts[i]);
+  if(rPts.length<2){clearRG();setTool('nav');return;}
+  const col=TC.ruler;
+  const vis=L.polyline(rPts,{color:col,weight:3,dashArray:'7,4',opacity:.85,interactive:false,pane:'annotations'});
+  const hit=L.polyline(rPts,{color:'transparent',weight:24,opacity:0,interactive:true,pane:'annotations'});
+  hit._meta={type:'ruler',distance:total,label:'',notes:'',color:col};hit._isAnn=true;
+  hit._visPair=vis;
+  vis._hitPair=hit;
+  hit.bindPopup(()=>linePop(total,col,'Mesure de distance'),{maxWidth:270});
+  hit.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(hit._sentinelId);this.openPopup(ev.latlng);});
+  clearRG();fg.addLayer(vis);fg.addLayer(hit);regAnn('ruler',hit);setTool('nav');
+  setTimeout(()=>hit.openPopup(rPts.at(-1)),100);
+}
+
+// ── 9. POLYGONE ──
+// Implémentation custom sans L.Draw.Polygon pour un contrôle total du touch sur mobile.
+// 1 doigt tap → ajoute un point
+// 2 doigts → pan/zoom, aucun point ajouté
+// Double-tap ou bouton Terminer → finalise le polygone
+let _polyPts=[];          // LatLng[] des points placés
+let _polyMarkers=[];      // markers visuels des points
+let _polyLines=[];        // polylines de prévisualisation
+let _polyPreview=null;    // polygone de prévisualisation
+let _polyActive=false;
+let _polyLastTap=0;       // timestamp du dernier tap
+let _polyLastTapPos=null; // position du dernier tap {x,y} en pixels écran
+
+function startPoly(){
+  _polyPts=[];_polyMarkers=[];_polyLines=[];_polyPreview=null;_polyActive=true;
+
+  // Bannière "Terminer" flottante
+  _polyShowHint();
+
+  const mc=map.getContainer();
+  let _pendingPt=null; // timer pour le délai anti-2-doigts
+
+  function onPolyTouch(e){
+    if(!_polyActive)return;
+
+    if(e.touches.length>=2){
+      // 2e doigt arrivé : annuler le point en attente s'il y en a un
+      if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
+      e.stopPropagation();
+      map.dragging.enable();
+      map.touchZoom.enable();
+      return;
+    }
+
+    // 1 doigt : capturer la position MAINTENANT mais attendre 80ms
+    // pour voir si un 2e doigt arrive (geste pan/zoom)
+    e.preventDefault();
+    e.stopPropagation();
+    map.dragging.disable();
+
+    const t=e.touches[0];
+    const r=mc.getBoundingClientRect();
+    const pt=map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top));
+    const now=Date.now();
+
+    if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
+    _pendingPt=setTimeout(()=>{
+      _pendingPt=null;
+      if(!_polyActive)return;
+
+      // Double-tap détecté uniquement si le 2e tap est PROCHE du précédent (≤ 25px)
+      // — évite les faux positifs quand l'utilisateur place des points rapidement
+      const dx=t.clientX-(_polyLastTapPos?_polyLastTapPos.x:Infinity);
+      const dy=t.clientY-(_polyLastTapPos?_polyLastTapPos.y:Infinity);
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const isDoubleTap=(now-_polyLastTap<500)&&dist<=25&&_polyPts.length>=3;
+
+      _polyLastTap=now;
+      _polyLastTapPos={x:t.clientX,y:t.clientY};
+
+      if(isDoubleTap){
+        _polyFinish();
+        return;
+      }
+      _polyAddPt(pt);
+    },80);
+  }
+
+  function onPolyTouchEnd(e){
+    if(!_polyActive)return;
+    if(e.touches.length===0)map.dragging.enable();
+  }
+
+  function onPolyTouchMove(e){
+    // Si l'utilisateur glisse (même 1 doigt), annuler le point en attente
+    if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
+  }
+
+  mc.addEventListener('touchstart',onPolyTouch,{passive:false,capture:true});
+  mc.addEventListener('touchmove',onPolyTouchMove,{passive:true,capture:false});
+  mc.addEventListener('touchend',onPolyTouchEnd,{passive:true,capture:false});
+
+  // ── PC : clic gauche = point, double-clic = terminer ──
+  function onPolyClick(e){
+    if(!_polyActive)return;
+    L.DomEvent.stopPropagation(e);
+    _polyAddPt(e.latlng);
+  }
+  function onPolyDblClick(e){
+    if(!_polyActive)return;
+    L.DomEvent.stopPropagation(e);
+    if(_polyPts.length>=3)_polyFinish();
+  }
+  map.on('click',onPolyClick);
+  map.on('dblclick',onPolyDblClick);
+
+  // Stockage des handlers pour nettoyage
+  _polyCleanup=function(){
+    _polyActive=false;
+    if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
+    mc.removeEventListener('touchstart',onPolyTouch,{capture:true});
+    mc.removeEventListener('touchmove',onPolyTouchMove,{capture:false});
+    mc.removeEventListener('touchend',onPolyTouchEnd,{capture:false});
+    map.off('click',onPolyClick);
+    map.off('dblclick',onPolyDblClick);
+    map.dragging.enable();
+    _polyHideHint();
+    _polyMarkers.forEach(m=>map.removeLayer(m));
+    _polyLines.forEach(l=>map.removeLayer(l));
+    if(_polyPreview)map.removeLayer(_polyPreview);
+    _polyMarkers=[];_polyLines=[];_polyPreview=null;_polyPts=[];_polyLastTap=0;_polyLastTapPos=null;
+  };
+}
+let _polyCleanup=null;
+
+function _polyAddPt(latlng){
+  _polyPts.push(latlng);
+  // Marker visuel du point
+  const dot=L.circleMarker(latlng,{radius:5,color:TC.poly,fillColor:TC.poly,fillOpacity:1,weight:2,interactive:false,pane:'annotations'}).addTo(map);
+  _polyMarkers.push(dot);
+  // Mettre à jour la prévisualisation
+  _polyUpdatePreview();
+}
+
+function _polyUpdatePreview(){
+  // Supprimer l'ancien preview
+  if(_polyPreview){map.removeLayer(_polyPreview);_polyPreview=null;}
+  if(_polyPts.length<2)return;
+  const pts=_polyPts.length>=3?[..._polyPts,_polyPts[0]]:_polyPts;
+  _polyPreview=L.polyline(pts,{color:TC.poly,weight:2,dashArray:'6,4',opacity:.8,interactive:false}).addTo(map);
+}
+
+function _polyShowHint(){
+  let h=document.getElementById('poly-hint');
+  if(!h){
+    h=document.createElement('div');h.id='poly-hint';
+    h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';
+    h.innerHTML='<button onclick="_polyFinish()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button><button onclick="setTool(\'nav\')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">✕</button>';
+    document.body.appendChild(h);
+  }
+  h.style.display='flex';
+}
+function _polyHideHint(){const h=document.getElementById('poly-hint');if(h)h.style.display='none';}
+function _polyUpdateCount(){}
+
+function _polyFinish(){
+  if(!_polyActive||_polyPts.length<3){showToast('⚠ Minimum 3 points requis');return;}
+  const colFinal=TC.poly;
+  const pts=_polyPts.slice();
+  if(_polyCleanup)_polyCleanup();
+
+  const l=L.polygon(pts,{color:colFinal,fillColor:colFinal,fillOpacity:.6,weight:3,pane:'annotations'});
+  const area=L.GeometryUtil.geodesicArea(l.getLatLngs()[0]);
+  const ha=+(area/10000).toFixed(4),m2=+area.toFixed(1);
+  l._meta={type:'poly',area_m2:m2,area_ha:ha,label:'',notes:'',color:colFinal};l._isAnn=true;
+  l.bindTooltip(ha+' ha',{permanent:true,className:'stt',direction:'center'});
+  l.bindPopup(()=>polyPop(m2,ha,colFinal),{maxWidth:270});
+  l.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(l._sentinelId);this.openPopup();});
+  addAnn('poly',l);setTool('nav');
+}
+function livePoly(){
+  _polyUpdateCount();
+}
+
+// ── 10. CERCLE ──
+let rlM=null;
+let _circRightDrag=false,_circRightStart=null;
+function startCirc(){
+  drawer=new L.Draw.Circle(map,{shapeOptions:{color:TC.circ,weight:3,fillColor:TC.circ,fillOpacity:.5}});
+  drawer.enable();
+  map.on('mousemove',liveCirc);
+
+  const mc=map.getContainer();
+
+  // ── MOBILE : 1 doigt = placer/agrandir cercle, 2 doigts = pan/zoom ──
+  function circTouchStart(e){
+    if(e.touches.length>=2){
+      // 2 doigts : annuler tout dessin en cours et laisser Leaflet gérer
+      if(drawer&&drawer._startLatLng){
+        // Annuler le cercle en cours : simuler Escape
+        try{drawer.disable();drawer.enable();}catch(ex){}
+      }
+      map.dragging.enable();map.touchZoom.enable();
+      return;
+    }
+    map.dragging.disable();
+  }
+  function circTouchEnd(e){
+    if(e.touches.length===0)map.dragging.enable();
+  }
+  mc.addEventListener('touchstart',circTouchStart,{passive:true});
+  mc.addEventListener('touchend',circTouchEnd,{passive:true});
+
+  // ── DESKTOP : clic droit = déplacer la carte ──
+  function circMouseDown(e){
+    if(e.button===2){
+      e.preventDefault();e.stopPropagation();
+      _circRightDrag=true;_circRightStart={x:e.clientX,y:e.clientY};
+      // Suspendre L.Draw temporairement et activer le dragging
+      map.dragging.enable();
+      mc.style.cursor='grab';
+    }
+  }
+  function circMouseUp(e){
+    if(e.button===2&&_circRightDrag){
+      _circRightDrag=false;_circRightStart=null;
+      map.dragging.disable();
+      mc.style.cursor='';
+    }
+  }
+  mc.addEventListener('mousedown',circMouseDown,{capture:true});
+  mc.addEventListener('mouseup',circMouseUp,{capture:true});
+  mc.addEventListener('contextmenu',e=>e.preventDefault(),{capture:true});
+
+  map.once(L.Draw.Event.CREATED,e=>{
+    map.off('mousemove',liveCirc);
+    if(rlM){map.removeLayer(rlM);rlM=null;}
+    mc.removeEventListener('touchstart',circTouchStart);
+    mc.removeEventListener('touchend',circTouchEnd);
+    mc.removeEventListener('mousedown',circMouseDown,{capture:true});
+    mc.removeEventListener('mouseup',circMouseUp,{capture:true});
+    map.dragging.enable();mc.style.cursor='';
+    const colFinal=TC.circ;
+    const l=e.layer;const r=l.getRadius();
+    l.options.pane='annotations';
+    l.setStyle({color:colFinal,fillColor:colFinal,fillOpacity:.5,weight:3});
+    l._meta={type:'circ',radius:r,label:'',notes:'',color:colFinal};l._isAnn=true;
+    l.bindPopup(()=>circPop(r,colFinal),{maxWidth:290});
+    l.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(l._sentinelId);this.openPopup();});
+    addAnn('circ',l);setTool('nav');setTimeout(()=>l.openPopup(),120);
+  });
+}
+
+// ── MOBILE FIX : empêche Leaflet.Draw de capturer les touch events sur toolbar/cbar ──
+(function(){
+  function blockDrawTouch(el){
+    if(!el)return;
+    el.addEventListener('touchstart',function(e){e.stopPropagation();},{passive:false,capture:true});
+    el.addEventListener('touchend',function(e){e.stopPropagation();},{passive:false,capture:true});
+  }
+  // On attend le DOM complet
+  document.addEventListener('DOMContentLoaded',function(){
+    blockDrawTouch(document.getElementById('toolbar'));
+    blockDrawTouch(document.getElementById('cbar'));
+  });
+  // Sécurité si DOMContentLoaded déjà passé
+  if(document.readyState==='complete'||document.readyState==='interactive'){
+    setTimeout(function(){
+      blockDrawTouch(document.getElementById('toolbar'));
+      blockDrawTouch(document.getElementById('cbar'));
+    },0);
+  }
+})();
+function liveCirc(e){
+  if(!drawer||!drawer._startLatLng)return;
+  const d=drawer._startLatLng.distanceTo(e.latlng);
+  if(rlM)map.removeLayer(rlM);
+  rlM=L.marker(e.latlng,{icon:L.divIcon({className:'',html:`<div class="rlbl">⌀ ${fmtD(d)}</div>`,iconAnchor:[-8,10]}),pane:'annotations'}).addTo(map);
+}
+
+// ── 11. POINT GPS ──
+function openPtModal(){document.getElementById('pt-modal').classList.add('on');}
+function closePtModal(){document.getElementById('pt-modal').classList.remove('on');}
+let _ptVisClick=null;
+function startVisPt(){
+  closePtModal();document.getElementById('main').classList.add('cross');
+  document.querySelector('[data-t=pt]').classList.add('on');tool='pt';setLI(false);
+  _ptVisClick=e=>{document.getElementById('main').classList.remove('cross');makePt(e.latlng.lat,e.latlng.lng);};
+  map.once('click',_ptVisClick);
+}
+function openGpsMod(){closePtModal();document.getElementById('gps-modal').classList.add('on');setTimeout(()=>document.getElementById('gps-lat').focus(),100);}
+function closeGpsMod(){
+  document.getElementById('gps-modal').classList.remove('on');
+  // Réinitialiser les champs
+  document.getElementById('gps-oneline').value='';
+  document.getElementById('gps-oneline-err').style.display='none';
+}
+
+// Parsing coordonnées GPS sur une ligne : décimal ou DMS
+// Formats supportés :
+//   42.559419, 3.029096
+//   42°33'33.9"N 3°01'44.8"E  (guillemets anglais, apostrophes, ou unicode)
+function parseGpsCoordLine(raw){
+  if(!raw||!raw.trim())return null;
+  const s=raw.trim();
+  // Format décimal : deux nombres séparés par virgule ou espace
+  const decRe=/^(-?\d{1,3}(?:\.\d+)?)[,\s]+(-?\d{1,3}(?:\.\d+)?)$/;
+  const dm=s.match(decRe);
+  if(dm){
+    const la=parseFloat(dm[1]),lo=parseFloat(dm[2]);
+    if(!isNaN(la)&&!isNaN(lo)&&la>=-90&&la<=90&&lo>=-180&&lo<=180)return{lat:la,lng:lo};
+  }
+  // Format DMS : 42°33'33.9"N 3°01'44.8"E (ou avec ″ ′ ° ou D M S)
+  const dmsRe=/(\d{1,3})[°º]\s*(\d{1,2})[''′]\s*(\d{1,2}(?:\.\d+)?)["""″]?\s*([NSns])\s+(\d{1,3})[°º]\s*(\d{1,2})[''′]\s*(\d{1,2}(?:\.\d+)?)["""″]?\s*([EOeo])/;
+  const dms=s.replace(/['']/g,"'").replace(/[""]/g,'"').match(dmsRe);
+  if(dms){
+    const lat=(parseInt(dms[1])+parseInt(dms[2])/60+parseFloat(dms[3])/3600)*(/[Ss]/.test(dms[4])?-1:1);
+    const lng=(parseInt(dms[5])+parseInt(dms[6])/60+parseFloat(dms[7])/3600)*(/[Oo]/.test(dms[8])?-1:1); // O = Ouest = W
+    if(!isNaN(lat)&&!isNaN(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180)return{lat,lng};
+  }
+  return null;
+}
+
+function parseGpsOneLine(){
+  const raw=document.getElementById('gps-oneline').value;
+  const errEl=document.getElementById('gps-oneline-err');
+  if(!raw.trim()){errEl.style.display='none';return;}
+  const c=parseGpsCoordLine(raw);
+  if(c){
+    document.getElementById('gps-lat').value=c.lat.toFixed(7);
+    document.getElementById('gps-lng').value=c.lng.toFixed(7);
+    errEl.style.display='none';
+  }else{
+    document.getElementById('gps-lat').value='';
+    document.getElementById('gps-lng').value='';
+    errEl.textContent='Format non reconnu — ex: 42.559419, 3.029096 ou 42°33\'33.9"N 3°01\'44.8"E';
+    errEl.style.display='block';
+  }
+}
+
+function placePtGPS(){
+  let lat=parseFloat(document.getElementById('gps-lat').value),lng=parseFloat(document.getElementById('gps-lng').value);
+  if(isNaN(lat)||isNaN(lng)){showToast('⚠ Coordonnées invalides');return;}
+  if(Math.abs(lat)>90||Math.abs(lng)>180){const [a,b]=merc2ll(lng,lat);lat=a;lng=b;showToast('✓ EPSG:3857 converti en WGS84');}
+  if(lat<-90||lat>90||lng<-180||lng>180){showToast('⚠ Coordonnées hors plage');return;}
+  closeGpsMod();makePt(lat,lng);map.setView([lat,lng],Math.max(map.getZoom(),15));
+}
+function ptIcon(col){
+  return L.divIcon({className:'',html:`<svg width="26" height="34" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg"><path d="M13 0C5.82 0 0 5.82 0 13c0 8.67 13 21 13 21S26 21.67 26 13C26 5.82 20.18 0 13 0z" fill="${col}"/><circle cx="13" cy="13" r="5" fill="white"/></svg>`,iconSize:[26,34],iconAnchor:[13,34],popupAnchor:[0,-36]});
+}
+function qrUrl(lat,lng){return `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent('https://www.google.com/maps?q='+lat.toFixed(7)+','+lng.toFixed(7))}&format=png&margin=2`;}
+
+function makePt(lat,lng){
+  const col=TC.pt;const uid='pt'+Date.now();
+  const mk=L.marker([lat,lng],{icon:ptIcon(col),draggable:false,pane:'annotations'}).addTo(fg);
+  mk._meta={type:'pt',lat,lng,link:'',label:'',resourceName:'',resourceB64:null,resourceType:'',color:col};mk._isAnn=true;
+  mk.bindPopup(ptPop(lat,lng,uid,col),{maxWidth:305,minWidth:255});mk.openPopup();
+  mk.on('popupopen',()=>setTimeout(()=>{wirePtPop(mk,uid);},60));
+  mk.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(mk._sentinelId);this.openPopup();});
+  mk.on('dragend',()=>{const ll=mk.getLatLng();mk._meta.lat=ll.lat;mk._meta.lng=ll.lng;mk.setPopupContent(ptPop(ll.lat,ll.lng,uid,col));updateList();});
+  regAnn('pt',mk);setTool('nav');
+}
+
+// ── RESSOURCES : approche label/input dans le popup ──
+// On utilise un input hidden GLOBAL et un label dans le popup qui le pointe via for=
+// C'est la méthode la plus compatible multi-navigateur/OS
+
+function ptPop(lat,lng,uid,col){
+  const gm=`https://www.google.com/maps?q=${(+lat).toFixed(7)},${(+lng).toFixed(7)}`;
+  return `<div class="pop">
+    <div class="ptt"><span class="pdot" style="background:${col}"></span>Point GPS</div>
+    <div class="pr"><span>Latitude</span><strong>${(+lat).toFixed(7)}°</strong></div>
+    <div class="pr"><span>Longitude</span><strong>${(+lng).toFixed(7)}°</strong></div>
+    <div class="qrwrap"><img src="${qrUrl(lat,lng)}" alt="QR"/></div>
+    <div class="pl">Étiquette</div><input class="pin" type="text" placeholder="Ex: Antenne…" id="lbl-${uid}" oninput="saveMK(this,'label')"/>
+    ${colorPickerHtml()}
+    <div class="pl">Lien web (URL)</div>
+    <div style="display:flex;gap:5px;align-items:center">
+      <input class="pin" type="url" placeholder="https://…" id="lnk-${uid}" oninput="saveMK(this,'link')" style="flex:1"/>
+      <a id="lnkopen-${uid}" href="#" target="_blank" rel="noopener" onclick="openLink('${uid}');return false;" class="pb" style="flex:0;padding:0 8px;height:30px;text-decoration:none;align-items:center;display:flex" title="Ouvrir le lien">↗</a>
+    </div>
+    <div class="pl">Ressources (PDF, JPEG, PNG)</div>
+    <label for="_resInput-${uid}" class="pdfz" style="display:block;cursor:pointer">
+      <div class="pico">📎</div><div class="ptxt">Cliquer pour ajouter un ou plusieurs fichiers</div>
+    </label>
+    <input type="file" id="_resInput-${uid}" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none" onchange="handleResChange(this,'${uid}','pt')"/>
+    <div id="pfa-${uid}"></div>
+    <div class="pbr">
+      <a href="${gm}" target="_blank" class="pb suc" style="text-decoration:none">🗺 Maps</a>
+      <button class="pb" onclick="cpTxt('${(+lat).toFixed(7)},${(+lng).toFixed(7)}')">📋</button>
+      <button class="pb dan" onclick="delOpen()">🗑</button>
+    </div>
+  </div>`;
+}
+
+function openLink(uid){
+  const inp=document.getElementById('lnk-'+uid);
+  if(inp&&inp.value){window.open(inp.value,'_blank','noopener');}
+}
+
+// Input fichier global unique — évite les problèmes de popup Leaflet
+const _globalResInput=(()=>{
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.pdf,.jpg,.jpeg,.png';inp.multiple=true;inp.style.display='none';
+  document.body.appendChild(inp);return inp;
+})();
+let _globalResTarget=null;
+
+function openResInput(mk,uid,type){
+  _globalResTarget={mk,uid,type};
+  _globalResInput.value='';
+  _globalResInput.onchange=e=>{
+    const files=Array.from(e.target.files);
+    files.forEach(f=>{
+      if(f&&_globalResTarget)attachResource(_globalResTarget.mk,_globalResTarget.uid,f,_globalResTarget.type);
+    });
+  };
+  // Déclencher directement — nous sommes dans un handler click utilisateur
+  _globalResInput.click();
+}
+
+// Handler pour l'input fichier dans le popup (utilisé par label for=)
+function handleResChange(inp,uid,popType){
+  const files=Array.from(inp.files);
+  // Trouver le marker correspondant depuis la popup ouverte
+  let found=null;
+  fg.eachLayer(l=>{if(l.isPopupOpen&&l.isPopupOpen()&&l._meta)found=l;});
+  if(!found)return;
+  files.forEach(f=>attachResource(found,uid,f,popType));
+  inp.value=''; // reset pour permettre re-sélection du même fichier
+}
+
+function wirePtPop(mk,uid){
+  // Avec l'approche label/input, pas besoin de wiring JS pour l'upload
+  // Juste restaurer les valeurs et afficher les ressources existantes
+  const li=document.getElementById('lnk-'+uid);if(li&&mk._meta.link)li.value=mk._meta.link;
+  const lb=document.getElementById('lbl-'+uid);if(lb&&mk._meta.label)lb.value=mk._meta.label;
+  // Mettre à jour le lien du bouton ↗
+  const la=document.getElementById('lnkopen-'+uid);
+  if(la&&mk._meta.link)la.href=mk._meta.link;
+  if(mk._meta.resources&&mk._meta.resources.length)showAllResAttached(uid,mk,'pt');
+  else if(mk._meta.resourceName)showResAttached(uid,mk._meta.resourceName,mk._meta.resourceType,mk,'pt');
+}
+
+function showAllResAttached(uid,mk,popType){
+  const prefix=popType==='emoji'?'e':'';
+  const pfa=document.getElementById(prefix+'pfa-'+uid);
+  if(!pfa)return;
+  const resources=mk._meta.resources||[];
+  if(!resources.length){pfa.innerHTML='';return;}
+  pfa.innerHTML=resources.map((res,i)=>{
+    const isImg=res.type&&res.type.startsWith('image');const icon=isImg?'🖼':'📄';
+    return `<div class="pfat" style="margin-bottom:4px;gap:8px">
+      <span style="font-size:14px">${icon}</span>
+      <span class="pfn" style="flex:1">${res.name}</span>
+      <button onclick="openResFile(${i},'${uid}','${popType||'pt'}')" title="Voir le fichier"
+        style="font-size:16px;border:none;background:none;cursor:pointer;padding:2px 4px;color:var(--blue)">👁</button>
+      <button onclick="rmResFile(${i},'${uid}','${popType||'pt'}')" title="Supprimer"
+        style="font-size:16px;border:none;background:none;cursor:pointer;padding:2px 4px;color:var(--red)">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function openResFile(idx,uid,popType){
+  let found=null;
+  fg.eachLayer(l=>{if(l.isPopupOpen&&l.isPopupOpen()&&l._meta)found=l;});
+  if(!found)return;
+  const res=(found._meta.resources||[])[idx];if(!res||!res.b64)return;
+  // Ouvrir via un blob URL pour les PDFs (data URLs peuvent être bloqués pour PDF)
+  if(res.type==='application/pdf'||res.name.toLowerCase().endsWith('.pdf')){
+    const blob=b64toBlob(res.b64,res.type||'application/pdf');
+    const url=URL.createObjectURL(blob);
+    window.open(url,'_blank','noopener');
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+  } else {
+    // Images : ouvrir directement
+    const win=window.open('','_blank');
+    if(win){win.document.write(`<img src="${res.b64}" style="max-width:100%;height:auto"/>`);win.document.close();}
+  }
+}
+
+function b64toBlob(dataUrl,mimeType){
+  const arr=dataUrl.split(',');const data=atob(arr[1]);
+  const bytes=new Uint8Array(data.length);
+  for(let i=0;i<data.length;i++)bytes[i]=data.charCodeAt(i);
+  return new Blob([bytes],{type:mimeType});
+}
+
+function rmResFile(idx,uid,popType){
+  let found=null;
+  fg.eachLayer(l=>{if(l.isPopupOpen&&l.isPopupOpen()&&l._meta)found=l;});
+  if(!found||!found._meta.resources)return;
+  found._meta.resources.splice(idx,1);
+  showAllResAttached(uid,found,popType);updateList();
+}
+
+function attachResource(mk,uid,file,popType){
+  const r=new FileReader();r.onload=ev=>{
+    // Stocker dans un tableau de ressources
+    if(!mk._meta.resources)mk._meta.resources=[];
+    mk._meta.resources.push({name:file.name,b64:ev.target.result,type:file.type||''});
+    // Compatibilité rétro : conserver aussi les champs simples
+    mk._meta.resourceName=file.name;mk._meta.resourceB64=ev.target.result;mk._meta.resourceType=file.type||'';
+    showAllResAttached(uid,mk,popType);updateList();showToast('✓ '+file.name);
+  };r.readAsDataURL(file);
+}
+
+function showResAttached(uid,name,type,mk,popType){
+  // Compatibilité rétro — construire resources si pas encore fait
+  if(!mk._meta.resources)mk._meta.resources=name?[{name,b64:mk._meta.resourceB64||null,type:type||''}]:[];
+  showAllResAttached(uid,mk,popType||'pt');
+}
+function saveMK(inp,key){fg.eachLayer(l=>{if(l._meta&&l._meta.type==='pt'&&l.isPopupOpen&&l.isPopupOpen()){l._meta[key]=inp.value;updateList();}});}
+
+// ── 12. OUTIL EMOJI ──
+function openEmojiModal(){document.getElementById('emoji-modal').classList.add('on');}
+function closeEmojiModal(){document.getElementById('emoji-modal').classList.remove('on');selectedEmoji=null;document.querySelectorAll('.emoji-pick').forEach(x=>x.classList.remove('sel'));document.getElementById('emoji-ok-btn').disabled=true;}
+function openEmojiPlaceModal(){document.getElementById('emoji-modal').classList.remove('on');document.getElementById('emoji-place-modal').classList.add('on');}
+function closeEmojiPlaceModal(){document.getElementById('emoji-place-modal').classList.remove('on');document.getElementById('emoji-modal').classList.add('on');}
+function openEmojiGpsMod(){document.getElementById('emoji-place-modal').classList.remove('on');document.getElementById('emoji-gps-modal').classList.add('on');}
+function closeEmojiGpsMod(){document.getElementById('emoji-gps-modal').classList.remove('on');document.getElementById('egps-oneline').value='';document.getElementById('egps-oneline-err').style.display='none';}
+function parseEmojiGpsOneLine(){
+  const raw=document.getElementById('egps-oneline').value;
+  const errEl=document.getElementById('egps-oneline-err');
+  if(!raw.trim()){errEl.style.display='none';return;}
+  const c=parseGpsCoordLine(raw);
+  if(c){document.getElementById('egps-lat').value=c.lat.toFixed(7);document.getElementById('egps-lng').value=c.lng.toFixed(7);errEl.style.display='none';}
+  else{document.getElementById('egps-lat').value='';document.getElementById('egps-lng').value='';errEl.textContent='Format non reconnu';errEl.style.display='block';}
+}
+function placeEmojiGPS(){
+  const lat=parseFloat(document.getElementById('egps-lat').value),lng=parseFloat(document.getElementById('egps-lng').value);
+  if(isNaN(lat)||isNaN(lng)||lat<-90||lat>90||lng<-180||lng>180){showToast('⚠ Coordonnées invalides');return;}
+  const em=selectedEmoji,col=emojiColor;
+  closeEmojiGpsMod();
+  placeEmoji(lat,lng,em,col);map.setView([lat,lng],Math.max(map.getZoom(),15));
+}
+
+function startEmojiPlace(){
+  if(!selectedEmoji)return;
+  const em=selectedEmoji,col=emojiColor;
+  closeEmojiModal();
+  document.getElementById('emoji-place-modal').classList.remove('on');
+  document.getElementById('main').classList.add('cross');
+  document.querySelector('[data-t=emoji]').classList.add('on');
+  tool='emoji';setLI(false);
+  _emojiClick=e=>{document.getElementById('main').classList.remove('cross');placeEmoji(e.latlng.lat,e.latlng.lng,em,col);};
+  map.once('click',_emojiClick);
+}
+let _emojiClick=null;
+
+function emojiIconFn(em,col){
+  return L.divIcon({className:'',html:`<div style="background:${col};width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.25);border:2px solid white">${em}</div>`,iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-20]});
+}
+
+function placeEmoji(lat,lng,em,col){
+  const uid='em'+Date.now();
+  const mk=L.marker([lat,lng],{icon:emojiIconFn(em,col),draggable:false,pane:'annotations'}).addTo(fg);
+  mk._meta={type:'emoji',emoji:em,label:'',notes:'',phone:'',email:'',link:'',showGps:false,lat,lng,color:col,resourceName:'',resourceB64:null,resourceType:''};mk._isAnn=true;
+  mk.bindPopup(emojiPop(lat,lng,uid,em,col),{maxWidth:310,minWidth:260});mk.openPopup();
+  mk.on('popupopen',()=>setTimeout(()=>wireEmojiPop(mk,uid,lat,lng),60));
+  mk.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(mk._sentinelId);this.openPopup();});
+  mk.on('dragend',()=>{const ll=mk.getLatLng();mk._meta.lat=ll.lat;mk._meta.lng=ll.lng;updateList();});
+  regAnn('emoji',mk);setTool('nav');
+}
+
+function emojiPop(lat,lng,uid,em,col){
+  return `<div class="pop">
+    <div class="ptt"><span style="font-size:20px">${em}</span><span style="margin-left:4px;color:${col}">Point carte</span></div>
+    <div class="pl">Étiquette</div><input class="pin" type="text" placeholder="Nom court…" id="elbl-${uid}" oninput="saveEM(this,'label')"/>
+    ${colorPickerHtml()}
+    <div class="pl">Notes</div><textarea class="pin" rows="3" placeholder="Informations, contraintes, observations…" id="enote-${uid}" oninput="saveEM(this,'notes')" style="resize:vertical"></textarea>
+    <div class="pl">Téléphone</div><input class="pin" type="tel" placeholder="+33 …" id="etel-${uid}" oninput="saveEM(this,'phone')"/>
+    <div class="pl">Email</div><input class="pin" type="email" placeholder="contact@…" id="eml-${uid}" oninput="saveEM(this,'email')"/>
+    <div class="pl">Lien web</div>
+    <div style="display:flex;gap:5px;align-items:center">
+      <input class="pin" type="url" placeholder="https://…" id="elnk-${uid}" oninput="saveEM(this,'link')" style="flex:1"/>
+      <a href="#" target="_blank" rel="noopener" onclick="openELink('${uid}');return false;" class="pb" style="flex:0;padding:0 8px;height:30px;text-decoration:none;align-items:center;display:flex" title="Ouvrir le lien">↗</a>
+    </div>
+    <div class="pl">Ressources (PDF, JPEG, PNG)</div>
+    <label for="_eResInput-${uid}" class="pdfz" style="display:block;cursor:pointer">
+      <div class="pico">📎</div><div class="ptxt">Cliquer pour ajouter un ou plusieurs fichiers</div>
+    </label>
+    <input type="file" id="_eResInput-${uid}" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none" onchange="handleResChange(this,'${uid}','emoji')"/>
+    <div id="epfa-${uid}"></div>
+    <div style="display:flex;align-items:center;gap:7px;margin-top:9px">
+      <input type="checkbox" id="egps-${uid}" onchange="toggleEmojiGps('${uid}',this.checked)" style="cursor:pointer"/>
+      <label for="egps-${uid}" style="font-size:11px;cursor:pointer;color:var(--t7)">Afficher les coordonnées GPS</label>
+    </div>
+    <div class="gps-section" id="egps-sec-${uid}">
+      <div class="pr"><span>Latitude</span><strong>${(+lat).toFixed(7)}°</strong></div>
+      <div class="pr"><span>Longitude</span><strong>${(+lng).toFixed(7)}°</strong></div>
+      <div class="qrwrap"><img src="${qrUrl(lat,lng)}" alt="QR"/></div>
+      <div style="display:flex;gap:6px;margin-top:7px;align-items:center">
+        <a href="https://www.google.com/maps?q=${(+lat).toFixed(7)},${(+lng).toFixed(7)}" target="_blank" class="pb suc" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;flex:1">🗺 Google Maps</a>
+        <button class="pb" onclick="cpTxt('${(+lat).toFixed(6)}, ${(+lng).toFixed(6)}')" title="Copier les coordonnées (format Google Maps)">📋 GPS</button>
+      </div>
+    </div>
+    <div class="pbr"><button class="pb dan" onclick="delOpen()">🗑 Supprimer</button></div>
+  </div>`;
+}
+
+function openELink(uid){const inp=document.getElementById('elnk-'+uid);if(inp&&inp.value)window.open(inp.value,'_blank','noopener');}
+
+function wireEmojiPop(mk,uid,lat,lng){
+  const m=mk._meta;
+  const setv=(id,val)=>{const el=document.getElementById(id);if(el&&val!==undefined&&val!==null)el.value=val;};
+  setv('elbl-'+uid,m.label);setv('enote-'+uid,m.notes);setv('etel-'+uid,m.phone);setv('eml-'+uid,m.email);setv('elnk-'+uid,m.link);
+  const cb=document.getElementById('egps-'+uid);if(cb)cb.checked=!!m.showGps;
+  if(m.showGps){const sec=document.getElementById('egps-sec-'+uid);if(sec)sec.classList.add('open');}
+  // L'input fichier est géré via label for= directement dans le HTML — pas besoin de wiring JS
+  if(mk._meta.resources&&mk._meta.resources.length)showAllResAttached(uid,mk,'emoji');
+  else if(mk._meta.resourceName)showResAttached(uid,mk._meta.resourceName,mk._meta.resourceType,mk,'emoji');
+}
+function saveEM(inp,key){fg.eachLayer(l=>{if(l._meta&&l._meta.type==='emoji'&&l.isPopupOpen&&l.isPopupOpen()){l._meta[key]=inp.value;updateList();}});}
+function toggleEmojiGps(uid,val){
+  fg.eachLayer(l=>{if(l._meta&&l._meta.type==='emoji'&&l.isPopupOpen&&l.isPopupOpen()){l._meta.showGps=val;const sec=document.getElementById('egps-sec-'+uid);if(sec)sec.classList.toggle('open',val);}});
+}
+
+// ── 13. CRAYON FREEHAND ──
+let penOn=false,penPts=[],penL=null,penTouches=0;
+
+function startPen(){
+  penOn=false;penPts=[];
+  map.dragging.disable();map.touchZoom.enable();
+  const mc=map.getContainer();
+  mc.addEventListener('mousedown',penStart);
+  mc.addEventListener('touchstart',penTouchStart,{passive:false});
+}
+
+function stopPen(){
+  penOn=false;
+  map.dragging.enable();
+  const mc=map.getContainer();
+  mc.removeEventListener('mousedown',penStart);
+  mc.removeEventListener('touchstart',penTouchStart);
+  mc.removeEventListener('mousemove',penMove);
+  mc.removeEventListener('touchmove',penTMove);
+  mc.removeEventListener('touchend',penTEnd);
+  document.removeEventListener('mouseup',penEnd);
+  if(penL){try{map.removeLayer(penL);}catch(e){}penL=null;}
+  penPts=[];penOn=false;
+}
+
+function penTouchStart(e){
+  penTouches=e.touches.length;
+  if(penTouches>=2){if(penOn){_cancelDraw();} map.dragging.enable();return;}
+  e.preventDefault();map.dragging.disable();
+  const t=e.touches[0];const r=map.getContainer().getBoundingClientRect();
+  _startDrawing(map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top)));
+  map.getContainer().addEventListener('touchmove',penTMove,{passive:false});
+  map.getContainer().addEventListener('touchend',penTEnd);
+}
+function penTMove(e){
+  if(!penOn)return;
+  if(e.touches.length>=2){_cancelDraw();return;}
+  e.preventDefault();
+  const t=e.touches[0];const r=map.getContainer().getBoundingClientRect();
+  _addPt(map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top)));
+}
+function penTEnd(){
+  _endDraw();
+  map.getContainer().removeEventListener('touchmove',penTMove);
+  map.getContainer().removeEventListener('touchend',penTEnd);
+}
+function penStart(e){
+  if(e.button!==0)return;
+  // Enregistrer mouseup EN PREMIER — avant _startDrawing — pour ne jamais le rater
+  document.addEventListener('mouseup',penEnd,{once:true});
+  if(penOn){_endDraw();} // terminer un tracé fantôme si besoin
+  _startDrawing(map.mouseEventToLatLng(e));
+  map.getContainer().addEventListener('mousemove',penMove);
+}
+function penMove(e){
+  if(!penOn)return;
+  // Sécurité supplémentaire : si le bouton gauche n'est plus pressé, terminer
+  if(e.buttons!==undefined&&e.buttons===0){penEnd();return;}
+  _addPt(map.mouseEventToLatLng(e));
+}
+function penEnd(){
+  map.getContainer().removeEventListener('mousemove',penMove);
+  document.removeEventListener('mouseup',penEnd);
+  _endDraw();
+}
+function _cancelDraw(){
+  // Annuler un tracé en cours sans le sauvegarder
+  penOn=false;
+  if(penL){try{map.removeLayer(penL);}catch(e){}penL=null;}
+  penPts=[];
+}
+function _startDrawing(ll){penOn=true;penPts=[ll];penL=L.polyline([ll],{color:TC.pen,weight:3,opacity:.9,lineJoin:'round',lineCap:'round',pane:'annotations'}).addTo(map);}
+function _addPt(ll){if(!penOn||!penL)return;penPts.push(ll);penL.setLatLngs(penPts);}
+function _endDraw(){
+  if(!penOn||!penL){penOn=false;return;}penOn=false;
+  if(penPts.length<3){try{map.removeLayer(penL);}catch(e){}penL=null;penPts=[];return;}
+  const col=TC.pen;let dist=0;for(let i=1;i<penPts.length;i++)dist+=penPts[i-1].distanceTo(penPts[i]);
+  // Recréer penL dans le pane annotations (ne peut pas changer de pane après création)
+  map.removeLayer(penL);
+  const visPen=L.polyline(penPts,{color:col,weight:3,opacity:.9,interactive:false,pane:'annotations',lineJoin:'round',lineCap:'round'});
+  visPen._isAnn=false;visPen._penPts=penPts.map(p=>[p.lat,p.lng]);
+  fg.addLayer(visPen);
+  const pts=[...penPts];
+  const hit=L.polyline(pts,{color:'transparent',weight:24,opacity:0,interactive:true,pane:'annotations'});
+  hit._meta={type:'pen',distance:dist,label:'',notes:'',color:col};hit._isAnn=true;hit._penPts=visPen._penPts;hit._visPair=visPen;
+  hit.bindPopup(()=>linePop(dist,col,'Tracé crayon'),{maxWidth:270});
+  hit.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(hit._sentinelId);this.openPopup(ev.latlng);});
+  fg.addLayer(hit);regAnn('pen',hit);penL=null;penPts=[];
+}
+
+// ── 14. TEXTE ──
+function placeTxt(e){
+  const uid='ta'+Date.now();const col=TC.txt;
+  const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
+  const mk=L.marker(e.latlng,{icon,draggable:false,pane:'annotations'}).addTo(fg);
+  mk._meta={type:'txt',content:'',label:'',notes:'',color:col};mk._isAnn=true;
+  mk.bindPopup(txtPop('',col,uid),{maxWidth:280,minWidth:240});
+  mk.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(mk._sentinelId);this.openPopup();});
+  mk.on('popupopen',()=>setTimeout(()=>{
+    const ta=document.getElementById('ta-'+uid);
+    if(ta){
+      ta.value=mk._meta.content||''; // restaurer le contenu sauvegardé
+      ta.oninput=()=>{mk._meta.content=ta.value;updateList();};
+      ta.focus();
+    }
+    const desc=document.getElementById('tdesc-'+uid);
+    if(desc){desc.value=mk._meta.label||'';desc.oninput=()=>{mk._meta.label=desc.value;updateList();};}
+  },60));
+  mk.on('dragend',()=>updateList());
+  regAnn('txt',mk);setTool('nav');setTimeout(()=>mk.openPopup(),100);
+}
+function txtPop(content,col,uid){
+  return `<div class="pop"><div class="ptt"><span class="pdot" style="background:${col}"></span>Annotation texte</div>
+    <textarea class="pin" id="ta-${uid}" rows="4" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:12px" placeholder="Saisir votre texte…"></textarea>
+    <div class="pl">Description courte</div><input class="pin" type="text" id="tdesc-${uid}" placeholder="Résumé court…" style="margin-top:2px"/>
+    <div class="pbr"><button class="pb dan" onclick="delOpen()">🗑 Supprimer</button></div></div>`;
+}
+
+// ── 15. POPUPS GÉNÉRIQUES ──
+function linePop(dist,col,title){
+  const m=(_openLayer&&_openLayer._meta)||{};
+  const d = (m.distance !== undefined) ? m.distance : dist;
+  const lbl=m.label||''; const notes=m.notes||'';
+  return `<div class="pop"><div class="ptt"><span class="pdot" style="background:${col}"></span>${title}</div>
+    <div class="pr"><span>Distance</span><strong>${fmtD(d)}</strong></div>
+    ${colorPickerHtml()}
+    <div class="pl">Description courte</div>
+    <input class="pin" type="text" placeholder="Ex: Chemin d'accès…" value="${lbl.replace(/"/g,'&quot;')}" oninput="saveOL(this.value)"/>
+    <div class="pl">✏ Notes</div>
+    <textarea class="pin" rows="3" placeholder="Notes libres…" oninput="saveOLNotes(this.value)" style="resize:vertical;font-family:'DM Sans',sans-serif">${notes}</textarea>
+    <div class="pbr">
+      <button class="pb pri" onclick="applyPopupChanges()">✓ Appliquer</button>
+      <button class="pb dan" onclick="delOpen()">🗑</button>
+    </div></div>`;
+}
+function polyPop(m2,ha,col){
+  const m=(_openLayer&&_openLayer._meta)||{};
+  const lbl=m.label||''; const notes=m.notes||'';
+  return `<div class="pop"><div class="ptt"><span class="pdot" style="background:${col}"></span>Mesure de surface</div>
+    <div class="pr"><span>m²</span><strong>${(+m2).toLocaleString('fr-FR')}</strong></div>
+    <div class="pr"><span>Hectares</span><strong>${ha} ha</strong></div>
+    ${colorPickerHtml()}
+    <div class="pl">Description courte</div>
+    <input class="pin" type="text" placeholder="Ex: Parcelle nord…" value="${lbl.replace(/"/g,'&quot;')}" oninput="saveOL(this.value)"/>
+    <div class="pl">✏ Notes</div>
+    <textarea class="pin" rows="3" placeholder="Notes libres…" oninput="saveOLNotes(this.value)" style="resize:vertical;font-family:'DM Sans',sans-serif">${notes}</textarea>
+    <div class="pbr">
+      <button class="pb pri" onclick="applyPopupChanges()">✓ Appliquer</button>
+      <button class="pb dan" onclick="delOpen()">🗑</button>
+    </div></div>`;
+}
+function circPop(r,col){
+  const m=(_openLayer&&_openLayer._meta)||{};
+  const lbl=m.label||''; const notes=m.notes||'';
+  return `<div class="pop"><div class="ptt"><span class="pdot" style="background:${col}"></span>Mesure de rayon</div>
+    <div class="pr"><span>Rayon</span><strong>${fmtD(r)}</strong></div>
+    <div class="pr"><span>Diamètre</span><strong>${fmtD(r*2)}</strong></div>
+    <div class="pr"><span>Périmètre</span><strong>${fmtD(2*Math.PI*r)}</strong></div>
+    <div class="pl">Modifier rayon (m)</div>
+    <div style="display:flex;gap:6px;margin-top:3px"><input class="pin" type="number" id="cr-in" value="${Math.round(r)}" min="1" style="flex:1"/><button class="pb" style="flex:0;padding:0 10px;background:#059669;border-color:#059669;color:#fff" onclick="applyR()">OK</button></div>
+    ${colorPickerHtml()}
+    <div class="pl">Description courte</div>
+    <input class="pin" type="text" placeholder="Ex: Zone 500m…" value="${lbl.replace(/"/g,'&quot;')}" oninput="saveOL(this.value)"/>
+    <div class="pl">✏ Notes</div>
+    <textarea class="pin" rows="3" placeholder="Notes libres…" oninput="saveOLNotes(this.value)" style="resize:vertical;font-family:'DM Sans',sans-serif">${notes}</textarea>
+    <div class="pbr">
+      <button class="pb pri" onclick="applyPopupChanges()">✓ Appliquer</button>
+      <button class="pb dan" onclick="delOpen()">🗑</button>
+    </div></div>`;
+}
+// Changement de couleur d'une annotation existante
+function changeAnnColor(col){
+  if(!_openLayer||!_openLayer._meta)return;
+  _openLayer._meta.color=col;
+  try{
+    if(_openLayer.setStyle)_openLayer.setStyle({color:col,fillColor:col});
+    if(_openLayer._visPair&&_openLayer._visPair.setStyle)_openLayer._visPair.setStyle({color:col});
+    if(_openLayer.setIcon&&_openLayer._meta.type==='pt')_openLayer.setIcon(ptIcon(col));
+    if(_openLayer.setIcon&&_openLayer._meta.type==='txt'){
+      _openLayer.setIcon(L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]}));
+    }
+    if(_openLayer.setIcon&&_openLayer._meta.type==='emoji'){
+      _openLayer.setIcon(emojiIconFn(_openLayer._meta.emoji,col));
+    }
+  }catch(e){}
+  updateList();showToast('✓ Couleur mise à jour');
+}
+
+// Sélecteur de couleur compact pour les popups
+function colorPickerHtml(){
+  const swatches=['#dc2626','#d97706','#f59e0b','#059669','#0891b2','#2563eb','#7c3aed','#0f172a','#6b7280','#ffffff'];
+  const sw=swatches.map(c=>`<div onclick="changeAnnColor('${c}')" style="width:16px;height:16px;background:${c};border-radius:50%;cursor:pointer;border:2px solid ${c==='#ffffff'?'#e2e8f0':'transparent'};flex-shrink:0" title="${c}"></div>`).join('');
+  return `<div class="pl">🎨 Couleur</div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:3px">
+      ${sw}
+      <input type="color" onchange="changeAnnColor(this.value)" style="width:20px;height:20px;border:1px solid #e2e8f0;border-radius:50%;cursor:pointer;padding:0;background:none;overflow:hidden" title="Couleur libre"/>
+    </div>`
+}
+let _openLayer=null;
+map.on('popupopen', e=>{
+  // Trouver la couche correspondant à cette popup
+  fg.eachLayer(l=>{
+    if(l.getPopup&&l.getPopup()===e.popup) _openLayer=l;
+    if(l._visPair&&l._visPair.getPopup&&l._visPair.getPopup()===e.popup) _openLayer=l;
+  });
+});
+map.on('popupclose', ()=>{ _openLayer=null; });
+
+function saveOL(v){
+  if(_openLayer&&_openLayer._meta&&'label'in _openLayer._meta){_openLayer._meta.label=v;updateList();}
+}
+function saveOLNotes(v){
+  if(_openLayer&&_openLayer._meta){_openLayer._meta.notes=v;}
+}
+function applyPopupChanges(){
+  // Appelé par le bouton "Appliquer" dans chaque popup de mesure
+  updateList();
+  showToast('✓ Notes sauvegardées');
+}
+function applyR(){const inp=document.getElementById('cr-in');if(!inp)return;const v=parseFloat(inp.value);if(isNaN(v)||v<=0)return;fg.eachLayer(l=>{if(l instanceof L.Circle&&l.isPopupOpen()){l.setRadius(v);l._meta.radius=v;l.setPopupContent(circPop(v,l._meta.color||TC.circ));updateList();showToast('✓ Rayon : '+fmtD(v));}});}
+function delOpen(){
+  let found=null;fg.eachLayer(l=>{if(l.isPopupOpen&&l.isPopupOpen())found=l;});
+  if(!found)return;map.closePopup();
+  if(found._visPair){try{fg.removeLayer(found._visPair);map.removeLayer(found._visPair);}catch(e){}}
+  try{fg.removeLayer(found);map.removeLayer(found);}catch(e){}
+  const idx=anns.findIndex(a=>a.layer===found);if(idx!==-1)anns.splice(idx,1);
+  updateList();showToast('✓ Supprimé');
+}
+
+// ── 16. ÉDITION / SUPPRESSION ──
+const editH=new L.EditToolbar.Edit(map,{featureGroup:fg});
+const delH=new L.EditToolbar.Delete(map,{featureGroup:fg});
+
+let _penLayersHidden=[]; // couches crayon temporairement retirées pendant l'édition
+
+function toggleEdit(){
+  if(editH.enabled()){
+    editH.save();editH.disable();
+    _penLayersHidden.forEach(l=>{try{fg.addLayer(l);l._editHidden=false;}catch(e){}});
+    _penLayersHidden=[];
+    fg.eachLayer(l=>{
+      if(l._meta&&l._meta.type==='ruler'){
+        l.setStyle({color:'transparent',opacity:0,weight:24,fillOpacity:0,interactive:true});
+        if(l._path){l._path.style.pointerEvents='auto';l._path.style.cursor='';}
+        if(l._visPair){
+          l._visPair.setStyle({opacity:l._visPair._origOpacity||0.85});
+          try{l._visPair.setLatLngs(l.getLatLngs());}catch(e){}
+          try{fg.addLayer(l._visPair);}catch(e){}
+        }
+      }
+    });
+    fg.eachLayer(l=>{try{if(l.dragging)l.dragging.disable();}catch(e){}});
+    fg.eachLayer(l=>{if(l._path)l._path.style.cursor='';});
+    const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='600';
+    const op=map.getPane('overlayPane');if(op)op.style.zIndex='400';
+    document.querySelector('[data-t=edit]').classList.remove('on');
+    setLI(true);updateList();
+  }else{
+    stopAll();tool='nav';
+    _penLayersHidden=[];
+    const penVisPairs=new Set();
+    fg.eachLayer(l=>{if(l._meta&&l._meta.type==='pen'&&l._visPair)penVisPairs.add(l._visPair);});
+    fg.eachLayer(l=>{
+      const t=l._meta&&l._meta.type;
+      const isPenHit=t==='pen';
+      const isPenVis=penVisPairs.has(l)||(!l._meta&&l._penPts!==undefined);
+      if(isPenHit||isPenVis)_penLayersHidden.push(l);
+      if(t==='ruler'&&l._visPair){
+        const col=l._meta.color||TC.ruler;
+        l._visPair._origOpacity=l._visPair.options.opacity||0.85;
+        l.setStyle({color:col,opacity:0.85,weight:3,dashArray:'7,4',fillOpacity:0});
+        if(l._path)l._path.style.cursor='crosshair';
+        try{fg.removeLayer(l._visPair);}catch(e){}
+        l._visPair.setStyle({opacity:0});
+      }
+    });
+    _penLayersHidden.forEach(l=>{try{fg.removeLayer(l);l._editHidden=true;}catch(e){}});
+    fg.eachLayer(l=>{try{if(l.dragging)l.dragging.enable();}catch(e){}});
+    editH.enable();
+    const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='660';
+    const op=map.getPane('overlayPane');if(op)op.style.zIndex='700';
+    document.querySelector('[data-t=edit]').classList.add('on');
+    setLI(true);
+  }
+}
+function toggleDel(){if(delH.enabled()){delH.save();delH.disable();document.querySelector('[data-t=del]').classList.remove('on');setLI(true);updateList();}else{stopAll();tool='nav';delH.enable();document.querySelector('[data-t=del]').classList.add('on');setLI(true);}}
+map.on(L.Draw.Event.DELETED,e=>{const d=e.layers;anns=anns.filter(a=>{let k=true;d.eachLayer(l=>{if(l===a.layer)k=false;});return k;});updateList();});
+
+// ── Mise à jour des mesures après édition (déplacement de sommets) ──
+map.on(L.Draw.Event.EDITED, e=>{
+  e.layers.eachLayer(layer=>{
+    const t = layer._meta && layer._meta.type;
+    if(!t) return;
+
+    if(t === 'poly'){
+      const pts = layer.getLatLngs()[0];
+      const area = L.GeometryUtil.geodesicArea(pts);
+      const ha = +(area/10000).toFixed(4);
+      const m2 = +area.toFixed(1);
+      layer._meta.area_m2 = m2;
+      layer._meta.area_ha = ha;
+      const col = layer._meta.color || TC.poly;
+      layer.bindPopup(()=>polyPop(m2, ha, col), {maxWidth:270});
+      layer.setTooltipContent(ha + ' ha');
+
+    } else if(t === 'circ'){
+      const r = layer.getRadius();
+      layer._meta.radius = r;
+      const col = layer._meta.color || TC.circ;
+      layer.bindPopup(()=>circPop(r, col), {maxWidth:290});
+
+    } else if(t === 'ruler'){
+      const pts = layer.getLatLngs();
+      let total = 0;
+      for(let i = 1; i < pts.length; i++) total += pts[i-1].distanceTo(pts[i]);
+      layer._meta.distance = total;
+      if(layer._visPair) layer._visPair.setLatLngs(pts);
+    }
+  });
+  updateList();
+});
+
+// ── 17. ANNOTATIONS ──
+function regAnn(type,layer){
+  fg.addLayer(layer);
+  // Remonter la nouvelle couche au-dessus des autres dans le SVG
+  try{if(layer.bringToFront)layer.bringToFront();}catch(e){}
+  if(layer._visPair)try{layer._visPair.bringToFront();}catch(e){}
+  const id=++cnt;layer._sentinelId=id;if(!layer._meta)layer._meta={type};
+  storeOrigFO(layer);
+  anns.push({id,type,layer});updateList();
+}
+function addAnn(type,layer){regAnn(type,layer);}
+
+function highlightAnn(id){
+  document.querySelectorAll('.ali').forEach(el=>el.classList.remove('ali-active'));
+  const el=document.querySelector(`.ali[data-id="${id}"]`);
+  if(el){el.classList.add('ali-active');el.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+function updateList(){
+  // Sync: ne garder dans anns que les couches encore présentes dans fg OU masquées volontairement OU temporairement cachées par le mode édition
+  const act=new Set();fg.eachLayer(l=>{if(l._sentinelId)act.add(l._sentinelId);});
+  anns=anns.filter(a=>act.has(a.id)||(a.layer._meta&&a.layer._meta._visible===false)||a.layer._editHidden);
+  document.getElementById('so').textContent=anns.length;
+  document.getElementById('ac').textContent=anns.length?`(${anns.length})`:'';
+  const delAllBtn=document.getElementById('del-all-ann');if(delAllBtn)delAllBtn.style.display=anns.length?'':'none';
+  renderAnnList();
+}
+
+function renderAnnList(){
+  const list=document.getElementById('ann-list');
+  if(!anns.length){list.innerHTML='<div class="ae">Aucune annotation</div>';return;}
+  const filterVal=document.getElementById('ann-filter').value;
+  const filtered=filterVal==='all'?anns:anns.filter(a=>a.type===filterVal);
+  list.innerHTML='';
+  const LBL={ruler:'Règle',poly:'Polygone',circ:'Cercle',pt:'Point GPS',emoji:'Emoji',pen:'Crayon',txt:'Texte',geojson:'GeoJSON'};
+  const ICO={ruler:'📐',poly:'⬟',circ:'◎',pt:'📍',emoji:'🏷',pen:'✏',txt:'T',geojson:'🌐'};
+  const DC={ruler:'#0891b2',poly:'#d97706',circ:'#059669',pt:'#dc2626',emoji:'#f59e0b',pen:'#7c3aed',txt:'#0f172a',geojson:'#475569'};
+  ;[...filtered].reverse().forEach(({id,type,layer})=>{
+    const m=layer._meta||{};const col=m.color||DC[type]||'#94a3b8';
+    const vis=m._visible!==false;
+    let sub=m.label||'';
+    if(!sub){if(type==='ruler'&&m.distance)sub=fmtD(m.distance);else if(type==='poly'&&m.area_ha)sub=m.area_ha+' ha';else if(type==='circ'&&m.radius)sub=fmtD(m.radius)+' rayon';else if(type==='pen'&&m.distance)sub=fmtD(m.distance)+' tracé';else if(type==='txt'&&m.content)sub=(m.content||'').substring(0,28);else if(type==='pt')sub=m.label||(m.lat?(+m.lat).toFixed(5)+', '+(+m.lng).toFixed(5):'');else if(type==='emoji')sub=(m.emoji||'')+' '+(m.label||'');}
+    const op=Math.round((m._opacity!==undefined?m._opacity:1)*100);
+    const emojiIcon=type==='emoji'?(m.emoji||'🏷'):(ICO[type]||'○');
+    const el=document.createElement('div');el.className='ali';el.dataset.id=id;el.style.opacity=vis?'1':'0.45';
+    el.innerHTML=`
+      <div class="abar" style="background:${col}"></div>
+      <div class="ainf">
+        <div class="an">${emojiIcon} ${LBL[type]||type} #${id}</div>
+        <div class="am">${sub}</div>
+        <div class="ann-op">
+          <input type="range" min="0" max="100" value="${op}" style="accent-color:${col}" oninput="setAO(${id},this.value/100)" onclick="event.stopPropagation()"/>
+          <span id="aop-${id}">${op}%</span>
+        </div>
+      </div>
+      <div class="abtns">
+        <button class="aeye" onclick="toggleAV(${id},event)" title="${vis?'Masquer':'Afficher'}">${vis?'👁':'🙈'}</button>
+        <button class="adel" onclick="rmAnn(${id},event)" title="Supprimer">✕</button>
+      </div>`;
+    el.addEventListener('click',ev=>{
+      if(ev.target.classList.contains('adel')||ev.target.classList.contains('aeye')||ev.target.tagName==='INPUT')return;
+      if(!vis){showToast('ℹ Annotation masquée — cliquez 👁 pour l\'afficher');return;}
+      try{if(layer.getBounds){const b=layer.getBounds();map.fitBounds(b,{padding:[60,60],maxZoom:Math.min(map.getZoom()+2,18)});}else if(layer.getLatLng)map.panTo(layer.getLatLng());}catch(e){}
+      setLI(true);if(layer.openPopup)setTimeout(()=>layer.openPopup(),200);
+      highlightAnn(id);
+    });
+    list.appendChild(el);
+  });
+}
+
+function toggleAV(id,ev){
+  if(ev)ev.stopPropagation();
+  const a=anns.find(a=>a.id===id);if(!a)return;
+  const m=a.layer._meta=a.layer._meta||{};
+  // _visible: undefined or true = visible, false = hidden
+  const currentlyVisible=(m._visible!==false);
+  m._visible=!currentlyVisible; // toggle
+  const nowVisible=m._visible;
+  if(nowVisible){
+    // Remettre dans fg sans supprimer de anns
+    try{fg.addLayer(a.layer);}catch(e){}
+    if(a.layer._visPair)try{fg.addLayer(a.layer._visPair);}catch(e){}
+  }else{
+    // Retirer de fg sans toucher à anns
+    try{fg.removeLayer(a.layer);}catch(e){}
+    if(a.layer._visPair)try{fg.removeLayer(a.layer._visPair);}catch(e){}
+  }
+  // Ne PAS appeler updateList() avec une synchro qui filtre sur fg — forcer le rendu sans filtrage
+  updateListNoSync();
+}
+
+// updateList sans re-sync fg (pour éviter de perdre les couches masquées)
+function updateListNoSync(){
+  // Reconstruire anns depuis la liste connue (pas fg)
+  document.getElementById('so').textContent=anns.length;
+  document.getElementById('ac').textContent=anns.length?`(${anns.length})`:'';
+  const delAllBtn=document.getElementById('del-all-ann');if(delAllBtn)delAllBtn.style.display=anns.length?'':'none';
+  renderAnnList();
+}
+function setAO(id,val){
+  const a=anns.find(a=>a.id===id);if(!a)return;
+  a.layer._meta._opacity=val;
+  try{
+    if(a.layer.setOpacity){
+      // Markers (pt, emoji, txt) : setOpacity est propre, ne touche pas au stroke
+      a.layer.setOpacity(val);
+    }else if(a.layer.setStyle){
+      // Shapes vectorielles : on DOIT réinclure weight pour éviter la réinitialisation Leaflet
+      const w=a.layer.options.weight||3;
+      const origFO=a.layer._meta._origFillOpacity!==undefined?a.layer._meta._origFillOpacity:a.layer.options.fillOpacity||0.5;
+      a.layer.setStyle({opacity:val,fillOpacity:origFO*val,weight:w});
+    }
+    if(a.layer._visPair){
+      const w2=a.layer._visPair.options.weight||3;
+      a.layer._visPair.setStyle({opacity:val,weight:w2});
+    }
+  }catch(e){}
+  const lbl=document.getElementById('aop-'+id);if(lbl)lbl.textContent=Math.round(val*100)+'%';
+}
+function storeOrigFO(layer){
+  if(layer&&layer.options&&layer._meta&&layer._meta._origFillOpacity===undefined){
+    layer._meta._origFillOpacity=layer.options.fillOpacity||0;
+  }
+}
+function rmAnn(id,ev){
+  if(ev)ev.stopPropagation();const idx=anns.findIndex(a=>a.id===id);if(idx===-1)return;
+  const l=anns[idx].layer;
+  if(l._visPair){try{fg.removeLayer(l._visPair);map.removeLayer(l._visPair);}catch(e){}}
+  try{fg.removeLayer(l);map.removeLayer(l);}catch(e){}
+  anns.splice(idx,1);updateList();
+}
+function openDelAllModal(){document.getElementById('del-all-modal').classList.add('on');}
+function closeDelAllModal(){document.getElementById('del-all-modal').classList.remove('on');}
+function confirmDelAll(){closeDelAllModal();[...anns].forEach(({id})=>rmAnn(id));showToast('✓ Annotations supprimées');}
+
+// Afficher/masquer toutes les annotations d'un coup
+let _allHidden=false;
+function toggleAllAnn(){
+  _allHidden=!_allHidden;
+  anns.forEach(a=>{
+    a.layer._meta._visible=!_allHidden;
+    if(!_allHidden){
+      try{fg.addLayer(a.layer);}catch(e){}
+      if(a.layer._visPair)try{fg.addLayer(a.layer._visPair);}catch(e){}
+    }else{
+      try{fg.removeLayer(a.layer);}catch(e){}
+      if(a.layer._visPair)try{fg.removeLayer(a.layer._visPair);}catch(e){}
+    }
+  });
+  const btn=document.getElementById('ann-eye-all');
+  if(btn){
+    btn.textContent=_allHidden?'🙈':'👁';
+    btn.title=_allHidden?'Afficher toutes les annotations':'Masquer toutes les annotations';
+    btn.style.color=_allHidden?'var(--t3)':'var(--t5)';
+  }
+  updateListNoSync();
+  showToast(_allHidden?'🙈 Annotations masquées':'👁 Annotations affichées');
+}
+
+// ── 18. IMPORT CARTE ──
+function mdo(e){e.preventDefault();document.getElementById('map-drop').classList.add('ov');}
+function mdl(){document.getElementById('map-drop').classList.remove('ov');}
+function mdd(e){e.preventDefault();document.getElementById('map-drop').classList.remove('ov');processMapFiles(e.dataTransfer.files);}
+function handleMapFiles(e){processMapFiles(e.target.files);e.target.value='';}
+
+function processMapFiles(files){
+  const arr=Array.from(files);
+  const imgF=arr.find(f=>/\.(jpg|jpeg|png)$/i.test(f.name));
+  const tifF=arr.find(f=>/\.(tif|tiff)$/i.test(f.name));
+  const jgwF=arr.find(f=>/\.jgw$/i.test(f.name));
+  const src=imgF||tifF;
+  if(!src){showToast('⚠ Aucun fichier image');return;}
+  if(tifF&&tifF.size>80*1024*1024){showToast('⚠ GeoTIFF >80 Mo — Exporter en JPEG depuis QGIS',5000);return;}
+  if(!projName)projName=src.name.replace(/\.[^.]+$/,'');
+  if(jgwF)readJGW(jgwF,src);else loadImgNoGeo(src);
+}
+
+function merc2ll(mx,my){
+  const lng=mx/20037508.342*180;
+  let lat=my/20037508.342*180;
+  lat=180/Math.PI*(2*Math.atan(Math.exp(lat*Math.PI/180))-Math.PI/2);
+  return[lat,lng];
+}
+
+function readJGW(jgwFile,imgFile){
+  const r=new FileReader();r.onload=ev=>{
+    const lines=ev.target.result.trim().split(/\r?\n/).map(l=>parseFloat(l.trim()));
+    if(lines.length<6||lines.some(isNaN)){showToast('⚠ JGW invalide');loadImgNoGeo(imgFile);return;}
+    const[A,,,E,Cx,Fy]=lines;
+    readB64(imgFile,url=>{
+      const img=new Image();img.onload=()=>{
+        const w=img.naturalWidth,h=img.naturalHeight;
+        const isMerc=Math.abs(Cx)>180||Math.abs(Fy)>90;
+        let bounds;
+        if(isMerc){
+          const wm=Cx-A/2,nm=Fy-E/2,em=wm+A*w,sm=nm+E*h;
+          const[sl,wl]=merc2ll(wm,sm);const[nl,el]=merc2ll(em,nm);
+          bounds=[[sl,wl],[nl,el]];showToast('✓ JGW EPSG:3857 → WGS84');
+        }else{
+          const west=Cx-A/2,north=Fy-E/2,east=west+A*w,south=north+E*h;
+          bounds=[[south,west],[north,east]];
+        }
+        addMapLayer(url,bounds,imgFile,ev.target.result,jgwFile.name,true);
+      };img.onerror=()=>showToast('⚠ Impossible de lire l\'image');img.src=url;
+    });
+  };r.readAsText(jgwFile);
+}
+
+function loadImgNoGeo(imgFile){
+  readB64(imgFile,url=>{
+    const img=new Image();img.onload=()=>{
+      const w=img.naturalWidth,h=img.naturalHeight,ratio=w/h;
+      const c=map.getCenter(),vb=map.getBounds();
+      const vh=vb.getNorth()-vb.getSouth(),imgH=vh*.8;
+      const lr=Math.cos(c.lat*Math.PI/180)||1,imgW=imgH*ratio/lr;
+      addMapLayer(url,[[c.lat-imgH/2,c.lng-imgW/2],[c.lat+imgH/2,c.lng+imgW/2]],imgFile,null,null,false);
+    };img.src=url;
+  });
+}
+function readB64(file,cb){const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsDataURL(file);}
+
+function addMapLayer(b64,bounds,imgFile,jgwText,jgwName,georef){
+  const ol=L.imageOverlay(b64,bounds,{opacity:1,interactive:false,pane:'mapImages',zIndex:200+mapLayers.length});
+  ol.addTo(map);fg.bringToFront();
+  const id=++cnt;
+  mapLayers.push({id,name:imgFile.name,layer:ol,imgB64:b64,jgwText,imgName:imgFile.name,jgwName,georef,visible:true,bounds});
+  renderML();if(georef)map.fitBounds(bounds,{padding:[20,20]});
+  showToast(`✓ ${imgFile.name} ${georef?'géoréférencé':'chargé'}`);
+  saveSession();
+}
+
+// ── 19. FONDS DE CARTE TOGGLE / RENDU ──
+function toggleTile(key){
+  const btn=document.getElementById('tb-'+key);
+  if(activeTiles[key]){map.removeLayer(activeTiles[key].layer);delete activeTiles[key];if(btn)btn.classList.remove('active');renderML();return;}
+  const def=TILE_DEFS[key];if(!def||!def.url)return;
+  const layer=L.tileLayer(def.url,{...def.opts,zIndex:nextBaseZ()});
+  layer.addTo(map);fg.bringToFront();
+  activeTiles[key]={layer,def,key};if(btn)btn.classList.add('active');renderML();
+  showToast(`✓ ${def.icon} ${def.label}`);
+}
+
+function renderML(){
+  const c=document.getElementById('map-layers');c.innerHTML='';
+
+  // ── Registre unifié : tiles rapides + couches IGN, triés par zIndex décroissant
+  const all=[];
+  Object.entries(activeTiles).forEach(([key,{def,layer}])=>{
+    all.push({key,type:'tile',label:def.label,icon:def.icon,layer,zIndex:layer.options.zIndex||100});
+  });
+  Object.entries(ignActiveLayers).forEach(([id,{layer,ldef}])=>{
+    all.push({key:id,type:'ign',label:ldef.name,icon:'🇫🇷',layer,ldef,zIndex:layer.options.zIndex||100});
+  });
+  all.sort((a,b)=>b.zIndex-a.zIndex);
+  // Réassigner des zIndex propres et consécutifs
+  all.forEach((entry,idx)=>{
+    const newZ=100+(all.length-1-idx);
+    entry.layer.setZIndex(newZ);
+    entry.layer.options.zIndex=newZ;
+    entry.zIndex=newZ;
+  });
+
+  // Rendre chaque entrée
+  all.forEach((entry)=>{
+    const op=Math.round((entry.layer.options.opacity??1)*100);
+    const d=document.createElement('div');d.className='mli tile';
+    if(entry.type==='ign')d.style.background='#f0f4ff';
+    let actions='';
+    if(entry.type==='tile'){
+      actions=`<button class="mld" onclick="toggleTile('${entry.key}')">✕</button>`;
+    } else {
+      actions=`<button class="mlv" onclick="openIgnUrlEdit(ignActiveLayers['${entry.key}']&&ignActiveLayers['${entry.key}'].ldef)" title="URL" style="font-size:11px">⚙</button>
+               <button class="mld" onclick="removeIgnLayerById('${entry.key}')">✕</button>`;
+    }
+    const opId=entry.type==='tile'?`topv-${entry.key}`:`ign-opv-${entry.key}`;
+    const opFn=entry.type==='tile'?`setTO('${entry.key}',this.value/100)`:`setIgnTO('${entry.key}',this.value/100)`;
+    d.innerHTML=`<div class="mlt"><span style="font-size:12px">${entry.icon}</span><span class="mln">${entry.label}</span>
+      <div class="mord">
+        <button onclick="moveBaseLayer('${entry.key}','${entry.type}',1)" title="Monter">▲</button>
+        <button onclick="moveBaseLayer('${entry.key}','${entry.type}',-1)" title="Descendre">▼</button>
+      </div>${actions}</div>
+      <div class="mlo"><label>Opacité</label><input type="range" min="0" max="100" value="${op}" oninput="${opFn}"/><span class="opv" id="${opId}">${op}%</span></div>`;
+    c.appendChild(d);
+  });
+
+  // ── Cartes uploadées (orthophotos locales) — section séparée
+  ;[...mapLayers].reverse().forEach(ml=>{
+    const op=Math.round(ml.layer.options.opacity*100);
+    const badge=ml.georef?`<span style="font-size:8px;font-weight:600;color:#059669;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1px 5px">📐 géoréf.</span>`:`<span style="font-size:8px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:1px 5px">⚠ sans géoréf.</span>`;
+    const d=document.createElement('div');d.className='mli';
+    d.innerHTML=`<div class="mlt"><span style="font-size:12px">🗺</span><span class="mln" title="${ml.name}">${ml.name}</span>
+      <div class="mord">
+        <button onclick="moveML(${ml.id},1)" title="Monter">▲</button>
+        <button onclick="moveML(${ml.id},-1)" title="Descendre">▼</button>
+      </div>
+      <button class="mlv" onclick="mlT(${ml.id})">${ml.visible?'👁':'🙈'}</button>
+      <button class="mld" onclick="mlR(${ml.id})">✕</button></div>
+      <div style="margin:3px 0 2px">${badge}</div>
+      <div class="mlo"><label>Opacité</label><input type="range" min="0" max="100" value="${op}" oninput="mlO(${ml.id},this.value/100,this)"/><span class="opv" id="opv-${ml.id}">${op}%</span></div>`;
+    c.appendChild(d);
+  });
+}
+function setTO(key,v){if(!activeTiles[key])return;activeTiles[key].layer.setOpacity(v);const el=document.getElementById('topv-'+key);if(el)el.textContent=Math.round(v*100)+'%';}
+function setIgnTO(id,v){if(!ignActiveLayers[id])return;ignActiveLayers[id].layer.setOpacity(v);const el=document.getElementById('ign-opv-'+id);if(el)el.textContent=Math.round(v*100)+'%';}
+function removeIgnLayerById(id){if(!ignActiveLayers[id])return;map.removeLayer(ignActiveLayers[id].layer);delete ignActiveLayers[id];renderML();const modal=document.getElementById('ign-modal');if(modal&&modal.classList.contains('on'))openIgnPanel();showToast('✕ Couche IGN retirée');}
+
+// Déplacement unifié tile + IGN
+function moveBaseLayer(key,type,dir){
+  const all=[];
+  Object.entries(activeTiles).forEach(([k,{def,layer}])=>all.push({key:k,type:'tile',layer,zIndex:layer.options.zIndex||100}));
+  Object.entries(ignActiveLayers).forEach(([id,{layer}])=>all.push({key:id,type:'ign',layer,zIndex:layer.options.zIndex||100}));
+  all.sort((a,b)=>b.zIndex-a.zIndex);
+  const i=all.findIndex(e=>e.key===key&&e.type===type);
+  if(i===-1)return;
+  const ni=i-dir; // dir=1 → monter dans liste → échanger avec l'entrée au-dessus (idx-1)
+  if(ni<0||ni>=all.length)return;
+  [all[i],all[ni]]=[all[ni],all[i]];
+  all.forEach((entry,idx)=>{
+    const newZ=100+(all.length-1-idx);
+    entry.layer.setZIndex(newZ);
+    entry.layer.options.zIndex=newZ;
+  });
+  fg.bringToFront();renderML();
+}
+
+// moveTile conservé pour compatibilité (redirige vers moveBaseLayer)
+function moveTile(key,dir){moveBaseLayer(key,'tile',dir);}
+
+// moveML : dir=1 → monter (zIndex augmente = au-dessus sur la carte), dir=-1 → descendre
+function moveML(id,dir){
+  const i=mapLayers.findIndex(m=>m.id===id);if(i===-1)return;
+  const ni=i+dir;if(ni<0||ni>=mapLayers.length)return;
+  [mapLayers[i],mapLayers[ni]]=[mapLayers[ni],mapLayers[i]];
+  mapLayers.forEach((ml,idx)=>ml.layer.setZIndex(200+idx)); // index 0 = plus bas
+  fg.bringToFront();renderML();
+}
+function mlT(id){const ml=mapLayers.find(m=>m.id===id);if(!ml)return;ml.visible=!ml.visible;ml.visible?map.addLayer(ml.layer):map.removeLayer(ml.layer);renderML();}
+function mlO(id,v,inp){const ml=mapLayers.find(m=>m.id===id);if(!ml)return;ml.layer.setOpacity(v);document.getElementById('opv-'+id).textContent=Math.round(v*100)+'%';}
+function mlR(id){const idx=mapLayers.findIndex(m=>m.id===id);if(idx===-1)return;map.removeLayer(mapLayers[idx].layer);mapLayers.splice(idx,1);renderML();}
+
+// ── 20. SESSION ──
+function saveSession(){try{const d={maps:mapLayers.map(ml=>({imgB64:ml.imgB64,jgwText:ml.jgwText,imgName:ml.imgName,jgwName:ml.jgwName,georef:ml.georef,bounds:ml.bounds}))};sessionStorage.setItem('sentinel_maps',JSON.stringify(d));}catch(e){}}
+function restoreSession(){try{const raw=sessionStorage.getItem('sentinel_maps');if(!raw)return;const d=JSON.parse(raw);(d.maps||[]).forEach(m=>{if(!m.imgB64||!m.bounds)return;const ol=L.imageOverlay(m.imgB64,m.bounds,{opacity:1,interactive:false,pane:'mapImages',zIndex:200+mapLayers.length});ol.addTo(map);const id=++cnt;mapLayers.push({id,name:m.imgName,layer:ol,imgB64:m.imgB64,jgwText:m.jgwText,imgName:m.imgName,jgwName:m.jgwName,georef:m.georef,visible:true,bounds:m.bounds});});renderML();if(mapLayers.length)map.fitBounds(mapLayers[0].bounds,{padding:[20,20]});}catch(e){}}
+
+// ── 21. EXPORT ──
+function exportProject(){openNameModal();}
+function openNameModal(){document.getElementById('name-in').value=projName||'';document.getElementById('name-modal').classList.add('on');setTimeout(()=>document.getElementById('name-in').select(),100);}
+function closeNameModal(){document.getElementById('name-modal').classList.remove('on');}
+function doExport(){
+  const nom=document.getElementById('name-in').value.trim()||projName||'Sentinel';
+  projName=nom;document.getElementById('proj-label').textContent=projName;closeNameModal();
+  const safe='Sentinel_'+nom.replace(/[^a-zA-Z0-9_\-]/g,'_');
+  const project={version:'1.0',name:nom,exported:new Date().toISOString(),maps:[],annotations:[]};
+  mapLayers.forEach(ml=>project.maps.push({imgName:ml.imgName,jgwName:ml.jgwName,jgwContent:ml.jgwText,imgB64:ml.imgB64,bounds:ml.bounds,georef:ml.georef}));
+  fg.eachLayer(layer=>{
+    const m=layer._meta||{};if(!m.type)return;
+    // notes est commun à tous les types — on l'inclut systématiquement dans la base
+    const obj={type:m.type,color:m.color||'',label:m.label||'',notes:m.notes||''};
+    if(layer instanceof L.Marker){const ll=layer.getLatLng();obj.latlng=[ll.lat,ll.lng];
+      if(m.type==='txt')obj.content=m.content||'';
+      else if(m.type==='pt'){obj.lat=ll.lat;obj.lng=ll.lng;obj.link=m.link||'';obj.resources=m.resources||[];obj.resourceName=m.resourceName||'';obj.resourceB64=m.resourceB64||null;obj.resourceType=m.resourceType||'';}
+      else if(m.type==='emoji'){obj.lat=ll.lat;obj.lng=ll.lng;obj.emoji=m.emoji;obj.phone=m.phone||'';obj.email=m.email||'';obj.link=m.link||'';obj.showGps=!!m.showGps;obj.resources=m.resources||[];obj.resourceName=m.resourceName||'';obj.resourceB64=m.resourceB64||null;obj.resourceType=m.resourceType||'';}
+    }else if(layer instanceof L.Circle){const c=layer.getLatLng();obj.center=[c.lat,c.lng];obj.radius=layer.getRadius();}
+    else if(layer instanceof L.Polygon){obj.latlngs=layer.getLatLngs()[0].map(p=>[p.lat,p.lng]);obj.area_m2=m.area_m2;obj.area_ha=m.area_ha;}
+    else if(layer instanceof L.Polyline){obj.latlngs=layer.getLatLngs().map(p=>[p.lat,p.lng]);obj.distance=m.distance;if(layer._penPts)obj.penPts=layer._penPts;}
+    project.annotations.push(obj);
+  });
+  const blob=new Blob([JSON.stringify(project,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safe+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  showToast(`✓ ${safe}.json exporté`);
+}
+
+// ── 22. CHARGEMENT ──
+function loadProject(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{restoreProject(JSON.parse(e.target.result),f.name);}catch(err){showToast('⚠ JSON invalide');console.error(err);}};r.readAsText(f);ev.target.value='';}
+
+function restoreProject(data,fname){
+  fg.clearLayers();anns=[];mapLayers.forEach(ml=>map.removeLayer(ml.layer));mapLayers=[];
+  Object.values(activeTiles).forEach(t=>map.removeLayer(t.layer));activeTiles={};
+  document.querySelectorAll('.tile-btn').forEach(b=>b.classList.remove('active'));
+  projName=data.name||fname.replace(/\.[^.]+$/,'');document.getElementById('proj-label').textContent=projName;
+  (data.maps||[]).forEach(m=>{
+    if(!m.imgB64||!m.bounds)return;
+    const ol=L.imageOverlay(m.imgB64,m.bounds,{opacity:1,interactive:false,pane:'mapImages',zIndex:200+mapLayers.length});
+    ol.addTo(map);const id=++cnt;
+    mapLayers.push({id,name:m.imgName,layer:ol,imgB64:m.imgB64,jgwText:m.jgwContent,imgName:m.imgName,jgwName:m.jgwName,georef:m.georef,visible:true,bounds:m.bounds});
+  });
+  renderML();fg.bringToFront();
+
+  (data.annotations||[]).forEach(obj=>{
+    const col=obj.color||'#2563eb';let layer=null;
+    switch(obj.type){
+      case 'ruler':case 'pen':{
+        const pts=obj.penPts||obj.latlngs||[];if(pts.length<2)break;
+        // FORCER pane:'annotations' sur les deux couches
+        const vis=L.polyline(pts,{color:col,weight:3,dashArray:obj.type==='ruler'?'7,4':null,opacity:.85,interactive:false,pane:'annotations'});
+        const hit=L.polyline(pts,{color:'transparent',weight:24,opacity:0,interactive:true,pane:'annotations'});
+        const dist=obj.distance||0;
+        hit._meta={type:obj.type,distance:dist,label:obj.label||'',notes:obj.notes||'',color:col};hit._isAnn=true;
+        if(obj.penPts)hit._penPts=obj.penPts;hit._visPair=vis;
+        hit.bindPopup(()=>linePop(dist,col,obj.type==='ruler'?'Mesure de distance':'Tracé crayon'),{maxWidth:270});
+        hit.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(hit._sentinelId);this.openPopup(ev.latlng);});
+        fg.addLayer(vis);layer=hit;break;
+      }
+      case 'poly':{
+        // FORCER pane:'annotations'
+        layer=L.polygon(obj.latlngs,{color:col,weight:3,fillColor:col,fillOpacity:.6,pane:'annotations'});
+        layer._meta={type:'poly',area_m2:obj.area_m2,area_ha:obj.area_ha,label:obj.label||'',notes:obj.notes||'',color:col};layer._isAnn=true;
+        layer.bindTooltip((obj.area_ha||0)+' ha',{permanent:true,className:'stt',direction:'center',pane:'tooltipPane'});
+        layer.bindPopup(()=>polyPop(obj.area_m2,obj.area_ha,col),{maxWidth:270});
+        layer.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(layer._sentinelId);this.openPopup();});break;
+      }
+      case 'circ':{
+        // FORCER pane:'annotations'
+        layer=L.circle(obj.center,{radius:obj.radius,color:col,weight:3,fillColor:col,fillOpacity:.5,pane:'annotations'});
+        layer._meta={type:'circ',radius:obj.radius,label:obj.label||'',notes:obj.notes||'',color:col};layer._isAnn=true;
+        layer.bindPopup(()=>circPop(obj.radius,col),{maxWidth:290});
+        layer.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(layer._sentinelId);this.openPopup();});break;
+      }
+      case 'pt':{
+        const uid='ptr'+Date.now()+Math.random().toString(36).slice(2);
+        const ll=obj.latlng||[obj.lat,obj.lng];
+        layer=L.marker(ll,{icon:ptIcon(col),draggable:false,pane:'annotations'});
+        const resources=obj.resources||(obj.resourceName?[{name:obj.resourceName,b64:obj.resourceB64||null,type:obj.resourceType||''}]:[]);
+        layer._meta={type:'pt',lat:ll[0],lng:ll[1],link:obj.link||'',label:obj.label||'',resources,resourceName:obj.resourceName||'',resourceB64:obj.resourceB64||null,resourceType:obj.resourceType||'',color:col};layer._isAnn=true;
+        layer.bindPopup(()=>ptPop(ll[0],ll[1],uid,col),{maxWidth:305,minWidth:255});
+        layer.on('popupopen',()=>setTimeout(()=>wirePtPop(layer,uid),60));
+        layer.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(layer._sentinelId);this.openPopup();});
+        layer.on('dragend',()=>{const l2=layer.getLatLng();layer._meta.lat=l2.lat;layer._meta.lng=l2.lng;updateList();});break;
+      }
+      case 'emoji':{
+        const uid='emr'+Date.now()+Math.random().toString(36).slice(2);
+        const ll=obj.latlng||[obj.lat,obj.lng];const em=obj.emoji||'🎯';
+        layer=L.marker(ll,{icon:emojiIconFn(em,col),draggable:false,pane:'annotations'});
+        const resources=obj.resources||(obj.resourceName?[{name:obj.resourceName,b64:obj.resourceB64||null,type:obj.resourceType||''}]:[]);
+        layer._meta={type:'emoji',emoji:em,label:obj.label||'',notes:obj.notes||'',phone:obj.phone||'',email:obj.email||'',link:obj.link||'',showGps:!!obj.showGps,lat:ll[0],lng:ll[1],color:col,resources,resourceName:obj.resourceName||'',resourceB64:obj.resourceB64||null,resourceType:obj.resourceType||''};layer._isAnn=true;
+        layer.bindPopup(()=>emojiPop(ll[0],ll[1],uid,em,col),{maxWidth:310,minWidth:260});
+        layer.on('popupopen',()=>setTimeout(()=>wireEmojiPop(layer,uid,ll[0],ll[1]),60));
+        layer.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(layer._sentinelId);this.openPopup();});
+        layer.on('dragend',()=>{const l2=layer.getLatLng();layer._meta.lat=l2.lat;layer._meta.lng=l2.lng;updateList();});break;
+      }
+      case 'txt':{
+        const uid='tar'+Date.now()+Math.random().toString(36).slice(2);
+        const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
+        layer=L.marker(obj.latlng,{icon,draggable:false,pane:'annotations'});
+        layer._meta={type:'txt',content:obj.content||'',label:obj.label||'',notes:obj.notes||'',color:col};layer._isAnn=true;
+        layer.bindPopup(()=>txtPop(obj.content||'',col,uid),{maxWidth:280,minWidth:240});
+        layer.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(layer._sentinelId);this.openPopup();});
+        layer.on('popupopen',()=>setTimeout(()=>{
+          const ta=document.getElementById('ta-'+uid);
+          if(ta){ta.value=layer._meta.content||'';ta.oninput=()=>{layer._meta.content=ta.value;updateList();};}
+          const desc=document.getElementById('tdesc-'+uid);
+          if(desc){desc.value=layer._meta.label||'';desc.oninput=()=>{layer._meta.label=desc.value;updateList();};}
+        },60));break;
+      }
+    }
+    if(layer){fg.addLayer(layer);storeOrigFO(layer);const id=++cnt;layer._sentinelId=id;anns.push({id,type:obj.type,layer});}
+  });
+  updateList();
+  try{if(mapLayers.length)map.fitBounds(mapLayers[0].bounds,{padding:[20,20]});else if(anns.length)map.fitBounds(fg.getBounds(),{padding:[40,40],maxZoom:16});}catch(e){}
+  showToast(`✓ Projet restauré — ${anns.length} annotation(s)`);
+}
+
+// ── 23. EXPORT GEOJSON ──
+function exportGeoJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(fg.toGeoJSON(),null,2)],{type:'application/geo+json'}));a.download='sentinel-'+Date.now()+'.geojson';a.click();showToast('✓ GeoJSON exporté');}
+
+// ── 24. RÉINITIALISER ──
+function openResetModal(){document.getElementById('reset-modal').classList.add('on');}
+function closeResetModal(){document.getElementById('reset-modal').classList.remove('on');}
+function confirmReset(){
+  closeResetModal();fg.clearLayers();anns=[];clearRG();
+  mapLayers.forEach(ml=>map.removeLayer(ml.layer));mapLayers=[];
+  Object.values(activeTiles).forEach(t=>map.removeLayer(t.layer));activeTiles={};
+  document.querySelectorAll('.tile-btn').forEach(b=>b.classList.remove('active'));
+  try{sessionStorage.removeItem('sentinel_maps');}catch(e){}
+  renderML();document.getElementById('proj-label').textContent='Aucun projet';projName='';
+  updateList();showToast('✓ Projet réinitialisé');
+}
+
+// ── 25. RESET VIEW ──
+function resetView(){
+  const mv=document.querySelector('meta[name=viewport]');if(mv)mv.content='width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no';
+  try{if(mapLayers.length)map.fitBounds(mapLayers[0].bounds,{padding:[20,20]});else if(anns.length)map.fitBounds(fg.getBounds(),{padding:[40,40],maxZoom:16});else map.setView([46.8,2.3],6);}catch(e){}
+  setTool('nav');showToast('✓ Vue recentrée');
+}
+
+// ── 26. DRAG & DROP GLOBAL ──
+const gdo=document.getElementById('gdo');
+document.addEventListener('dragenter',e=>{if(e.dataTransfer.types.includes('Files'))gdo.classList.add('on');});
+document.addEventListener('dragleave',e=>{if(!e.relatedTarget)gdo.classList.remove('on');});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{
+  e.preventDefault();gdo.classList.remove('on');
+  const f=e.dataTransfer.files[0];if(!f)return;
+  const ext=f.name.split('.').pop().toLowerCase();
+  if(ext==='json'){const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.version&&d.annotations)restoreProject(d,f.name);else loadGJ(d);}catch(err){showToast('⚠ Fichier invalide');}};r.readAsText(f);}
+  else if(ext==='geojson'){const r=new FileReader();r.onload=ev=>{try{loadGJ(JSON.parse(ev.target.result));}catch(e){showToast('⚠ GeoJSON invalide');}};r.readAsText(f);}
+  else if(/\.(jpg|jpeg|png|tif|tiff|jgw)$/i.test(f.name))processMapFiles(e.dataTransfer.files);
+});
+function loadGJ(data){const col='#475569';const gj=L.geoJSON(data,{style:{color:col,weight:2,fillOpacity:.1},pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,color:col})});gj.addTo(fg);gj.eachLayer(l=>{l._meta={type:'geojson',color:col};l._isAnn=true;const id=++cnt;l._sentinelId=id;anns.push({id,type:'geojson',layer:l});});try{map.fitBounds(gj.getBounds(),{padding:[30,30]});}catch(e){}updateList();showToast('✓ GeoJSON chargé');}
+
+// ── 27. STATUS BAR ──
+map.on('mousemove',e=>{const sc=document.getElementById('sc');if(sc){sc.textContent=`${e.latlng.lat.toFixed(5)}°, ${e.latlng.lng.toFixed(5)}°`;sc.style.display='';}});
+map.on('zoomend',()=>document.getElementById('sz').textContent=map.getZoom());
+document.getElementById('sz').textContent=map.getZoom();
+
+// ── UTILS ──
+function fmtD(m){return m>=1000?(m/1000).toFixed(2)+' km':Math.round(m)+' m';}
+function cpTxt(t){
+  // Méthode 1 : clipboard API moderne (HTTPS uniquement)
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(()=>showToast('✓ Coordonnées copiées')).catch(()=>cpTxtFallback(t));
+  } else {
+    cpTxtFallback(t);
+  }
+}
+function cpTxtFallback(t){
+  // Méthode 2 : execCommand (fonctionne en file://, HTTP, tous navigateurs)
+  const el=document.createElement('textarea');
+  el.value=t;el.style.cssText='position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+  document.body.appendChild(el);
+  el.focus();el.select();
+  try{
+    document.execCommand('copy');
+    showToast('✓ Coordonnées copiées');
+  }catch(e){
+    showToast('⚠ Copie non supportée — coords: '+t,4000);
+  }
+  document.body.removeChild(el);
+}
+let toastT;
+function showToast(msg,ms=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
+
+// ── INIT ──
+restoreSession();
+updateList();
+showToast('Sentinel Project V1 — Prêt');
+
+(function(){
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    && !/Windows NT|Macintosh/i.test(navigator.userAgent);
+  if(isMobile){const h=document.getElementById('mobile-hint');if(h)h.style.display='block';}
+})();
+
+// ══════════════════════════════════════════════
+// PANNEAU CARTES IGN — GÉOPORTAIL COMPLET
+// Licence Ouverte Etalab 2.0 — usage commercial autorisé
+// ══════════════════════════════════════════════
+
+const IGN_LAYERS = {
+  '✈️ Aéronautique & Drones': [
+    {
+      id:'ign-drones',
+      name:'🚁 Restrictions drones',
+      desc:'Zones interdites / réglementées pour drones — France métropolitaine',
+      proto:'wmts', layer:'TRANSPORTS.DRONES.RESTRICTIONS',
+      format:'image/png', minZoom:6, maxZoom:19, opacity:0.75
+    }
+  ],
+  '🗺 Cartes topographiques': [
+    {
+      id:'ign-planv2',
+      name:'Plan IGN v2',
+      desc:'Cartographie multi-échelles IGN — mise à jour régulière',
+      proto:'wmts', layer:'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+      format:'image/png', minZoom:6, maxZoom:19, opacity:1,
+      badge:{text:'✓ Etalab 2.0',cls:'new'}
+    }
+  ],
+  '🛰 Imagerie': [
+    {
+      id:'ign-ortho-irc',
+      name:'Ortho IRC',
+      desc:'Orthophotos infra-rouge couleur — végétation et cultures',
+      proto:'wmts', layer:'ORTHOIMAGERY.ORTHOPHOTOS.IRC',
+      format:'image/jpeg', minZoom:6, maxZoom:19, opacity:1
+    }
+  ],
+  '🏔 Relief': [
+    {
+      id:'ign-estompage',
+      name:'Estompage relief',
+      desc:'Ombrage calculé depuis BDAlti — relief mis en valeur',
+      proto:'wmts', layer:'IGNF_ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW',
+      format:'image/png', minZoom:6, maxZoom:15, opacity:0.65
+    },
+    {
+      id:'ign-pentes',
+      name:'Carte des pentes (PAC)',
+      desc:'Seuils pente agriculture : 7–10% bleu · 10–15% mauve · 15–20% orange · >20% rouge',
+      proto:'wmts', layer:'GEOGRAPHICALGRIDSYSTEMS.SLOPES.PAC',
+      format:'image/png', minZoom:6, maxZoom:15, opacity:0.7,
+      badge:{text:'Agri',cls:'new'}
+    }
+  ],
+  '📜 Cartes historiques': [
+    {
+      id:'ign-cassini',
+      name:'Carte de Cassini',
+      desc:'XVIIIe siècle — BnF haute définition (1750–1815)',
+      proto:'wmts', layer:'BNF-IGNF_GEOGRAPHICALGRIDSYSTEMS.CASSINI',
+      format:'image/png', minZoom:6, maxZoom:14, opacity:1
+    },
+    {
+      id:'ign-etat-major',
+      name:"Carte d'État-Major",
+      desc:'XIXe siècle (1818–1866) — première carte topométrique nationale',
+      proto:'wmts', layer:'GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40',
+      format:'image/jpeg', minZoom:6, maxZoom:15, opacity:1
+    }
+  ]
+};
+
+// Couches IGN actives : id → { layer, ldef }
+const ignActiveLayers = {};
+
+const IGN_WMTS = 'https://data.geopf.fr/wmts';
+
+// URL lisible pour la modale d'édition
+function ignTileUrl(ldef){
+  return `${IGN_WMTS}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&LAYER=${ldef.layer}&FORMAT=${ldef.format||'image/png'}`;
+}
+
+// Calcule le prochain zIndex disponible dans le pool unifié tiles+ign
+function nextBaseZ(){
+  const allZ=[
+    ...Object.values(activeTiles).map(e=>e.layer.options.zIndex||100),
+    ...Object.values(ignActiveLayers).map(e=>e.layer.options.zIndex||100)
+  ];
+  return allZ.length ? Math.max(...allZ)+1 : 101;
+}
+
+// Crée la couche Leaflet (tout en WMTS public)
+function ignMakeLayer(ldef, zIndex){
+  const f = ldef.format||'image/png';
+  const url = `${IGN_WMTS}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&LAYER=${ldef.layer}&FORMAT=${f}`;
+  return L.tileLayer(url, {
+    opacity: ldef.opacity||1,
+    minZoom: ldef.minZoom||6,
+    maxZoom: ldef.maxZoom||19,
+    maxNativeZoom: ldef.maxZoom||19,
+    attribution:'© IGN Géoplateforme — Licence Ouverte Etalab 2.0'
+  });
+}
+
+function openIgnPanel(){
+  const modal = document.getElementById('ign-modal');
+  const list  = document.getElementById('ign-layers-list');
+  list.innerHTML = '';
+  Object.entries(IGN_LAYERS).forEach(([cat, layers])=>{
+    const section = document.createElement('div');
+    const catDiv  = document.createElement('div');
+    catDiv.className = 'ign-cat';
+    catDiv.textContent = cat;
+    section.appendChild(catDiv);
+    const grid = document.createElement('div');
+    grid.className = 'ign-grid';
+    layers.forEach(ldef=>{
+      const isActive = !!ignActiveLayers[ldef.id];
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position:relative;display:flex;flex-direction:column;';
+      const btn = document.createElement('button');
+      btn.className = 'ign-btn'+(isActive?' active':'');
+      btn.innerHTML = `<span class="ign-name">${ldef.name}</span>
+        <span class="ign-desc">${ldef.desc}</span>
+        ${ldef.badge?`<span class="ign-badge ${ldef.badge.cls}">${ldef.badge.text}</span>`:''}`;
+      btn.onclick = ()=>toggleIgnLayer(ldef, btn);
+      // Bouton engrenage URL
+      const gear = document.createElement('button');
+      gear.title = "Modifier l'URL";
+      gear.style.cssText = 'position:absolute;top:4px;right:4px;width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);border-radius:4px;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;color:var(--t5);padding:0;';
+      gear.innerHTML = '⚙';
+      gear.onclick = (e)=>{e.stopPropagation();openIgnUrlEdit(ldef);};
+      gear.onmouseenter=()=>{gear.style.borderColor='var(--amber)';gear.style.color='var(--amber)';};
+      gear.onmouseleave=()=>{gear.style.borderColor='var(--bdr)';gear.style.color='var(--t5)';};
+      wrapper.appendChild(btn);
+      wrapper.appendChild(gear);
+      grid.appendChild(wrapper);
+    });
+    section.appendChild(grid);
+    list.appendChild(section);
+  });
+  modal.classList.add('on');
+}
+
+function closeIgnPanel(){
+  document.getElementById('ign-modal').classList.remove('on');
+}
+
+// Édition URL IGN — réutilise la modale URL existante
+let _ignUrlEditId = null;
+function openIgnUrlEdit(ldef){
+  _ignUrlEditId = ldef.id;
+  document.getElementById('url-modal-desc').innerHTML = `<b>${ldef.name}</b> — modifiez l'URL si la couche ne s'affiche plus.<br>
+    <a href="https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities" target="_blank" rel="noopener" style="color:var(--blue);font-size:10px">🔍 GetCapabilities IGN →</a>`;
+  document.getElementById('url-modal-input').value = ignTileUrl(ldef);
+  document.getElementById('url-modal').dataset.ignMode = '1';
+  document.getElementById('url-modal').classList.add('on');
+}
+
+function toggleIgnLayer(ldef, btn){
+  if(ignActiveLayers[ldef.id]){
+    map.removeLayer(ignActiveLayers[ldef.id].layer);
+    delete ignActiveLayers[ldef.id];
+    if(btn) btn.classList.remove('active');
+    renderML();
+    showToast(`✕ ${ldef.name} retiré`);
+    return;
+  }
+  const tl = ignMakeLayer(ldef, nextBaseZ());
+  tl.addTo(map);
+  try{fg.bringToFront();}catch(e){}
+  ignActiveLayers[ldef.id] = {layer:tl, ldef};
+  if(btn) btn.classList.add('active');
+  renderML();
+  showToast(`✓ ${ldef.name} activé`);
+}
+
+// ══════════════════════════════════════════════
+// AUTHENTIFICATION SUPABASE
+// ══════════════════════════════════════════════
+const SUPA_URL = 'https://bbvtpfczaeffolmarkqj.supabase.co';
+const SUPA_KEY = 'sb_publishable_0_QwAxwoz6uqsTO8RWoBhQ_oTROvPVv';
+
+let _supa = null;
+try {
+  _supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: { persistSession: true, storage: window.localStorage }
+  });
+} catch(e) {
+  console.error('Supabase SDK non chargé:', e);
+}
+
+// Masque l'app et montre l'écran de connexion
+function _showAuth(){
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('logout-btn').classList.remove('visible');
+  document.getElementById('chgpwd-btn').classList.remove('visible');
+  document.getElementById('auth-footer').style.display='none';
+}
+
+// Déverrouille l'app et masque l'écran de connexion
+function _showApp(user){
+  document.getElementById('auth-screen').classList.add('hidden');
+  const lb=document.getElementById('logout-btn');
+  const lu=document.getElementById('logout-user');
+  lb.classList.add('visible');
+  document.getElementById('chgpwd-btn').classList.add('visible');
+  if(lu) lu.textContent=user.email.split('@')[0];
+  // Afficher le footer auth dans le panel
+  const af=document.getElementById('auth-footer');
+  const afu=document.getElementById('auth-footer-user');
+  if(af) af.style.display='flex';
+  if(afu) afu.textContent=user.email.split('@')[0];
+}
+
+function openForgotPwd(){
+  const m=document.getElementById('forgot-modal');
+  if(!m){console.error('forgot-modal introuvable');return;}
+  const fe=document.getElementById('forgot-email');
+  const ae=document.getElementById('auth-email');
+  const fe2=document.getElementById('forgot-err');
+  const fo=document.getElementById('forgot-ok');
+  if(fe&&ae) fe.value=ae.value||'';
+  if(fe2) fe2.classList.remove('show');
+  if(fo) fo.style.display='none';
+  m.style.display='flex';
+  setTimeout(()=>{if(fe)fe.focus();},100);
+}
+function closeForgotPwd(){
+  document.getElementById('forgot-modal').style.display = 'none';
+}
+async function doForgotPwd(){
+  const email = document.getElementById('forgot-email').value.trim();
+  const errEl = document.getElementById('forgot-err');
+  const btn   = document.getElementById('forgot-submit');
+  const lbl   = document.getElementById('forgot-lbl');
+  errEl.classList.remove('show');
+  document.getElementById('forgot-ok').style.display = 'none';
+  if(!email){ errEl.textContent='Veuillez entrer votre adresse e-mail.'; errEl.classList.add('show'); return; }
+  btn.disabled = true; lbl.innerHTML = '<span class="auth-spinner"></span>';
+  const { error } = await _supa.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  btn.disabled = false; lbl.textContent = 'Envoyer le lien';
+  if(error){ errEl.textContent = 'Erreur : ' + error.message; errEl.classList.add('show'); return; }
+  document.getElementById('forgot-ok').style.display = 'block';
+}
+function openChgPwd(){
+  document.getElementById('chgpwd-new').value='';
+  document.getElementById('chgpwd-confirm').value='';
+  document.getElementById('chgpwd-err').classList.remove('show');
+  document.getElementById('chgpwd-modal').classList.add('on');
+  setTimeout(()=>document.getElementById('chgpwd-new').focus(),100);
+}
+function closeChgPwd(){
+  document.getElementById('chgpwd-modal').classList.remove('on');
+}
+async function doChgPwd(){
+  const pwd  = document.getElementById('chgpwd-new').value;
+  const pwd2 = document.getElementById('chgpwd-confirm').value;
+  const errEl= document.getElementById('chgpwd-err');
+  const btn  = document.getElementById('chgpwd-submit');
+  const lbl  = document.getElementById('chgpwd-lbl');
+  errEl.classList.remove('show');
+  if(!pwd||pwd.length<6){
+    errEl.textContent='Le mot de passe doit contenir au moins 6 caractères.';
+    errEl.classList.add('show');return;
+  }
+  if(pwd!==pwd2){
+    errEl.textContent='Les deux mots de passe ne correspondent pas.';
+    errEl.classList.add('show');return;
+  }
+  btn.disabled=true;lbl.innerHTML='<span class="auth-spinner"></span>';
+  const {error}=await _supa.auth.updateUser({password:pwd});
+  btn.disabled=false;lbl.textContent='Enregistrer';
+  if(error){
+    errEl.textContent='Erreur : '+error.message;
+    errEl.classList.add('show');return;
+  }
+  closeChgPwd();
+  showToast('✓ Mot de passe modifié avec succès');
+}
+
+// Connexion email / mot de passe
+async function doLogin(){
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const remember = document.getElementById('auth-remember').checked;
+  const errEl    = document.getElementById('auth-err');
+  const btn      = document.getElementById('auth-submit');
+  const lbl      = document.getElementById('auth-btn-lbl');
+
+  errEl.classList.remove('show');
+  if(!email || !password){
+    errEl.textContent = 'Veuillez remplir tous les champs.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="auth-spinner"></span>';
+
+  // Choisir le stockage selon "Se souvenir de moi"
+  // true → localStorage (persiste après fermeture du navigateur)
+  // false → sessionStorage (disparaît à la fermeture de l'onglet)
+  _supa.auth.storage = remember ? window.localStorage : window.sessionStorage;
+
+  const { data, error } = await _supa.auth.signInWithPassword({ email, password });
+
+  btn.disabled = false;
+  lbl.textContent = 'Se connecter';
+
+  if(error){
+    let msg = 'Identifiants incorrects. Vérifiez votre e-mail et mot de passe.';
+    if(error.message && error.message.toLowerCase().includes('email not confirmed'))
+      msg = 'Veuillez confirmer votre adresse e-mail avant de vous connecter.';
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+    return;
+  }
+  _showApp(data.user);
+}
+
+// Déconnexion
+async function doLogout(){
+  await _supa.auth.signOut();
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-err').classList.remove('show');
+  _showAuth();
+  showToast('Déconnecté.');
+}
+
+// ── Vérification session au chargement ──
+(async ()=>{
+  if(!_supa){ _showAuth(); return; }
+  // avant que notre code s'exécute. On écoute onAuthStateChange pour détecter le cas.
+  _supa.auth.onAuthStateChange((event, session)=>{
+    if(event === 'SIGNED_OUT' || !session){
+      document.getElementById('setpwd-screen').classList.remove('on');
+      _showAuth();
+    } else if(event === 'PASSWORD_RECOVERY'){
+      // Lien de réinitialisation de mot de passe
+      _showAuth(); // cacher login
+      document.getElementById('setpwd-screen').classList.add('on');
+    } else if(event === 'SIGNED_IN'){
+      // Vérifier si c'est une première connexion via invitation
+      // Supabase marque app_metadata.provider = 'email' et le user n'a pas encore
+      // de mot de passe défini lui-même — on détecte via invited_at sans last_sign_in
+      const u = session.user;
+      const isInvite = u.invited_at && !u.last_sign_in_at
+        || (u.app_metadata && u.app_metadata.invited_at)
+        || window._sentinelInviteFlow;
+      if(isInvite){
+        window._sentinelInviteFlow = true;
+        document.getElementById('setpwd-screen').classList.add('on');
+      } else {
+        document.getElementById('setpwd-screen').classList.remove('on');
+        _showApp(u);
+      }
+    } else if(event === 'USER_UPDATED'){
+      // Mot de passe mis à jour → accéder à l'app
+      document.getElementById('setpwd-screen').classList.remove('on');
+      if(session) _showApp(session.user);
+    }
+  });
+
+  // Vérifier si une session existe déjà au chargement
+  const { data:{ session } } = await _supa.auth.getSession();
+  if(session && session.user){
+    const u = session.user;
+    const isInvite = u.invited_at && !u.last_sign_in_at;
+    if(isInvite){
+      window._sentinelInviteFlow = true;
+      document.getElementById('setpwd-screen').classList.add('on');
+    } else {
+      _showApp(u);
+    }
+  } else {
+    _showAuth();
+  }
+
+})();
+
+// Création du mot de passe après invitation
+async function doSetPassword(){
+  const pwd  = document.getElementById('setpwd-input').value;
+  const pwd2 = document.getElementById('setpwd-confirm').value;
+  const errEl= document.getElementById('setpwd-err');
+  const btn  = document.getElementById('setpwd-submit');
+  const lbl  = document.getElementById('setpwd-btn-lbl');
+
+  errEl.classList.remove('show');
+  if(!pwd || pwd.length < 6){
+    errEl.textContent='Le mot de passe doit contenir au moins 6 caractères.';
+    errEl.classList.add('show');return;
+  }
+  if(pwd !== pwd2){
+    errEl.textContent='Les deux mots de passe ne correspondent pas.';
+    errEl.classList.add('show');return;
+  }
+
+  btn.disabled=true;
+  lbl.innerHTML='<span class="auth-spinner"></span>';
+
+  const { data, error } = await _supa.auth.updateUser({ password: pwd });
+
+  btn.disabled=false;
+  lbl.textContent='Activer mon accès';
+
+  if(error){
+    errEl.textContent='Erreur : '+error.message;
+    errEl.classList.add('show');return;
+  }
+
+  // USER_UPDATED sera déclenché → onAuthStateChange ferme setpwd-screen et ouvre l'app
+  window._sentinelInviteFlow = false;
+  showToast('✓ Accès activé — bienvenue sur Sentinel Project !');
+}
+</script>
+</body>
+</html>
