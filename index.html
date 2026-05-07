@@ -314,6 +314,33 @@ input,textarea,select{font-family:inherit}
 @media screen and (max-height:380px){
   .leaflet-popup-content{max-height:45vh}
 }
+
+/* ── Mobile : colonnes réduites ── */
+@media screen and (max-width:768px){
+  :root{--tbw:88px;--pw:200px;--tbh:40px}
+  .tb{padding:5px 4px;gap:2px}
+  .tbi{font-size:16px}
+  .tbl{font-size:8px}
+  .tbs{font-size:7px}
+  .pst{font-size:9px}
+  .tile-btn{font-size:8px;padding:5px 4px}
+  .tico{font-size:14px}
+  #reset-btn{font-size:10px;padding:4px 8px}
+}
+
+#mobile-back-btn{
+  display:none;position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:9999;background:rgba(37,99,235,0.9);
+  color:#fff;border:none;border-radius:20px;
+  padding:10px 18px;font-size:13px;font-weight:700;
+  font-family:'DM Sans',sans-serif;cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  white-space:nowrap;
+}
+@media screen and (max-width:768px){
+  #mobile-back-btn{display:block}
+}
 .ptt{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t5);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px}
 .pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .pr{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--t5);margin-bottom:4px}
@@ -556,6 +583,7 @@ input,textarea,select{font-family:inherit}
 
 
 <button id="reset-btn" onclick="resetView()">⊹ Recentrer</button>
+<button id="mobile-back-btn" onclick="mobileBackToInterface()" title="Retour interface">◀ Interface</button>
 
 <!-- TOPBAR -->
 <div id="topbar">
@@ -2789,23 +2817,11 @@ restoreSession();
 updateList();
 showToast('Sentinel Project V1 — Prêt');
 
-// Zoom mobile : réduire l'interface pour qu'elle rentre dans l'écran
-(function(){
-  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-    && !/Windows NT|Macintosh/i.test(navigator.userAgent);
-  if(isMobile){
-    const screenW = window.screen.width;
-    const appW = 1024;
-    if(screenW < appW){
-      const scale = screenW / appW;
-      document.body.style.transform = `scale(${scale})`;
-      document.body.style.transformOrigin = 'top left';
-      document.body.style.width = `${appW}px`;
-      document.body.style.height = `${window.screen.height / scale}px`;
-      setTimeout(()=>{ try{map.invalidateSize();}catch(e){} }, 300);
-    }
-  }
-})();
+function mobileBackToInterface(){
+  window.scrollTo({left:0, top:0, behavior:'smooth'});
+  document.body.scrollLeft = 0;
+  document.documentElement.scrollLeft = 0;
+}
 
 // Avertissement fermeture si modifications non exportées
 let _hasUnsaved = false;
