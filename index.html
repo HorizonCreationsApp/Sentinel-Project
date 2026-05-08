@@ -1092,8 +1092,9 @@ let urlEditKey=null;
 // Fonctions édition URL
 function openUrlEdit(key){
   urlEditKey=key; const def=TILE_DEFS[key];
-  document.getElementById('url-modal-desc').innerHTML=`<b>${def.icon} ${def.label}</b> — modifiez si ce fond ne s'affiche plus.<br>
-    <a href="https://www.google.com/search?q=${encodeURIComponent(def.label+' tile URL XYZ leaflet 2024')}" target="_blank" style="color:var(--blue);font-size:10px">🔍 Rechercher une URL à jour →</a>`;
+  const q = encodeURIComponent(def.label+' tile URL XYZ leaflet');
+  document.getElementById('url-modal-desc').innerHTML='<b>'+def.icon+' '+def.label+'</b> - modifiez si ce fond ne s affiche plus.<br>'
+    +'<a href="https://www.google.com/search?q='+q+'" target="_blank" style="color:var(--blue);font-size:10px">Rechercher une URL a jour</a>';
   document.getElementById('url-modal-input').value=def.url;
   document.getElementById('url-modal').classList.add('on');
 }
@@ -3002,7 +3003,9 @@ function _showToolHint(id, onDone, label){
   if(!h){ h=document.createElement('div'); h.id=id;
     h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';
     document.body.appendChild(h); }
-  h.innerHTML='<span style="opacity:.7;font-size:11px">'+label+'</span><button onclick="_toolHintDone(''+id+'')" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button><button onclick="setTool('nav')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">✕</button>';
+  h.innerHTML='<span style="opacity:.7;font-size:11px">'+label+'</span>'
+    +'<button onclick="_toolHintDone(\''+id+'\')" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">\u2713 Terminer</button>'
+    +'<button onclick="setTool(\'nav\')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">\u2715</button>';
   h._onDone=onDone; h.style.display='flex';
 }
 function _hideToolHint(id){ const h=document.getElementById(id); if(h) h.style.display='none'; }
@@ -3384,6 +3387,8 @@ async function doLogin(){
   const btn      = document.getElementById('auth-submit');
   const lbl      = document.getElementById('auth-btn-lbl');
 
+  console.log('doLogin appelé', {email, remember, _supa: !!_supa});
+
   errEl.classList.remove('show');
   if(!email || !password){
     errEl.textContent = 'Veuillez remplir tous les champs.';
@@ -3394,21 +3399,55 @@ async function doLogin(){
   btn.disabled = true;
   lbl.innerHTML = '<span class="auth-spinner"></span>';
 
-  // Choisir le stockage selon "Se souvenir de moi"
-  // true → localStorage (persiste après fermeture du navigateur)
-  // false → sessionStorage (disparaît à la fermeture de l'onglet)
-  _supa.auth.storage = remember ? window.localStorage : window.sessionStorage;
+  try {
+    _supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
+      auth: {
+        persistSession: true,
+        storage: remember ? window.localStorage : window.sessionStorage
+      }
+    });
+    console.log('Client Supabase recréé OK');
+  } catch(e) {
+    console.error('Erreur recréation client:', e);
+    errEl.textContent = 'Erreur de connexion au service. Rechargez la page.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    lbl.textContent = 'Se connecter';
+    return;
+  }
 
-  const { data, error } = await _supa.auth.signInWithPassword({ email, password });
+  console.log('Tentative signIn...');
+  let data, error;
+  try {
+    const result = await _supa.auth.signInWithPassword({ email, password });
+    data = result.data;
+    error = result.error;
+    console.log('Résultat signIn:', {data, error});
+  } catch(e) {
+    console.error('Exception signIn:', e);
+    error = e;
+  }
 
   btn.disabled = false;
   lbl.textContent = 'Se connecter';
 
   if(error){
     let msg = 'Identifiants incorrects. Vérifiez votre e-mail et mot de passe.';
-    if(error.message && error.message.toLowerCase().includes('email not confirmed'))
-      msg = 'Veuillez confirmer votre adresse e-mail avant de vous connecter.';
+    if(error.message){
+      console.error('Erreur Supabase:', error.message);
+      if(error.message.toLowerCase().includes('email not confirmed'))
+        msg = 'Veuillez confirmer votre adresse e-mail avant de vous connecter.';
+      else if(error.message.toLowerCase().includes('fetch') || error.message.toLowerCase().includes('network'))
+        msg = 'Erreur réseau. Vérifiez votre connexion internet.';
+      else
+        msg = 'Erreur : ' + error.message;
+    }
     errEl.textContent = msg;
+    errEl.classList.add('show');
+    return;
+  }
+  if(!data || !data.user){
+    errEl.textContent = 'Réponse inattendue du serveur. Réessayez.';
     errEl.classList.add('show');
     return;
   }
