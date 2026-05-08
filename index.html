@@ -2365,6 +2365,7 @@ function toggleEdit(){
     const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='600';
     const op=map.getPane('overlayPane');if(op)op.style.zIndex='400';
     const obEdit=document.getElementById('ob-edit');if(obEdit)obEdit.classList.remove('on');
+    _hideToolHint('edit-hint');
     setLI(true);updateList();
   }else{
     stopAll();tool='nav';
@@ -2391,7 +2392,7 @@ function toggleEdit(){
     const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='660';
     const op=map.getPane('overlayPane');if(op)op.style.zIndex='700';
     const obEdit2=document.getElementById('ob-edit');if(obEdit2)obEdit2.classList.add('on');
-    _showToolHint('edit-hint', ()=>toggleEdit(), 'Terminer l\'édition');
+    _showToolHint('edit-hint', ()=>toggleEdit(), 'Terminer l\'édition', ()=>toggleEdit());
     setLI(true);
   }
 }
@@ -3005,18 +3006,25 @@ function outilAction(t){
   if(tool===t){ setTool('nav'); } else { setTool(t); }
 }
 
-function _showToolHint(id, onDone, label){
+function _showToolHint(id, onDone, label, onCancel){
   let h = document.getElementById(id);
   if(!h){ h=document.createElement('div'); h.id=id;
     h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';
     document.body.appendChild(h); }
   h.innerHTML='<span style="opacity:.7;font-size:11px">'+label+'</span>'
     +'<button onclick="_toolHintDone(\''+id+'\')" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">\u2713 Terminer</button>'
-    +'<button onclick="setTool(\'nav\')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">\u2715</button>';
-  h._onDone=onDone; h.style.display='flex';
+    +'<button onclick="_toolHintCancel(\''+id+'\')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">\u2715</button>';
+  h._onDone=onDone;
+  h._onCancel=onCancel||null;
+  h.style.display='flex';
 }
 function _hideToolHint(id){ const h=document.getElementById(id); if(h) h.style.display='none'; }
 function _toolHintDone(id){ const h=document.getElementById(id); if(h&&h._onDone) h._onDone(); }
+function _toolHintCancel(id){
+  const h=document.getElementById(id);
+  if(h&&h._onCancel){ h._onCancel(); }
+  else { setTool('nav'); }
+}
 
 // ── 26. DRAG & DROP GLOBAL ──
 const gdo=document.getElementById('gdo');
