@@ -147,7 +147,7 @@
   --blue:#2563eb;--bluel:#eff6ff;--green:#059669;--amber:#d97706;--red:#dc2626;--violet:#7c3aed;--cyan:#0891b2;
   --ss:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
   --sm:0 4px 14px rgba(0,0,0,.09);--sl:0 12px 32px rgba(0,0,0,.13);
-  --r:8px;--tbw:126px;--pw:262px;--tbh:48px;
+  --r:8px;--tbw:138px;--pw:262px;--tbh:48px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{height:100%;overflow:hidden;touch-action:manipulation}
@@ -183,18 +183,55 @@ input,textarea,select{font-family:inherit}
 #main{display:flex;flex:1;overflow:hidden;position:relative}
 
 /* RECENTRER — toujours fixe */
-#reset-btn{position:fixed!important;top:10px!important;left:50%!important;-webkit-transform:translateX(-50%) translateZ(0)!important;transform:translateX(-50%) translateZ(0)!important;z-index:99999!important;background:var(--w);border:1.5px solid var(--bdrm);color:var(--t7);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:7px 16px;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,.15);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;will-change:transform}
-#reset-btn:hover{background:var(--bg);border-color:var(--blue);color:var(--blue)}
+#reset-btn{
+  display:flex;position:fixed;top:10px;left:50%;
+  transform:translateX(-50%);z-index:99999;
+  background:rgba(255,255,255,0.82);border:1.5px solid var(--bdrm);
+  color:var(--t7);font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:600;padding:6px 14px;
+  border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,0.18);
+  cursor:pointer;align-items:center;gap:5px;
+  white-space:nowrap;backdrop-filter:blur(4px);
+}
+#reset-btn:hover{background:rgba(255,255,255,0.95);border-color:var(--blue);color:var(--blue)}
 
 /* TOOLBAR */
-#toolbar{width:var(--tbw);background:var(--w);border-right:1px solid var(--bdr);display:flex;flex-direction:column;align-items:stretch;padding:8px 6px;gap:2px;flex-shrink:0;box-shadow:var(--ss);z-index:500;overflow-y:auto}
+#toolbar{
+  position:absolute;top:0;left:0;z-index:500;
+  width:var(--tbw);
+  background:var(--w);
+  border-right:1px solid var(--bdr);
+  border-bottom-right-radius:12px;
+  display:flex;flex-direction:column;align-items:stretch;
+  padding:8px 6px;gap:2px;
+  box-shadow:2px 2px 10px rgba(0,0,0,.1);
+  height:auto;
+}
 #toolbar::-webkit-scrollbar{width:3px}
 #toolbar::-webkit-scrollbar-thumb{background:var(--bdr)}
 .tsep{height:1px;background:var(--bdr);margin:5px 0;flex-shrink:0}
+
+.outil-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 8px;border:1.5px solid var(--bdr);border-radius:var(--r);
+  background:var(--bg);cursor:pointer;transition:all .15s;
+  font-family:'DM Sans',sans-serif;
+}
+.outil-btn span{font-size:22px;line-height:1}
+.outil-btn b{font-size:10px;color:var(--t9);font-weight:600}
+.outil-btn small{font-size:8.5px;color:var(--t5);text-align:center;line-height:1.3}
+.outil-btn:hover{border-color:var(--blue);background:var(--bluel)}
+.outil-btn.on{border-color:var(--blue);background:var(--bluel);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+.outil-btn.on b{color:var(--blue)}
+#tuto-btn{opacity:0.7}
+#tuto-btn:hover{opacity:1}
+#outils-color-row{display:flex;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid var(--bdr);margin-bottom:4px;flex-wrap:wrap}
+#outils-color-row .cb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);flex-shrink:0}
+.tb .tbs{color:var(--t7)!important}
 .tb{display:flex;align-items:center;gap:7px;padding:7px 8px;border:1px solid transparent;background:transparent;color:var(--t5);border-radius:var(--r);transition:all .13s;flex-shrink:0;text-align:left;width:100%}
 .tb:hover{background:var(--bg);color:var(--t9);border-color:var(--bdr)}
 .tb .tbi{font-size:15px;flex-shrink:0;width:20px;text-align:center}
-.tb .tbl{font-size:11px;font-weight:500;line-height:1.2;flex:1}
+.tb .tbl{font-size:11px;font-weight:500;line-height:1.2;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tb .tbs{font-size:9px;color:var(--t3);display:block;font-weight:400;margin-top:1px}
 .tb .cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
 .tb.on{color:var(--w)!important;border-color:transparent!important}
@@ -208,8 +245,8 @@ input,textarea,select{font-family:inherit}
 [data-t=del].on{background:var(--red)}
 
 /* Palette couleurs */
-#cbar{padding:8px 6px;border-top:1px solid var(--bdr);background:var(--w);flex-shrink:0;display:none}
-#cbar.on{display:block}
+#cbar{display:none!important}
+#cbar.on{display:none!important}
 #cbar .cb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:5px}
 #swatches{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
 .csw{width:19px;height:19px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .12s;flex-shrink:0}
@@ -253,9 +290,9 @@ input,textarea,select{font-family:inherit}
 .mord{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
 .mord button{width:20px;height:13px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:8px;border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .mord button:hover{border-color:var(--blue);color:var(--blue)}
-.mlo{display:flex;align-items:center;gap:6px;margin-top:5px}
+.mlo{display:flex;align-items:center;gap:6px;margin-top:5px;overflow:hidden}
 .mlo label{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);white-space:nowrap}
-.mlo input[type=range]{flex:1;height:3px;accent-color:var(--blue);cursor:pointer}
+.mlo input[type=range]{flex:1;height:3px;accent-color:var(--blue);cursor:pointer;min-width:0;max-width:100%}
 .opv{font-size:9px;font-family:'DM Mono',monospace;color:var(--t5);width:24px;text-align:right}
 
 /* Fonds de carte en ligne */
@@ -266,7 +303,7 @@ input,textarea,select{font-family:inherit}
 .tile-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--bluel)}
 .tile-btn.active{border-color:var(--blue);color:var(--blue);background:var(--bluel);font-weight:700}
 .url-cfg-row{display:flex;flex-wrap:wrap;gap:3px;border-top:1px solid var(--bdr);padding-top:5px;margin-top:4px}
-.url-cfg-btn{padding:2px 6px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:8px;border-radius:3px;cursor:pointer;transition:all .12s}
+.url-cfg-btn{padding:3px 4px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);font-size:8px;border-radius:3px;cursor:pointer;transition:all .12s;flex:1 0 calc(33% - 3px);text-align:center;min-width:0}
 .url-cfg-btn:hover{border-color:var(--amber);color:var(--amber);background:#fffbeb}
 
 /* Projet */
@@ -286,27 +323,47 @@ input,textarea,select{font-family:inherit}
 #del-all-ann{font-size:9px;padding:3px 7px;border:1px solid var(--red);background:#fff5f5;color:var(--red);border-radius:4px;cursor:pointer;display:none}
 #ann-list{flex-shrink:0;padding:6px 9px 10px}
 .ae{font-size:11px;color:var(--t3);text-align:center;padding:14px 0;font-family:'DM Mono',monospace}
-.ali{display:flex;align-items:flex-start;gap:6px;padding:6px 7px;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:4px;background:var(--w);cursor:pointer;transition:all .11s}
+.ali{display:flex;align-items:stretch;gap:6px;padding:6px 7px;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:4px;background:var(--w);cursor:pointer;transition:all .11s}
 .ali:hover{border-color:var(--bdrm);background:var(--bg)}
 .ali.ali-active{border-color:var(--blue);background:var(--bluel);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
-.abar{width:3px;height:24px;border-radius:2px;flex-shrink:0;margin-top:2px}
-.ainf{flex:1;min-width:0}
-.an{font-size:11px;font-weight:500;color:var(--t9)}
-.am{font-size:10px;color:var(--t5);font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ann-op{display:flex;align-items:center;gap:4px;margin-top:3px}
-.ann-op input[type=range]{flex:1;height:3px;cursor:pointer}
-.ann-op span{font-size:9px;font-family:'DM Mono',monospace;color:var(--t5);width:22px;text-align:right}
-.abtns{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
-.adel{width:20px;height:20px;border:1px solid transparent;background:transparent;color:var(--t3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
-.adel:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
-.aeye{width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.abar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch}
+.ainf{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.an{font-size:10px;font-weight:600;color:var(--t7)}
+.am{font-size:10px;font-weight:500;color:var(--t9);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.ali-row1{display:flex;align-items:center;gap:4px;width:100%}
+.ali-row1 .an{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ali-row2{display:flex;align-items:center;gap:6px;width:100%}
+.ann-op{display:flex;align-items:center;gap:4px;width:100%}
+.ann-op input[type=range]{flex:1;min-width:0;cursor:pointer}
+.ann-op span{font-size:9px;font-family:'DM Mono',monospace;color:var(--t5);flex-shrink:0}
+.abtns{display:none}
+.adel{width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;cursor:pointer}
+.adel:hover{border-color:var(--red);color:var(--red);background:#fff5f5;font-weight:700}
+.aeye{width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);color:var(--t5);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;cursor:pointer}
 .aeye:hover{border-color:var(--blue);color:var(--blue);background:var(--bluel)}
 
 /* POPUPS LEAFLET */
 .leaflet-popup-content-wrapper{background:var(--w)!important;border:1px solid var(--bdr)!important;border-radius:10px!important;box-shadow:var(--sl)!important;color:var(--t9)!important;font-family:'DM Sans',sans-serif!important;padding:0!important}
 .leaflet-popup-tip-container{display:none!important}
-.leaflet-popup-content{margin:0!important;padding:0!important;max-height:70vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.leaflet-popup-close-button{color:var(--t5)!important;top:9px!important;right:9px!important;font-size:17px!important;z-index:10}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:var(--bdr);border-radius:10px;outline:none;cursor:pointer;padding:6px 0;box-sizing:content-box;accent-color:var(--blue)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--blue);cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,.35);margin-top:-5px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--blue);cursor:pointer;border:none;box-shadow:0 1px 3px rgba(37,99,235,.35)}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:10px;background:var(--bdr)}
+input[type=range]:focus{outline:none}
+.leaflet-popup-content{margin:0!important;padding:0!important;max-height:70vh;overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#000000aa transparent}
+/* Scrollbars globales — noires, arrondies, permanentes */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.06);border-radius:10px}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid transparent}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.45)}
+* {scrollbar-width:thin;scrollbar-color:rgba(0,0,0,0.25) rgba(0,0,0,0.06)}
+.leaflet-popup-content::-webkit-scrollbar{width:5px}
+.leaflet-popup-content::-webkit-scrollbar-track{background:rgba(0,0,0,0.06);border-radius:10px}
+.leaflet-popup-content::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.35);border-radius:10px;min-height:20px}
+.mbox2::-webkit-scrollbar{width:5px}
+.mbox2::-webkit-scrollbar-track{background:rgba(0,0,0,0.06);border-radius:10px}
+.mbox2::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.35);border-radius:10px;min-height:20px}
+.leaflet-popup-close-button{color:var(--w)!important;background:var(--t5)!important;top:-8px!important;right:-8px!important;font-size:13px!important;z-index:10;width:22px!important;height:22px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;box-shadow:0 1px 4px rgba(0,0,0,.2)!important}
 .pop{padding:14px;min-width:235px}
 @media screen and (max-height:500px){
   .leaflet-popup-content{max-height:55vh}
@@ -315,17 +372,26 @@ input,textarea,select{font-family:inherit}
   .leaflet-popup-content{max-height:45vh}
 }
 
-/* ── Mobile : colonnes réduites ── */
-@media screen and (max-width:768px){
-  :root{--tbw:88px;--pw:200px;--tbh:40px}
-  .tb{padding:5px 4px;gap:2px}
-  .tbi{font-size:16px}
-  .tbl{font-size:8px}
-  .tbs{font-size:7px}
-  .pst{font-size:9px}
-  .tile-btn{font-size:8px;padding:5px 4px}
-  .tico{font-size:14px}
-  #reset-btn{font-size:10px;padding:4px 8px}
+/* ── Mobile paysage : colonnes réduites pour laisser de la place à la carte ── */
+@media screen and (max-height:500px) and (orientation:landscape){
+  :root{--tbw:72px;--pw:170px;--tbh:40px}
+  .tb{padding:4px 3px;gap:1px}
+  .tbi{font-size:15px}
+  .tbl{font-size:7.5px}
+  .tbs{font-size:6.5px;display:none}
+  .pst{font-size:8.5px}
+  .tile-btn{font-size:7.5px;padding:4px 3px}
+  .tico{font-size:13px}
+  .ann-item{padding:5px 6px}
+  .ps{padding:6px 7px}
+}
+/* ── Mobile portrait : colonnes légèrement réduites ── */
+@media screen and (max-width:480px) and (orientation:portrait){
+  :root{--tbw:82px;--pw:185px;--tbh:40px}
+  .tb{padding:4px 3px;gap:1px}
+  .tbi{font-size:15px}
+  .tbl{font-size:7.5px}
+  .tbs{font-size:6.5px}
 }
 
 #mobile-back-btn{
@@ -376,7 +442,7 @@ input,textarea,select{font-family:inherit}
 /* MODALS */
 .mbg{position:fixed;inset:0;background:rgba(15,23,42,.32);z-index:8000;display:none;align-items:center;justify-content:center}
 .mbg.on{display:flex}
-.mbox2{background:var(--w);border-radius:12px;box-shadow:var(--sl);padding:20px;width:290px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.mbox2{background:var(--w);border-radius:12px;box-shadow:var(--sl);padding:20px;width:290px;max-width:92vw;max-height:90vh;overflow-y:scroll}
 .mtit{font-size:14px;font-weight:600;color:var(--t9);margin-bottom:5px}
 .msub{font-size:12px;color:var(--t5);margin-bottom:13px;line-height:1.5}
 .mbtns{display:flex;flex-direction:column;gap:7px}
@@ -583,7 +649,6 @@ input,textarea,select{font-family:inherit}
 
 
 <button id="reset-btn" onclick="resetView()">⊹ Recentrer</button>
-<button id="mobile-back-btn" onclick="mobileBackToInterface()" title="Retour interface">◀ Interface</button>
 
 <!-- TOPBAR -->
 <div id="topbar">
@@ -609,31 +674,56 @@ input,textarea,select{font-family:inherit}
   <span class="spill"><strong id="so">0</strong> obj</span>
 </div>
 
+<!-- ══ MODALE OUTILS ══ — hors #main -->
+<div id="outils-modal" style="position:fixed;inset:0;z-index:9500;background:rgba(15,23,42,.32);display:none;align-items:center;justify-content:center">
+  <div style="background:var(--w);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:16px 18px;width:310px;max-width:92vw;max-height:90vh;overflow-y:auto">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t5);margin-bottom:10px">🔧 Outils</div>
+    <div id="outils-color-row">
+      <span class="cb-lbl">Couleur</span>
+      <div id="swatches-outils" style="display:flex;flex-wrap:wrap;gap:4px;width:calc(5 * 19px + 4 * 4px);flex-shrink:0"></div>
+      <input type="color" id="cc-outils" value="#2563eb" oninput="setCustomColorOutils(this.value)" style="width:22px;height:22px;border:1.5px solid var(--bdr);border-radius:4px;cursor:pointer;padding:1px;flex-shrink:0"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <button class="outil-btn" id="ob-imp"   onclick="outilAction('imp')"><span>🗺</span><b>Importer</b><small>JPEG/PNG + JGW</small></button>
+      <button class="outil-btn" id="ob-ruler" onclick="outilAction('ruler')"><span>📐</span><b>Règle</b><small>Distance · Dbl-clic fin</small></button>
+      <button class="outil-btn" id="ob-poly"  onclick="outilAction('poly')"><span>⬟</span><b>Surface</b><small>Polygone · Dbl-clic fin</small></button>
+      <button class="outil-btn" id="ob-circ"  onclick="outilAction('circ')"><span>◎</span><b>Cercle</b><small>Rayon</small></button>
+      <button class="outil-btn" id="ob-pt"    onclick="outilAction('pt')"><span>📍</span><b>Point GPS</b><small>Lien + ressource</small></button>
+      <button class="outil-btn" id="ob-emoji" onclick="outilAction('emoji')"><span>🏷</span><b>Point carte</b><small>25 marqueurs</small></button>
+      <button class="outil-btn" id="ob-pen"   onclick="outilAction('pen')"><span>✏</span><b>Crayon</b><small>Dessin libre</small></button>
+      <button class="outil-btn" id="ob-txt"   onclick="outilAction('txt')"><span>T</span><b>Texte</b><small>Annotation</small></button>
+      <button class="outil-btn" id="ob-edit"  onclick="outilAction('edit')" style="grid-column:1/-1"><span>⚙</span><b>Éditer</b><small>Modifier les formes tracées</small></button>
+    </div>
+    <button class="mcancel" style="margin-top:12px;width:100%" onclick="closeOutilsModal()">Fermer</button>
+  </div>
+</div>
+
 <!-- MAIN -->
 <div id="main">
 
   <!-- TOOLBAR -->
   <div id="toolbar">
-    <div id="mobile-hint" style="display:none;padding:7px 8px;background:#fffbeb;border-bottom:1px solid #fde68a;font-size:9.5px;color:#92400e;line-height:1.4;text-align:center">
-      💡 Pour une meilleure expérience,<br>activez le <strong>Mode ordinateur</strong><br>dans votre navigateur mobile
-    </div>
-    <button class="tb on" data-t="nav" onclick="setTool('nav')"><span class="tbi">↖</span><span class="tbl">Navigation<span class="tbs">Déplacer / Zoomer</span></span></button>
+    <button class="tb" id="tuto-btn" onclick="document.getElementById('mobile-tuto').classList.add('on')" title="Conseils d'utilisation" style="min-height:auto;padding:6px 4px">
+      <span class="tbi">💡</span>
+      <span class="tbl" style="font-size:8px;line-height:1.2">Astuce</span>
+    </button>
     <div class="tsep"></div>
-    <button class="tb" data-t="imp" onclick="document.getElementById('map-fi').click()"><span class="tbi">🗺</span><span class="tbl">Importer<span class="tbs">JPEG/PNG + JGW</span></span></button>
+    <button class="tb on" data-t="nav" onclick="setTool('nav')">
+      <span class="tbi">↖</span>
+      <span class="tbl">Déplacer<span class="tbs">/ Zoomer</span></span>
+    </button>
     <div class="tsep"></div>
-    <button class="tb" data-t="ruler" onclick="setTool('ruler')"><span class="tbi">📐</span><span class="tbl">Règle<span class="tbs">Distance · Double-clic fin</span></span><span class="cdot" id="cd-ruler" style="background:#0891b2"></span></button>
-    <button class="tb" data-t="poly"  onclick="setTool('poly')"><span class="tbi">⬟</span><span class="tbl">Surface<span class="tbs">Mesure polygone</span><span class="tbs" style="color:var(--t3);font-size:9px">Double-clic : fin</span></span><span class="cdot" id="cd-poly" style="background:#d97706"></span></button>
-    <button class="tb" data-t="circ"  onclick="setTool('circ')"><span class="tbi">◎</span><span class="tbl">Cercle<span class="tbs">Mesure rayon</span></span><span class="cdot" id="cd-circ" style="background:#059669"></span></button>
-    <button class="tb" data-t="pt"    onclick="openPtModal()"><span class="tbi">📍</span><span class="tbl">Point GPS<span class="tbs">Lien + ressource</span></span><span class="cdot" id="cd-pt" style="background:#dc2626"></span></button>
-    <button class="tb" data-t="emoji" onclick="openEmojiModal()"><span class="tbi">🏷</span><span class="tbl">Point carte<span class="tbs">25 marqueurs</span></span><span class="cdot" id="cd-emoji" style="background:#f59e0b"></span></button>
-    <button class="tb" data-t="pen"   onclick="setTool('pen')"><span class="tbi">✏</span><span class="tbl">Crayon<span class="tbs">Dessin libre</span></span><span class="cdot" id="cd-pen" style="background:#7c3aed"></span></button>
-    <button class="tb" data-t="txt"   onclick="setTool('txt')"><span class="tbi">T</span><span class="tbl">Texte<span class="tbs">Annotation</span></span><span class="cdot" id="cd-txt" style="background:#0f172a"></span></button>
-    <div class="tsep"></div>
-    <button class="tb" data-t="edit" onclick="toggleEdit()"><span class="tbi">⚙</span><span class="tbl">Éditer<span class="tbs">Modifier formes</span></span></button>
+    <button class="tb" id="tb-outils" onclick="toggleOutilsModal()">
+      <span class="tbi">🔧</span>
+      <span class="tbl">Outils<span class="tbs">Annoter / Mesurer</span></span>
+    </button>
     <div id="cbar">
       <div class="cb-lbl">Couleur</div>
       <div id="swatches"></div>
-      <div style="display:flex;align-items:center;gap:5px"><input type="color" id="cc" value="#2563eb" oninput="setCustomColor(this.value)"/><span style="font-size:9px;color:var(--t5)">Libre</span></div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <input type="color" id="cc" value="#2563eb" oninput="setCustomColor(this.value)"/>
+        <span style="font-size:9px;color:var(--t5)">Libre</span>
+      </div>
     </div>
   </div>
 
@@ -715,6 +805,40 @@ input,textarea,select{font-family:inherit}
       <button onclick="openChgPwd()" style="width:100%;background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 8px;font-size:10.5px;font-weight:600;color:var(--t5);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;transition:all .15s" onmouseover="this.style.borderColor='#2563eb';this.style.color='#2563eb'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t5)'">🔑 Mot de passe</button>
       <button onclick="doLogout()" style="width:100%;background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 8px;font-size:10.5px;font-weight:600;color:var(--t5);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;transition:all .15s" onmouseover="this.style.borderColor='#dc2626';this.style.color='#dc2626'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--t5)'">👤 <span id="auth-footer-user" style="max-width:120px;overflow:hidden;text-overflow:ellipsis"></span> · Déconnexion</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ MODALE TUTO MODE ORDINATEUR ══ -->
+<div class="mbg" id="mobile-tuto">
+  <div class="mbox2" style="max-width:320px;max-height:85vh;overflow-y:auto">
+    <div class="mtit">📱 Passer en Mode ordinateur</div>
+    <div style="font-size:11px;color:var(--t7);line-height:1.8;margin-top:10px">
+      <div style="background:#eff6ff;border-left:3px solid #2563eb;padding:8px 10px;border-radius:0 6px 6px 0;margin-bottom:12px;font-size:10px;color:#1e3a5f">
+        Le mode ordinateur affiche Sentinel Project avec toute son interface et permet une utilisation optimale sur smartphone.
+      </div>
+      <b style="color:var(--t9);font-size:12px">🤖 Android — Chrome</b><br>
+      <div style="margin:6px 0 12px 0">
+        1. Appuie sur le menu <b>⋮</b> (3 points) en haut à droite<br>
+        2. Coche <b>"Site pour ordinateur"</b><br>
+        3. La page se recharge en mode ordinateur ✓
+      </div>
+      <b style="color:var(--t9);font-size:12px">🍎 iOS — Safari</b><br>
+      <div style="margin:6px 0 12px 0">
+        1. Appuie sur <b>AA</b> ou l'icône de paramètres dans la barre d'adresse<br>
+        2. Sélectionne <b>"Demander le site pour ordinateur"</b><br>
+        3. La page se recharge en mode ordinateur ✓
+      </div>
+      <b style="color:var(--t9);font-size:12px">🍎 iOS — Chrome</b><br>
+      <div style="margin:6px 0 12px 0">
+        1. Appuie sur le menu <b>⋮</b> en bas à droite<br>
+        2. Sélectionne <b>"Site pour ordinateur"</b><br>
+        3. La page se recharge en mode ordinateur ✓
+      </div>
+      <div style="background:#f0fdf4;border-left:3px solid #059669;padding:8px 10px;border-radius:0 6px 6px 0;font-size:10px;color:#065f46">
+        💡 Une fois en mode ordinateur, tu peux ajouter Sentinel Project à l'écran d'accueil pour un accès rapide comme une app native.
+      </div>
+    </div>
+    <button class="mcancel" style="margin-top:14px" onclick="document.getElementById('mobile-tuto').classList.remove('on')">Fermer</button>
   </div>
 </div>
 
@@ -1013,6 +1137,7 @@ function resetUrlEdit(){
 const fg=new L.FeatureGroup([],{pane:'annotations'}).addTo(map);
 let anns=[],mapLayers=[],cnt=0,tool='nav',drawer=null,projName='';
 const TC={ruler:'#0891b2',poly:'#d97706',circ:'#059669',pt:'#dc2626',emoji:'#f59e0b',pen:'#7c3aed',txt:'#0f172a'};
+let _globalColor = null;
 const SWCOLS=['#dc2626','#d97706','#f59e0b','#059669','#0891b2','#2563eb','#7c3aed','#0f172a','#6b7280','#ffffff'];
 const EMOJIS=['🌉','🚗','🏠','🌲','🚂','⚡','💧','🚧','⛽','🏥','🏫','🏪','🚁','⚓','🔥','⚠️','📡','🛤️','🅿️','🏗️','🌊','🦅','⛺','🗼','🎯'];
 let selectedEmoji=null;
@@ -1025,6 +1150,7 @@ function buildSwatches(){
   SWCOLS.forEach(col=>{const d=document.createElement('div');d.className='csw';d.style.background=col;if(col==='#ffffff')d.style.border='2px solid #e2e8f0';d.onclick=()=>{setToolColor(col);selSwatch(d);};c.appendChild(d);});
 }
 buildSwatches();
+setTimeout(()=>syncOutilsSwatches(), 100);
 function selSwatch(el){document.querySelectorAll('.csw').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
 function setToolColor(col){
   if(tool in TC){
@@ -1286,9 +1412,11 @@ function setTool(t){
   document.getElementById('main').classList.remove('cross','penmode');
   if(tool===t&&t!=='nav'){tool='nav';document.querySelector('[data-t=nav]').classList.add('on');setLI(true);showCbar(false);return;}
   tool=t;
-  const btn=document.querySelector(`[data-t="${t}"]`);if(btn)btn.classList.add('on');
+  if(t==='nav') document.querySelector('[data-t=nav]').classList.add('on');
+  ['ruler','poly','circ','pt','emoji','pen','txt'].forEach(k=>{
+    const b=document.getElementById('ob-'+k);if(b)b.classList.toggle('on',k===t);
+  });
   showCbar(DRAW_TOOLS.includes(t));
-  // Bloquer les interactions sur les annotations quand un outil actif
   setLI(t==='nav'||t==='edit');
   if(t==='ruler'){document.getElementById('main').classList.add('cross');startRuler();}
   if(t==='poly') {document.getElementById('main').classList.add('cross');startPoly();}
@@ -1333,11 +1461,28 @@ function setLI(on){
 
 // ── 8. RÈGLE ──
 let rPts=[],rSegs=[],rDots=[],rOn=false;
-function startRuler(){rOn=true;rPts=[];rSegs=[];rDots=[];map.on('click',rClick);map.on('dblclick',rEnd);}
-function stopRuler(){if(!rOn)return;rOn=false;map.off('click',rClick);map.off('dblclick',rEnd);}
+function startRuler(){
+  rOn=true;rPts=[];rSegs=[];rDots=[];_rLastPt=null;_rLastPtTime=0;
+  map.doubleClickZoom.disable();
+  map.on('click',rClick);
+  _showToolHint('ruler-hint', ()=>rEnd({latlng:rPts.length?rPts.at(-1):map.getCenter()}), 'Terminer la mesure');
+}
+function stopRuler(){if(!rOn)return;rOn=false;map.off('click',rClick);_hideToolHint('ruler-hint');map.doubleClickZoom.enable();}
 function clearRG(){rDots.forEach(d=>map.removeLayer(d));rSegs.forEach(s=>map.removeLayer(s));rDots=[];rSegs=[];}
+let _rLastPt = null;
+let _rLastPtTime = 0;
 function rClick(e){
-  if(!rOn)return;rPts.push(e.latlng);
+  if(!rOn)return;
+  const now = Date.now();
+  if(_rLastPt && (now - _rLastPtTime) < 400){
+    const p1=map.latLngToContainerPoint(_rLastPt);
+    const p2=map.latLngToContainerPoint(e.latlng);
+    const dist=Math.sqrt(Math.pow(p1.x-p2.x,2)+Math.pow(p1.y-p2.y,2));
+    if(dist<20){rEnd(e);return;}
+  }
+  _rLastPt=e.latlng;
+  _rLastPtTime=now;
+  rPts.push(e.latlng);
   rDots.push(L.circleMarker(e.latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations'}).addTo(map));
   if(rPts.length>1){rSegs.push(L.polyline([rPts.at(-2),e.latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.8,pane:'annotations'}).addTo(map));
     let t=0;for(let i=1;i<rPts.length;i++)t+=rPts[i-1].distanceTo(rPts[i]);}
@@ -1352,10 +1497,9 @@ function rEnd(e){
   hit._meta={type:'ruler',distance:total,label:'',notes:'',color:col};hit._isAnn=true;
   hit._visPair=vis;
   vis._hitPair=hit;
-  hit.bindPopup(()=>linePop(total,col,'Mesure de distance'),{maxWidth:270});
+  hit.bindPopup(()=>linePop(total,col,'Mesure de distance'),{maxWidth:270,autoPan:false});
   hit.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(hit._sentinelId);this.openPopup(ev.latlng);});
   clearRG();fg.addLayer(vis);fg.addLayer(hit);regAnn('ruler',hit);setTool('nav');
-  setTimeout(()=>hit.openPopup(rPts.at(-1)),100);
 }
 
 // ── 9. POLYGONE ──
@@ -1373,6 +1517,7 @@ let _polyLastTapPos=null; // position du dernier tap {x,y} en pixels écran
 
 function startPoly(){
   _polyPts=[];_polyMarkers=[];_polyLines=[];_polyPreview=null;_polyActive=true;
+  map.doubleClickZoom.disable();
 
   // Bannière "Terminer" flottante
   _polyShowHint();
@@ -1464,6 +1609,7 @@ function startPoly(){
     map.off('click',onPolyClick);
     map.off('dblclick',onPolyDblClick);
     map.dragging.enable();
+    map.doubleClickZoom.enable();
     _polyHideHint();
     _polyMarkers.forEach(m=>map.removeLayer(m));
     _polyLines.forEach(l=>map.removeLayer(l));
@@ -1495,7 +1641,7 @@ function _polyShowHint(){
   if(!h){
     h=document.createElement('div');h.id='poly-hint';
     h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';
-    h.innerHTML='<button onclick="_polyFinish()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button><button onclick="setTool(\'nav\')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">✕</button>';
+    h.innerHTML='<span style="opacity:.7;font-size:11px">Terminer la surface</span><button onclick="_polyFinish()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button><button onclick="setTool(\'nav\')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">✕</button>';
     document.body.appendChild(h);
   }
   h.style.display='flex';
@@ -1514,7 +1660,7 @@ function _polyFinish(){
   const ha=+(area/10000).toFixed(4),m2=+area.toFixed(1);
   l._meta={type:'poly',area_m2:m2,area_ha:ha,label:'',notes:'',color:colFinal};l._isAnn=true;
   l.bindTooltip(ha+' ha',{permanent:true,className:'stt',direction:'center'});
-  l.bindPopup(()=>polyPop(m2,ha,colFinal),{maxWidth:270});
+  l.bindPopup(()=>polyPop(m2,ha,colFinal),{maxWidth:270,autoPan:false});
   l.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(l._sentinelId);this.openPopup();});
   addAnn('poly',l);setTool('nav');
 }
@@ -1585,9 +1731,9 @@ function startCirc(){
     l.options.pane='annotations';
     l.setStyle({color:colFinal,fillColor:colFinal,fillOpacity:.5,weight:3});
     l._meta={type:'circ',radius:r,label:'',notes:'',color:colFinal};l._isAnn=true;
-    l.bindPopup(()=>circPop(r,colFinal),{maxWidth:290});
+    l.bindPopup(()=>circPop(r,colFinal),{maxWidth:290,autoPan:false});
     l.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(l._sentinelId);this.openPopup();});
-    addAnn('circ',l);setTool('nav');setTimeout(()=>l.openPopup(),120);
+    addAnn('circ',l);setTool('nav');
   });
 }
 
@@ -1624,7 +1770,7 @@ function closePtModal(){document.getElementById('pt-modal').classList.remove('on
 let _ptVisClick=null;
 function startVisPt(){
   closePtModal();document.getElementById('main').classList.add('cross');
-  document.querySelector('[data-t=pt]').classList.add('on');tool='pt';setLI(false);
+  tool='pt';setLI(false);
   _ptVisClick=e=>{document.getElementById('main').classList.remove('cross');makePt(e.latlng.lat,e.latlng.lng);};
   map.once('click',_ptVisClick);
 }
@@ -1686,7 +1832,7 @@ function placePtGPS(){
   closeGpsMod();makePt(lat,lng);map.setView([lat,lng],Math.max(map.getZoom(),15));
 }
 function ptIcon(col){
-  return L.divIcon({className:'',html:`<svg width="26" height="34" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg"><path d="M13 0C5.82 0 0 5.82 0 13c0 8.67 13 21 13 21S26 21.67 26 13C26 5.82 20.18 0 13 0z" fill="${col}"/><circle cx="13" cy="13" r="5" fill="white"/></svg>`,iconSize:[26,34],iconAnchor:[13,34],popupAnchor:[0,-36]});
+  return L.divIcon({className:'',html:`<svg width="26" height="34" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg"><path d="M13 0C5.82 0 0 5.82 0 13c0 8.67 13 21 13 21S26 21.67 26 13C26 5.82 20.18 0 13 0z" fill="${col}"/><circle cx="13" cy="13" r="5" fill="white" stroke="#00000066" stroke-width="1.5"/></svg>`,iconSize:[26,34],iconAnchor:[13,34],popupAnchor:[0,-36]});
 }
 function qrUrl(lat,lng){return `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent('https://www.google.com/maps?q='+lat.toFixed(7)+','+lng.toFixed(7))}&format=png&margin=2`;}
 
@@ -1881,7 +2027,6 @@ function startEmojiPlace(){
   closeEmojiModal();
   document.getElementById('emoji-place-modal').classList.remove('on');
   document.getElementById('main').classList.add('cross');
-  document.querySelector('[data-t=emoji]').classList.add('on');
   tool='emoji';setLI(false);
   _emojiClick=e=>{document.getElementById('main').classList.remove('cross');placeEmoji(e.latlng.lat,e.latlng.lng,em,col);};
   map.once('click',_emojiClick);
@@ -1960,6 +2105,10 @@ function toggleEmojiGps(uid,val){
 let penOn=false,penPts=[],penL=null,penTouches=0;
 
 function startPen(){
+  _showToolHint('pen-hint', ()=>{
+    if(penOn && penPts.length >= 3) penEnd();
+    else setTool('nav');
+  }, 'Terminer le tracé');
   penOn=false;penPts=[];
   map.dragging.disable();map.touchZoom.enable();
   const mc=map.getContainer();
@@ -1968,6 +2117,7 @@ function startPen(){
 }
 
 function stopPen(){
+  _hideToolHint('pen-hint');
   penOn=false;
   map.dragging.enable();
   const mc=map.getContainer();
@@ -2041,7 +2191,7 @@ function _endDraw(){
   const pts=[...penPts];
   const hit=L.polyline(pts,{color:'transparent',weight:24,opacity:0,interactive:true,pane:'annotations'});
   hit._meta={type:'pen',distance:dist,label:'',notes:'',color:col};hit._isAnn=true;hit._penPts=visPen._penPts;hit._visPair=visPen;
-  hit.bindPopup(()=>linePop(dist,col,'Tracé crayon'),{maxWidth:270});
+  hit.bindPopup(()=>linePop(dist,col,'Tracé crayon'),{maxWidth:270,autoPan:false});
   hit.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(hit._sentinelId);this.openPopup(ev.latlng);});
   fg.addLayer(hit);regAnn('pen',hit);penL=null;penPts=[];
 }
@@ -2049,7 +2199,7 @@ function _endDraw(){
 // ── 14. TEXTE ──
 function placeTxt(e){
   const uid='ta'+Date.now();const col=TC.txt;
-  const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
+  const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
   const mk=L.marker(e.latlng,{icon,draggable:false,pane:'annotations'}).addTo(fg);
   mk._meta={type:'txt',content:'',label:'',notes:'',color:col};mk._isAnn=true;
   mk.bindPopup(txtPop('',col,uid),{maxWidth:280,minWidth:240});
@@ -2071,7 +2221,8 @@ function txtPop(content,col,uid){
   return `<div class="pop"><div class="ptt"><span class="pdot" style="background:${col}"></span>Annotation texte</div>
     <textarea class="pin" id="ta-${uid}" rows="4" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:12px" placeholder="Saisir votre texte…"></textarea>
     <div class="pl">Description courte</div><input class="pin" type="text" id="tdesc-${uid}" placeholder="Résumé court…" style="margin-top:2px"/>
-    <div class="pbr"><button class="pb dan" onclick="delOpen()">🗑 Supprimer</button></div></div>`;
+    ${colorPickerHtml()}
+    <div class="pbr"><button class="pb pri" onclick="applyPopupChanges()">✓ Appliquer</button><button class="pb dan" onclick="delOpen()">🗑 Supprimer</button></div></div>`;
 }
 
 // ── 15. POPUPS GÉNÉRIQUES ──
@@ -2135,7 +2286,7 @@ function changeAnnColor(col){
     if(_openLayer._visPair&&_openLayer._visPair.setStyle)_openLayer._visPair.setStyle({color:col});
     if(_openLayer.setIcon&&_openLayer._meta.type==='pt')_openLayer.setIcon(ptIcon(col));
     if(_openLayer.setIcon&&_openLayer._meta.type==='txt'){
-      _openLayer.setIcon(L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]}));
+      _openLayer.setIcon(L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]}));
     }
     if(_openLayer.setIcon&&_openLayer._meta.type==='emoji'){
       _openLayer.setIcon(emojiIconFn(_openLayer._meta.emoji,col));
@@ -2211,7 +2362,7 @@ function toggleEdit(){
     fg.eachLayer(l=>{if(l._path)l._path.style.cursor='';});
     const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='600';
     const op=map.getPane('overlayPane');if(op)op.style.zIndex='400';
-    document.querySelector('[data-t=edit]').classList.remove('on');
+    const obEdit=document.getElementById('ob-edit');if(obEdit)obEdit.classList.remove('on');
     setLI(true);updateList();
   }else{
     stopAll();tool='nav';
@@ -2237,11 +2388,12 @@ function toggleEdit(){
     editH.enable();
     const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='660';
     const op=map.getPane('overlayPane');if(op)op.style.zIndex='700';
-    document.querySelector('[data-t=edit]').classList.add('on');
+    const obEdit2=document.getElementById('ob-edit');if(obEdit2)obEdit2.classList.add('on');
+    _showToolHint('edit-hint', ()=>toggleEdit(), 'Terminer l\'édition');
     setLI(true);
   }
 }
-function toggleDel(){if(delH.enabled()){delH.save();delH.disable();document.querySelector('[data-t=del]').classList.remove('on');setLI(true);updateList();}else{stopAll();tool='nav';delH.enable();document.querySelector('[data-t=del]').classList.add('on');setLI(true);}}
+function toggleDel(){if(delH.enabled()){delH.save();delH.disable();setLI(true);updateList();}else{stopAll();tool='nav';delH.enable();setLI(true);}}
 map.on(L.Draw.Event.DELETED,e=>{const d=e.layers;anns=anns.filter(a=>{let k=true;d.eachLayer(l=>{if(l===a.layer)k=false;});return k;});updateList();});
 
 // ── Mise à jour des mesures après édition (déplacement de sommets) ──
@@ -2285,6 +2437,9 @@ function regAnn(type,layer){
   // Remonter la nouvelle couche au-dessus des autres dans le SVG
   try{if(layer.bringToFront)layer.bringToFront();}catch(e){}
   if(layer._visPair)try{layer._visPair.bringToFront();}catch(e){}
+  if(['pt','emoji','txt'].includes(type)){
+    try{layer.setZIndexOffset(1000);}catch(e){}
+  }
   const id=++cnt;layer._sentinelId=id;if(!layer._meta)layer._meta={type};
   storeOrigFO(layer);
   anns.push({id,type,layer});updateList();
@@ -2323,20 +2478,23 @@ function renderAnnList(){
     if(!sub){if(type==='ruler'&&m.distance)sub=fmtD(m.distance);else if(type==='poly'&&m.area_ha)sub=m.area_ha+' ha';else if(type==='circ'&&m.radius)sub=fmtD(m.radius)+' rayon';else if(type==='pen'&&m.distance)sub=fmtD(m.distance)+' tracé';else if(type==='txt'&&m.content)sub=(m.content||'').substring(0,28);else if(type==='pt')sub=m.label||(m.lat?(+m.lat).toFixed(5)+', '+(+m.lng).toFixed(5):'');else if(type==='emoji')sub=(m.emoji||'')+' '+(m.label||'');}
     const op=Math.round((m._opacity!==undefined?m._opacity:1)*100);
     const emojiIcon=type==='emoji'?(m.emoji||'🏷'):(ICO[type]||'○');
+    const lbl = m.label || (type==='txt' ? (m.content||'').substring(0,30) : '');
     const el=document.createElement('div');el.className='ali';el.dataset.id=id;el.style.opacity=vis?'1':'0.45';
     el.innerHTML=`
       <div class="abar" style="background:${col}"></div>
       <div class="ainf">
-        <div class="an">${emojiIcon} ${LBL[type]||type} #${id}</div>
-        <div class="am">${sub}</div>
-        <div class="ann-op">
-          <input type="range" min="0" max="100" value="${op}" style="accent-color:${col}" oninput="setAO(${id},this.value/100)" onclick="event.stopPropagation()"/>
-          <span id="aop-${id}">${op}%</span>
+        <div class="ali-row1">
+          <span class="an">${emojiIcon} ${LBL[type]||type} #${id}</span>
+          <button class="aeye" onclick="toggleAV(${id},event)" title="${vis?'Masquer':'Afficher'}">${vis?'👁':'🙈'}</button>
         </div>
-      </div>
-      <div class="abtns">
-        <button class="aeye" onclick="toggleAV(${id},event)" title="${vis?'Masquer':'Afficher'}">${vis?'👁':'🙈'}</button>
-        <button class="adel" onclick="rmAnn(${id},event)" title="Supprimer">✕</button>
+        <div class="ali-row2">
+          <span class="am">${lbl}</span>
+          <button class="adel" onclick="rmAnn(${id},event)" title="Supprimer">✕</button>
+        </div>
+        <div class="ann-op">
+          <input type="range" min="0" max="100" value="${op}" oninput="setAO(${id},this.value/100)" onclick="event.stopPropagation()"/>
+          <span id="aop-${id}" style="font-size:9px;color:var(--t5);white-space:nowrap;font-family:'DM Mono',monospace">${op}%</span>
+        </div>
       </div>`;
     el.addEventListener('click',ev=>{
       if(ev.target.classList.contains('adel')||ev.target.classList.contains('aeye')||ev.target.tagName==='INPUT')return;
@@ -2722,7 +2880,7 @@ function restoreProject(data,fname){
       }
       case 'txt':{
         const uid='tar'+Date.now()+Math.random().toString(36).slice(2);
-        const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
+        const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
         layer=L.marker(obj.latlng,{icon,draggable:false,pane:'annotations'});
         layer._meta={type:'txt',content:obj.content||'',label:obj.label||'',notes:obj.notes||'',color:col};layer._isAnn=true;
         layer.bindPopup(()=>txtPop(obj.content||'',col,uid),{maxWidth:280,minWidth:240});
@@ -2760,10 +2918,95 @@ function confirmReset(){
 
 // ── 25. RESET VIEW ──
 function resetView(){
-  const mv=document.querySelector('meta[name=viewport]');if(mv)mv.content='width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no';
-  try{if(mapLayers.length)map.fitBounds(mapLayers[0].bounds,{padding:[20,20]});else if(anns.length)map.fitBounds(fg.getBounds(),{padding:[40,40],maxZoom:16});else map.setView([46.8,2.3],6);}catch(e){}
-  setTool('nav');showToast('✓ Vue recentrée');
+  window.scrollTo({left:0, top:0, behavior:'instant'});
+  document.body.scrollLeft = 0;
+  document.documentElement.scrollLeft = 0;
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  try{
+    if(mapLayers.length) map.fitBounds(mapLayers[0].bounds,{padding:[20,20]});
+    else if(anns.length) map.fitBounds(fg.getBounds(),{padding:[40,40],maxZoom:16});
+    else map.setView([46.8,2.3],6);
+    setTimeout(()=>map.invalidateSize(),200);
+  }catch(e){}
+  setTool('nav');
+  showToast('✓ Vue recentrée');
 }
+
+// ── MODALE OUTILS ──
+function toggleOutilsModal(){
+  const m = document.getElementById('outils-modal');
+  m.classList.toggle('on');
+  const cc = document.getElementById('cc-outils');
+  if(cc) cc.value = document.getElementById('cc').value;
+  syncOutilsSwatches();
+  ['imp','ruler','poly','circ','pt','emoji','pen','txt','edit'].forEach(t=>{
+    const b = document.getElementById('ob-'+t);
+    if(b) b.classList.toggle('on', tool===t || (t==='edit' && document.querySelector('[data-t=edit]')?.classList.contains('on')));
+  });
+}
+
+function syncOutilsSwatches(){
+  const src = document.getElementById('swatches');
+  const dst = document.getElementById('swatches-outils');
+  if(src && dst) dst.innerHTML = src.innerHTML;
+  const activeCol = TC[tool] || TC.ruler || '#2563eb';
+  if(dst) dst.querySelectorAll('.csw').forEach(el=>{
+    if(el.style.background === activeCol) el.classList.add('sel');
+    el.onclick = ()=>{
+      applyColorToAllTools(el.style.background);
+      dst.querySelectorAll('.csw').forEach(s=>s.classList.remove('sel'));
+      el.classList.add('sel');
+      document.getElementById('cc-outils').value = el.style.background;
+      document.getElementById('cc').value = el.style.background;
+    };
+  });
+  const cc = document.getElementById('cc-outils');
+  if(cc) cc.value = activeCol;
+}
+
+function applyColorToAllTools(col){
+  Object.keys(TC).forEach(k => TC[k] = col);
+  document.getElementById('cc').value = col;
+  document.querySelectorAll('.cdot').forEach(d=>d.style.background = col);
+}
+
+function setCustomColorOutils(col){
+  applyColorToAllTools(col);
+  document.querySelectorAll('.csw').forEach(s=>s.classList.remove('sel'));
+}
+
+function outilAction(t){
+  if(_pendingColor !== null){
+    _globalColor = _pendingColor;
+    if(TC[t] !== undefined) TC[t] = _pendingColor;
+  } else if(_globalColor !== null){
+    if(TC[t] !== undefined) TC[t] = _globalColor;
+  }
+  _pendingColor = null;
+  closeOutilsModal();
+  if(t==='imp'){ setTimeout(()=>document.getElementById('map-fi').click(), 150); return; }
+  if(t==='edit'){ setTimeout(()=>toggleEdit(), 150); return; }
+  if(t==='pt'){ tool='pt'; setTimeout(()=>openPtModal(), 150); return; }
+  if(t==='emoji'){
+    tool='emoji';
+    emojiColor = TC.emoji;
+    setTimeout(()=>openEmojiModal(), 150); return;
+  }
+  if(tool===t){ setTool('nav'); } else { setTool(t); }
+  m.classList.remove('on');
+}
+
+function _showToolHint(id, onDone, label){
+  let h = document.getElementById(id);
+  if(!h){ h=document.createElement('div'); h.id=id;
+    h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';
+    document.body.appendChild(h); }
+  h.innerHTML='<span style="opacity:.7;font-size:11px">'+label+'</span><button onclick="_toolHintDone(''+id+'')" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button><button onclick="setTool('nav')" style="background:#6b7280;color:#fff;border:none;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer">✕</button>';
+  h._onDone=onDone; h.style.display='flex';
+}
+function _hideToolHint(id){ const h=document.getElementById(id); if(h) h.style.display='none'; }
+function _toolHintDone(id){ const h=document.getElementById(id); if(h&&h._onDone) h._onDone(); }
 
 // ── 26. DRAG & DROP GLOBAL ──
 const gdo=document.getElementById('gdo');
@@ -2817,11 +3060,7 @@ restoreSession();
 updateList();
 showToast('Sentinel Project V1 — Prêt');
 
-function mobileBackToInterface(){
-  window.scrollTo({left:0, top:0, behavior:'smooth'});
-  document.body.scrollLeft = 0;
-  document.documentElement.scrollLeft = 0;
-}
+
 
 // Avertissement fermeture si modifications non exportées
 let _hasUnsaved = false;
@@ -2853,7 +3092,7 @@ window.addEventListener('beforeunload', e => {
 (function(){
   const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
     && !/Windows NT|Macintosh/i.test(navigator.userAgent);
-  if(isMobile){const h=document.getElementById('mobile-hint');if(h)h.style.display='block';}
+  if(isMobile) setTimeout(()=>resetView(), 600);
 })();
 
 // ══════════════════════════════════════════════
