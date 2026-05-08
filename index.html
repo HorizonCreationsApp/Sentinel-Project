@@ -3158,10 +3158,18 @@ const IGN_LAYERS = {
     {
       id:'ign-pentes',
       name:'Carte des pentes (PAC)',
-      desc:'Seuils pente agriculture : 7–10% bleu · 10–15% mauve · 15–20% orange · >20% rouge',
-      proto:'wmts', layer:'GEOGRAPHICALGRIDSYSTEMS.SLOPES.PAC',
-      format:'image/png', minZoom:6, maxZoom:15, opacity:0.7,
+      desc:'Pentes >7% pour aides PAC — rouge = >20%',
+      url:'https://data.geopf.fr/wms-r?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=GEOGRAPHICALGRIDSYSTEMS.SLOPES.PAC&STYLES=&FORMAT=image/png&TRANSPARENT=true&CRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}',
+      proto:'wms', minZoom:6, maxZoom:17, opacity:0.7,
       badge:{text:'Agri',cls:'new'}
+    },
+    {
+      id:'ign-pentes-ski',
+      name:'Carte des pentes (Avalanches)',
+      desc:'30° jaune · 35° orange · 40° rouge · 45° violet',
+      proto:'wmts', layer:'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN',
+      format:'image/png', minZoom:6, maxZoom:17, opacity:0.7,
+      badge:{text:'Secours',cls:'new'}
     }
   ],
   '📜 Cartes historiques': [
@@ -3203,6 +3211,18 @@ function nextBaseZ(){
 
 // Crée la couche Leaflet (tout en WMTS public)
 function ignMakeLayer(ldef, zIndex){
+  if(ldef.proto === 'wms' && ldef.url){
+    return L.tileLayer.wms(ldef.url.split('?')[0], {
+      layers: ldef.url.match(/LAYERS=([^&]+)/)?.[1] || '',
+      format: 'image/png',
+      transparent: true,
+      version: '1.3.0',
+      opacity: ldef.opacity||0.7,
+      minZoom: ldef.minZoom||6,
+      maxZoom: ldef.maxZoom||17,
+      attribution:'© IGN Géoplateforme — Licence Ouverte Etalab 2.0'
+    });
+  }
   const f = ldef.format||'image/png';
   const url = `${IGN_WMTS}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&LAYER=${ldef.layer}&FORMAT=${f}`;
   return L.tileLayer(url, {
