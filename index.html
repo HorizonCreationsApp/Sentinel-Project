@@ -1525,62 +1525,66 @@ function startPoly(){
   _polyShowHint();
 
   const mc=map.getContainer();
-  let _pendingPt=null; // timer pour le délai anti-2-doigts
+  let _touchStart=null;
+  let _isDragging=false;
 
   function onPolyTouch(e){
     if(!_polyActive)return;
-
     if(e.touches.length>=2){
-      // 2e doigt arrivé : annuler le point en attente s'il y en a un
-      if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
-      e.stopPropagation();
+      _touchStart=null;
+      _isDragging=false;
       map.dragging.enable();
       map.touchZoom.enable();
       return;
     }
-
-    // 1 doigt : capturer la position MAINTENANT mais attendre 80ms
-    // pour voir si un 2e doigt arrive (geste pan/zoom)
     e.preventDefault();
     e.stopPropagation();
-    map.dragging.disable();
-
     const t=e.touches[0];
     const r=mc.getBoundingClientRect();
-    const pt=map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top));
-    const now=Date.now();
-
-    if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
-    _pendingPt=setTimeout(()=>{
-      _pendingPt=null;
-      if(!_polyActive)return;
-
-      // Double-tap détecté uniquement si le 2e tap est PROCHE du précédent (≤ 25px)
-      // — évite les faux positifs quand l'utilisateur place des points rapidement
-      const dx=t.clientX-(_polyLastTapPos?_polyLastTapPos.x:Infinity);
-      const dy=t.clientY-(_polyLastTapPos?_polyLastTapPos.y:Infinity);
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      const isDoubleTap=(now-_polyLastTap<500)&&dist<=25&&_polyPts.length>=3;
-
-      _polyLastTap=now;
-      _polyLastTapPos={x:t.clientX,y:t.clientY};
-
-      if(isDoubleTap){
-        _polyFinish();
-        return;
-      }
-      _polyAddPt(pt);
-    },80);
-  }
-
-  function onPolyTouchEnd(e){
-    if(!_polyActive)return;
-    if(e.touches.length===0)map.dragging.enable();
+    _touchStart={
+      x:t.clientX, y:t.clientY,
+      latlng:map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top))
+    };
+    _isDragging=false;
+    map.dragging.disable();
   }
 
   function onPolyTouchMove(e){
-    // Si l'utilisateur glisse (même 1 doigt), annuler le point en attente
-    if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
+    if(!_polyActive||!_touchStart)return;
+    if(e.touches.length>=2){_isDragging=true;map.dragging.enable();return;}
+    const t=e.touches[0];
+    const dx=t.clientX-_touchStart.x;
+    const dy=t.clientY-_touchStart.y;
+    if(!_isDragging&&Math.sqrt(dx*dx+dy*dy)>10){
+      _isDragging=true;
+      map.dragging.enable();
+    }
+    if(_isDragging){
+      const r=mc.getBoundingClientRect();
+      const cur=map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top));
+      const c=map.getCenter();
+      map.panTo([c.lat+(_touchStart.latlng.lat-cur.lat),c.lng+(_touchStart.latlng.lng-cur.lng)],{animate:false});
+      _touchStart.x=t.clientX;_touchStart.y=t.clientY;
+      _touchStart.latlng=map.containerPointToLatLng(L.point(t.clientX-r.left,t.clientY-r.top));
+    }
+  }
+
+  function onPolyTouchEnd(e){
+    if(!_polyActive||!_touchStart)return;
+    map.dragging.enable();
+    if(!_isDragging){
+      const pt=_touchStart.latlng;
+      const now=Date.now();
+      const dx=_touchStart.x-(_polyLastTapPos?_polyLastTapPos.x:Infinity);
+      const dy=_touchStart.y-(_polyLastTapPos?_polyLastTapPos.y:Infinity);
+      const isDoubleTap=(now-_polyLastTap<500)&&Math.sqrt(dx*dx+dy*dy)<=25&&_polyPts.length>=3;
+      _polyLastTap=now;
+      _polyLastTapPos={x:_touchStart.x,y:_touchStart.y};
+      if(isDoubleTap){_polyFinish();_touchStart=null;_isDragging=false;return;}
+      _polyAddPt(pt);
+    }
+    _touchStart=null;
+    _isDragging=false;
   }
 
   mc.addEventListener('touchstart',onPolyTouch,{passive:false,capture:true});
@@ -1604,7 +1608,8 @@ function startPoly(){
   // Stockage des handlers pour nettoyage
   _polyCleanup=function(){
     _polyActive=false;
-    if(_pendingPt){clearTimeout(_pendingPt);_pendingPt=null;}
+    _touchStart=null;
+    _isDragging=false;
     mc.removeEventListener('touchstart',onPolyTouch,{capture:true});
     mc.removeEventListener('touchmove',onPolyTouchMove,{capture:false});
     mc.removeEventListener('touchend',onPolyTouchEnd,{capture:false});
