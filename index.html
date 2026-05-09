@@ -3188,14 +3188,20 @@ const IGN_LAYERS = {
       format:'image/png', minZoom:6, maxZoom:19, opacity:0.75
     }
   ],
-  '🗺 Cartes topographiques': [
+  '🌊 Données terrain': [
     {
-      id:'ign-planv2',
-      name:'Plan IGN v2',
-      desc:'Cartographie multi-échelles IGN — mise à jour régulière',
-      proto:'wmts', layer:'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
-      format:'image/png', minZoom:6, maxZoom:19, opacity:1,
-      badge:{text:'✓ Etalab 2.0',cls:'new'}
+      id:'ign-hydro',
+      name:'Réseau hydrographique',
+      desc:'Cours d’eau, lacs, réservoirs, zones humides — mise à jour régulière',
+      layer:'HYDROGRAPHY.HYDROGRAPHY', proto:'wmts', format:'image/png', minZoom:6, maxZoom:19, opacity:0.8,
+      badge:{text:'Etalab 2.0',cls:'new'}
+    },
+    {
+      id:'ign-bati',
+      name:'Bâtiments',
+      desc:'Emprise au sol des bâtiments BD TOPO® — mise à jour régulière',
+      layer:'BUILDINGS.BUILDINGS', proto:'wmts', format:'image/png', minZoom:6, maxZoom:19, opacity:0.8,
+      badge:{text:'Etalab 2.0',cls:'new'}
     }
   ],
   '🛰 Imagerie': [
