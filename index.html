@@ -668,10 +668,42 @@ input[type=range]:focus{outline:none}
   </div>
   <!-- Géolocalisation -->
   <button class="tb-ico-btn" onclick="geolocate()" title="Me localiser">📍</button>
+  <!-- Météo -->
+  <button class="tb-ico-btn" onclick="openMeteoModal()" title="Météo" style="font-size:17px">⛅</button>
   <div class="tbsep"></div>
   <span class="spill" id="sc" style="display:none">—</span>
   <span class="spill">Z <strong id="sz">6</strong></span>
   <span class="spill"><strong id="so">0</strong> obj</span>
+</div>
+
+<!-- ══ MODALE MÉTÉO ══ -->
+<div class="mbg" id="meteo-modal">
+  <div class="mbox2" style="max-width:320px;text-align:center">
+    <div style="font-size:22px;margin-bottom:6px">⛅</div>
+    <div class="mtit" style="margin-bottom:8px">Consulter la météo</div>
+    <p style="font-size:11px;color:var(--t5);line-height:1.6;margin-bottom:16px;max-width:260px;margin-left:auto;margin-right:auto">
+      Vous allez être redirigé vers un site météo externe. Sentinel Project <strong>restera ouvert</strong> dans cet onglet.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <button onclick="openMeteo('windy')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--bdr);border-radius:10px;background:var(--bg);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--t9);transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--bdr)'">
+        <span style="font-size:20px">🌬</span>
+        <div style="text-align:left">
+          <div>Windy</div>
+          <div style="font-size:10px;font-weight:400;color:var(--t5)">windy.com — vent, pluie, nuages animés</div>
+        </div>
+        <span style="margin-left:auto;color:var(--t3)">↗</span>
+      </button>
+      <button onclick="openMeteo('mf')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--bdr);border-radius:10px;background:var(--bg);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--t9);transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--bdr)'">
+        <span style="font-size:20px">🇫🇷</span>
+        <div style="text-align:left">
+          <div>Météo-France</div>
+          <div style="font-size:10px;font-weight:400;color:var(--t5)">meteofrance.com — saisir votre ville</div>
+        </div>
+        <span style="margin-left:auto;color:var(--t3)">↗</span>
+      </button>
+    </div>
+    <button class="mcancel" onclick="document.getElementById('meteo-modal').classList.remove('on')">Fermer</button>
+  </div>
 </div>
 
 <!-- ══ MODALE OUTILS ══ — hors #main -->
@@ -1020,7 +1052,11 @@ input[type=range]:focus{outline:none}
       <b style="color:var(--t9)">7. Cookies et traceurs</b><br>
       Aucun cookie publicitaire ni traceur tiers. Un token de session JWT est stocké localement sur l'appareil aux seules fins d'authentification (localStorage ou sessionStorage selon le choix de l'utilisateur). Ce token ne contient aucune donnée de localisation.<br><br>
 
-      <b style="color:var(--t9)">8. Droit applicable</b><br>
+      <b style="color:var(--t9)">8. Services météorologiques tiers</b><br>
+      Sentinel Project propose des liens vers des services météorologiques externes (<b>Météo-France</b> — meteofrance.com et <b>Windy</b> — windy.com) accessibles via un bouton dédié. Ces liens ouvrent les sites concernés dans un nouvel onglet du navigateur de l'utilisateur.<br>
+      L'éditeur de Sentinel Project n'est ni affilié, ni partenaire, ni responsable des contenus, données, disponibilité ou exactitude de ces services tiers. <b>L'utilisateur accède à ces sites externes sous sa seule responsabilité</b>, dans le respect des conditions d'utilisation propres à chaque service. Sentinel Project ne collecte, ne transmet, ni ne traite aucune donnée météorologique. Les coordonnées géographiques transmises dans l'URL de redirection sont issues de la carte affichée et traitées exclusivement sur l'appareil de l'utilisateur.<br><br>
+
+      <b style="color:var(--t9)">9. Droit applicable</b><br>
       Droit français. Tribunal judiciaire de Perpignan (France). Protection mondiale (Convention de Berne + ADPIC/TRIPS).<br><br>
 
       <b>© 2026 Frédéric Ferra — Tous droits réservés.</b>
@@ -3111,6 +3147,25 @@ window.addEventListener('beforeunload', e => {
     return e.returnValue;
   }
 });
+
+// ── MÉTÉO ──
+function openMeteoModal(){
+  document.getElementById('meteo-modal').classList.add('on');
+}
+function openMeteo(service){
+  const c = map.getCenter();
+  const lat = c.lat.toFixed(4);
+  const lng = c.lng.toFixed(4);
+  const z = map.getZoom();
+  let url;
+  if(service === 'mf'){
+    url = 'https://meteofrance.com/';
+  } else if(service === 'windy'){
+    url = `https://www.windy.com/?${lat},${lng},${Math.min(z,13)}`;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+  document.getElementById('meteo-modal').classList.remove('on');
+}
 
 (function(){
   const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
