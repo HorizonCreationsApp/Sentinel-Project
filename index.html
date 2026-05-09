@@ -2870,7 +2870,11 @@ function restoreProject(data,fname){
   });
   renderML();fg.bringToFront();
 
-  (data.annotations||[]).forEach(obj=>{
+  // Trier : surfaces/lignes d'abord, puis points/markers
+  const ORDER = {ruler:0, pen:0, poly:1, circ:1, geojson:2, pt:3, emoji:3, txt:3};
+  const sorted = [...(data.annotations||[])].sort((a,b)=>(ORDER[a.type]??2)-(ORDER[b.type]??2));
+
+  sorted.forEach(obj=>{
     const col=obj.color||'#2563eb';let layer=null;
     switch(obj.type){
       case 'ruler':case 'pen':{
