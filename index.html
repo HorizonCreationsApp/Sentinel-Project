@@ -470,7 +470,7 @@ input[type=range]:focus{outline:none}
 
 /* Toast */
 #portrait-msg{display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.95);flex-direction:column;gap:20px;align-items:center;justify-content:center;color:#fff;text-align:center;padding:30px}
-@media(orientation:portrait) and (max-width:900px){#portrait-msg{display:flex}}
+/* portrait géré par JS */
 #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(68px);background:var(--t9);color:var(--w);font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:20px;z-index:9999;transition:transform .24s ease;pointer-events:none;box-shadow:var(--sl);white-space:nowrap}
 #toast.on{transform:translateX(-50%) translateY(0)}
 
@@ -657,7 +657,7 @@ input[type=range]:focus{outline:none}
 <div id="topbar">
   <div class="logo">
     <div class="logo-dot"></div>
-    Sentinel Project <span style="font-size:10px;font-weight:500;color:var(--blue);letter-spacing:.5px">V1</span>
+    Sentinel Project <span style="font-size:10px;font-weight:500;color:var(--blue);letter-spacing:.5px">V1.2.1</span>
     <span class="logo-copy">© 2026 Tous droits réservés</span>
     <button class="tb-ico-btn" onclick="document.getElementById('legal-modal').classList.add('on')" title="Mentions légales" style="width:22px;height:22px;font-size:11px;font-weight:600">⚖</button>
   </div>
@@ -3664,8 +3664,42 @@ async function doSetPassword(){
   <div style="font-size:18px;font-weight:700;font-family:'DM Sans',sans-serif">Tournez votre appareil</div>
   <div style="font-size:13px;opacity:.8;font-family:'DM Sans',sans-serif;line-height:1.6;max-width:260px">Sentinel Project est optimisé pour une utilisation en mode <b>paysage</b></div>
   <div style="font-size:36px">🔄</div>
+  <button onclick="dismissPortrait()" style="margin-top:8px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 24px;border-radius:20px;cursor:pointer">Continuer quand même</button>
 </div>
 <style>@keyframes spin{0%{transform:rotate(0deg)}25%{transform:rotate(-20deg)}75%{transform:rotate(20deg)}100%{transform:rotate(0deg)}}</style>
+<script>
+(function(){
+  // Afficher seulement si portrait ET pas encore dismissed dans cette session
+  function checkPortrait(){
+    const el = document.getElementById('portrait-msg');
+    if(!el) return;
+    const dismissed = sessionStorage.getItem('portrait-dismissed');
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobile = window.innerWidth < 900;
+    if(isPortrait && isMobile && !dismissed){
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+  window.dismissPortrait = function(){
+    sessionStorage.setItem('portrait-dismissed','1');
+    document.getElementById('portrait-msg').style.display = 'none';
+  };
+  // Vérifier au chargement et à la rotation
+  window.addEventListener('load', checkPortrait);
+  window.addEventListener('resize', function(){
+    // Si l'utilisateur tourne en paysage, cacher — si retourne en portrait et pas dismissed, réafficher
+    const dismissed = sessionStorage.getItem('portrait-dismissed');
+    const el = document.getElementById('portrait-msg');
+    if(!el) return;
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobile = window.innerWidth < 900;
+    if(!isPortrait){ el.style.display = 'none'; }
+    else if(isMobile && !dismissed){ el.style.display = 'flex'; }
+  });
+})();
+</script>
 
 </body>
 </html>
