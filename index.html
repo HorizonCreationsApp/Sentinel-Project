@@ -123,8 +123,7 @@
 #setpwd-screen.on{display:flex;}
 
 /* Bouton déconnexion */
-#logout-btn{display:none!important}
-#chgpwd-btn{display:none!important}
+
 /* Modale changement mot de passe */
 #chgpwd-modal{
   position:fixed;inset:0;z-index:9998;
@@ -582,12 +581,12 @@ input[type=range]:focus{outline:none}
     </div>
   </div>
 </div>
-<button id="chgpwd-btn" onclick="openChgPwd()" title="Changer mon mot de passe">
+<button id="chgpwd-btn" onclick="openChgPwd()" title="Changer mon mot de passe" style="display:none">
   🔑 Mot de passe
 </button>
 
 <!-- Bouton déconnexion (visible une fois connecté) -->
-<button id="logout-btn" onclick="doLogout()" title="Se déconnecter">
+<button id="logout-btn" onclick="doLogout()" title="Se déconnecter" style="display:none">
   👤 <span id="logout-user"></span> · Déconnexion
 </button>
 
@@ -3405,11 +3404,13 @@ function _showAuth(){
 // Déverrouille l'app et masque l'écran de connexion
 function _showApp(user){
   document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('reset-btn').style.display='';
+  const rb=document.getElementById('reset-btn');
+  if(rb) rb.style.display='';
   const lb=document.getElementById('logout-btn');
   const lu=document.getElementById('logout-user');
-  lb.classList.add('visible');
-  document.getElementById('chgpwd-btn').classList.add('visible');
+  if(lb) lb.classList.add('visible');
+  const cb=document.getElementById('chgpwd-btn');
+  if(cb) cb.classList.add('visible');
   if(lu) lu.textContent=user.email.split('@')[0];
   // Afficher le footer auth dans le panel
   const af=document.getElementById('auth-footer');
