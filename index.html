@@ -442,7 +442,7 @@ input[type=range]:focus{outline:none}
 /* MODALS */
 .mbg{position:fixed;inset:0;background:rgba(15,23,42,.32);z-index:8000;display:none;align-items:center;justify-content:center}
 .mbg.on{display:flex}
-.mbox2{background:var(--w);border-radius:12px;box-shadow:var(--sl);padding:20px;width:290px;max-width:92vw;max-height:90vh;overflow-y:scroll}
+.mbox2{background:var(--w);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.13),0 0 0 10px #ffffff;padding:20px;width:290px;max-width:92vw;max-height:90vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--blue) rgba(0,0,0,0.08)}
 .mtit{font-size:14px;font-weight:600;color:var(--t9);margin-bottom:5px}
 .msub{font-size:12px;color:var(--t5);margin-bottom:13px;line-height:1.5}
 .mbtns{display:flex;flex-direction:column;gap:7px}
@@ -469,6 +469,8 @@ input[type=range]:focus{outline:none}
 .geolocme{width:14px;height:14px;background:var(--blue);border:3px solid var(--w);border-radius:50%;box-shadow:0 0 0 3px rgba(37,99,235,.3)}
 
 /* Toast */
+#portrait-msg{display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.95);flex-direction:column;gap:20px;align-items:center;justify-content:center;color:#fff;text-align:center;padding:30px}
+@media(orientation:portrait) and (max-width:900px){#portrait-msg{display:flex}}
 #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(68px);background:var(--t9);color:var(--w);font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:20px;z-index:9999;transition:transform .24s ease;pointer-events:none;box-shadow:var(--sl);white-space:nowrap}
 #toast.on{transform:translateX(-50%) translateY(0)}
 
@@ -545,7 +547,8 @@ input[type=range]:focus{outline:none}
     </div>
     <div class="auth-footer">
       Accès réservé aux utilisateurs autorisés.<br>
-      © 2026 Frédéric Ferra — Tous droits réservés
+      © 2026 Frédéric Ferra — Tous droits réservés<br>
+      <span onclick="var m=document.getElementById('legal-modal');m.classList.add('on');m.style.zIndex='99999'" style="color:var(--blue);cursor:pointer;font-size:10px;text-decoration:underline">Mentions légales &amp; Politique de confidentialité</span>
     </div>
   </div>
 </div><!-- /auth-screen -->
@@ -648,7 +651,7 @@ input[type=range]:focus{outline:none}
 </div>
 
 
-<button id="reset-btn" onclick="resetView()">⊹ Recentrer</button>
+
 
 <!-- TOPBAR -->
 <div id="topbar">
@@ -1015,12 +1018,12 @@ input[type=range]:focus{outline:none}
 
 <!-- Mentions légales -->
 <div class="mbg" id="legal-modal">
-  <div class="mbox2" style="width:400px;max-height:80vh;overflow-y:auto">
+  <div class="mbox2" style="width:560px;max-height:88vh">
     <div class="mtit">⚖ Mentions légales — Sentinel Project</div>
     <div style="font-size:10.5px;color:var(--t7);line-height:1.75;margin-top:10px">
 
       <b style="color:var(--t9)">1. Éditeur</b><br>
-      Sentinel Project est édité par <b>Frédéric Ferra</b>, micro-entrepreneur.<br>
+      Sentinel Project est édité par <b>Frédéric Ferra</b> (ci-après "l'Éditeur"), micro-entrepreneur.<br>
       SIRET : 838 040 491 00014<br>
       Contact : contact@horizoncreations.net<br><br>
 
@@ -1031,30 +1034,32 @@ input[type=range]:focus{outline:none}
       <b style="color:var(--t9)">3. Propriété intellectuelle</b><br>
       Sentinel Project constitue une œuvre originale protégée par le Code de la propriété intellectuelle français (L.111-1 et s.) et la Convention de Berne (180+ États).<br>
       © 2026 Frédéric Ferra — Tous droits réservés.<br>
-      Toute reproduction, distribution ou exploitation commerciale sans autorisation écrite préalable est interdite et constitue une contrefaçon (art. L.335-2 CPI).<br>
+      Toute reproduction, distribution ou exploitation commerciale sans autorisation écrite préalable de l'Éditeur est interdite et constitue une contrefaçon (art. L.335-2 CPI).<br>
       Composants open source : Leaflet (BSD-2), IGN Géoplateforme (Etalab 2.0), OpenStreetMap (ODbL).<br><br>
 
       <b style="color:var(--t9)">4. Accès et utilisation</b><br>
       L'accès est réservé aux utilisateurs autorisés. Toute tentative d'accès non autorisé est une infraction pénale (art. 323-1 Code pénal). L'utilisation par une personne morale implique l'acceptation des présentes mentions légales et engage la responsabilité de l'organisation pour l'usage de ses agents.<br><br>
 
       <b style="color:var(--t9)">5. Limitation de responsabilité</b><br>
-      Sentinel Project est fourni dans le cadre d'une <b>obligation de moyens</b> et non de résultat. L'éditeur ne saurait être tenu responsable des interruptions de service, pertes de données, ni des décisions prises sur la base des informations affichées. <b>L'utilisateur reconnaît utiliser l'application sous sa seule et entière responsabilité.</b> L'application constitue un outil d'aide à la décision et ne se substitue pas au jugement professionnel ni aux protocoles réglementaires en vigueur.<br>
+      Sentinel Project est fourni dans le cadre d'une <b>obligation de moyens</b> et non de résultat. L'Éditeur ne saurait être tenu responsable des interruptions de service, pertes de données, ni des décisions prises sur la base des informations affichées. <b>L'utilisateur reconnaît utiliser l'application sous sa seule et entière responsabilité.</b> L'application constitue un outil d'aide à la décision et ne se substitue pas au jugement professionnel ni aux protocoles réglementaires en vigueur.<br>
       Les données cartographiques tierces (IGN, OpenStreetMap) sont fournies sans garantie d'exactitude, notamment pour les usages de sécurité civile, gestion de crise ou défense.<br><br>
 
       <b style="color:var(--t9)">6. Protection des données (RGPD)</b><br>
-      Frédéric Ferra agit en qualité de responsable du traitement (RGPD UE 2016/679 + loi Informatique et Libertés).<br><br>
+      L'Éditeur agit en qualité de responsable du traitement (RGPD UE 2016/679 + loi Informatique et Libertés).<br><br>
+      <b>Base légale du traitement :</b> exécution du contrat d'accès au service (Art. 6.1.b RGPD).<br>
       <b>Données collectées :</b> adresse email, date, heure et adresse IP de connexion.<br>
       <b>Non collecté :</b> la géolocalisation est traitée exclusivement en local sur l'appareil de l'utilisateur et n'est jamais transmise.<br>
       <b>Finalité :</b> gestion des accès et authentification uniquement.<br>
       <b>Conservation :</b> durée de la relation contractuelle, suppression sous 30 jours après résiliation.<br>
-      <b>Droits :</b> accès, rectification, suppression, opposition, portabilité — contact@horizoncreations.net. Recours possible auprès de la CNIL (www.cnil.fr).<br><br>
+      <b>Sous-traitants (Art. 13.1.e RGPD) :</b> Supabase Inc. (authentification et stockage des comptes — serveurs EU-WEST-1, Irlande, DPA signé) ; GitHub Inc./Microsoft (hébergement statique de l'application via GitHub Pages).<br>
+      <b>Droits :</b> accès, rectification, suppression, opposition, portabilité — contact@horizoncreations.net. L'Éditeur s'engage à répondre à toute demande d'exercice des droits dans un délai d'<b>un mois</b> (Art. 12.3 RGPD). Recours possible auprès de la CNIL (www.cnil.fr).<br><br>
 
       <b style="color:var(--t9)">7. Cookies et traceurs</b><br>
       Aucun cookie publicitaire ni traceur tiers. Un token de session JWT est stocké localement sur l'appareil aux seules fins d'authentification (localStorage ou sessionStorage selon le choix de l'utilisateur). Ce token ne contient aucune donnée de localisation.<br><br>
 
       <b style="color:var(--t9)">8. Services météorologiques tiers</b><br>
       Sentinel Project propose des liens vers des services météorologiques externes (<b>Météo-France</b> — meteofrance.com et <b>Windy</b> — windy.com) accessibles via un bouton dédié. Ces liens ouvrent les sites concernés dans un nouvel onglet du navigateur de l'utilisateur.<br>
-      L'éditeur de Sentinel Project n'est ni affilié, ni partenaire, ni responsable des contenus, données, disponibilité ou exactitude de ces services tiers. <b>L'utilisateur accède à ces sites externes sous sa seule responsabilité</b>, dans le respect des conditions d'utilisation propres à chaque service. Sentinel Project ne collecte, ne transmet, ni ne traite aucune donnée météorologique. Les coordonnées géographiques transmises dans l'URL de redirection sont issues de la carte affichée et traitées exclusivement sur l'appareil de l'utilisateur.<br><br>
+      L'Éditeur n'est ni affilié, ni partenaire, ni responsable des contenus, données, disponibilité ou exactitude de ces services tiers. <b>L'utilisateur accède à ces sites externes sous sa seule responsabilité</b>, dans le respect des conditions d'utilisation propres à chaque service. Sentinel Project ne collecte, ne transmet, ni ne traite aucune donnée météorologique. Les coordonnées géographiques transmises dans l'URL de redirection sont issues de la carte affichée et traitées exclusivement sur l'appareil de l'utilisateur.<br><br>
 
       <b style="color:var(--t9)">9. Droit applicable</b><br>
       Droit français. Tribunal judiciaire de Perpignan (France). Protection mondiale (Convention de Berne + ADPIC/TRIPS).<br><br>
@@ -3391,6 +3396,7 @@ try {
 // Masque l'app et montre l'écran de connexion
 function _showAuth(){
   document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('reset-btn').style.display='none';
   document.getElementById('logout-btn').classList.remove('visible');
   document.getElementById('chgpwd-btn').classList.remove('visible');
   document.getElementById('auth-footer').style.display='none';
@@ -3399,6 +3405,7 @@ function _showAuth(){
 // Déverrouille l'app et masque l'écran de connexion
 function _showApp(user){
   document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('reset-btn').style.display='';
   const lb=document.getElementById('logout-btn');
   const lu=document.getElementById('logout-user');
   lb.classList.add('visible');
@@ -3652,5 +3659,13 @@ async function doSetPassword(){
   showToast('✓ Accès activé — bienvenue sur Sentinel Project !');
 }
 </script>
+<div id="portrait-msg">
+  <div style="font-size:52px;animation:spin 2s linear infinite">📱</div>
+  <div style="font-size:18px;font-weight:700;font-family:'DM Sans',sans-serif">Tournez votre appareil</div>
+  <div style="font-size:13px;opacity:.8;font-family:'DM Sans',sans-serif;line-height:1.6;max-width:260px">Sentinel Project est optimisé pour une utilisation en mode <b>paysage</b></div>
+  <div style="font-size:36px">🔄</div>
+</div>
+<style>@keyframes spin{0%{transform:rotate(0deg)}25%{transform:rotate(-20deg)}75%{transform:rotate(20deg)}100%{transform:rotate(0deg)}}</style>
+
 </body>
 </html>
