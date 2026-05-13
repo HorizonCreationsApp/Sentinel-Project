@@ -917,11 +917,6 @@ input[type=range]:focus{outline:none}
   <div class="mbox2" style="width:320px">
     <div class="mtit">🏷 Choisir un marqueur</div>
     <div class="emoji-grid" id="emoji-grid"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-      <span style="font-size:11px;color:var(--t5)">Couleur de fond :</span>
-      <div id="emoji-swatches" style="display:flex;flex-wrap:wrap;gap:4px"></div>
-      <input type="color" id="emoji-cc" value="#f59e0b" style="width:24px;height:24px;border:1px solid var(--bdr);border-radius:50%;cursor:pointer;padding:0;background:none;overflow:hidden"/>
-    </div>
     <div class="mgrid" style="margin-top:12px">
       <button class="mko" onclick="closeEmojiModal()">Annuler</button>
       <button class="mok" id="emoji-ok-btn" onclick="openEmojiPlaceModal()" disabled>Placer →</button>
@@ -1220,19 +1215,6 @@ function setToolColor(col){
 }
 function setCustomColor(col){setToolColor(col);document.querySelectorAll('.csw').forEach(s=>s.classList.remove('sel'));}
 function showCbar(show){document.getElementById('cbar').classList.toggle('on',show);if(show){const col=TC[tool]||'#2563eb';document.getElementById('cc').value=col;}}
-
-// Emoji swatches
-function buildEmojiSwatches(){
-  const c=document.getElementById('emoji-swatches');c.innerHTML='';
-  ['#f59e0b','#dc2626','#059669','#2563eb','#7c3aed','#0f172a'].forEach(col=>{
-    const d=document.createElement('div');d.className='csw';d.style.background=col;d.style.width='20px';d.style.height='20px';
-    if(col==='#0f172a')d.style.border='2px solid #e2e8f0';
-    d.onclick=()=>{emojiColor=col;document.getElementById('emoji-cc').value=col;document.querySelectorAll('#emoji-swatches .csw').forEach(s=>s.classList.remove('sel'));d.classList.add('sel');};
-    c.appendChild(d);
-  });
-}
-buildEmojiSwatches();
-document.getElementById('emoji-cc').addEventListener('input',e=>{emojiColor=e.target.value;document.querySelectorAll('#emoji-swatches .csw').forEach(s=>s.classList.remove('sel'));});
 
 // Emoji grid
 function buildEmojiGrid(){
