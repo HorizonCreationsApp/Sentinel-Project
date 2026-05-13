@@ -782,8 +782,8 @@ input[type=range]:focus{outline:none}
           <div class="iico">🗺</div>
           <div class="itxt"><strong>JPEG/PNG + .JGW</strong>Sélectionner les 2 fichiers ensemble</div>
         </div>
-        <div class="ibox"><span>ℹ️</span><p>Ctrl+clic pour sélectionner .jpeg ET .jgw simultanément. Sans .jgw, les mesures ne seront pas à l'échelle.</p></div>
-        <input type="file" id="map-fi" accept=".jpg,.jpeg,.png,.tif,.tiff,.jgw" multiple style="display:none" onchange="handleMapFiles(event)"/>
+        <div class="ibox"><span>ℹ️</span><p>Ctrl+clic pour sélectionner .jpeg ET .jgw simultanément (ou .png ET .pgw). Sans fichier world, les mesures ne seront pas à l'échelle.</p></div>
+        <input type="file" id="map-fi" accept=".jpg,.jpeg,.png,.tif,.tiff,.jgw,.pgw,.tfw,.wld" multiple style="display:none" onchange="handleMapFiles(event)"/>
       </div>
       <div id="map-layers"></div>
       <!-- Fonds de carte en ligne -->
@@ -1117,6 +1117,9 @@ map.getContainer().style.webkitUserSelect='none';
 // Pane dédié pour les annotations finales — zIndex 650 = au-dessus de tout
 map.createPane('annotations');
 map.getPane('annotations').style.zIndex=650;
+// Pane markers — toujours AU-DESSUS des surfaces/polygones
+map.createPane('markers');
+map.getPane('markers').style.zIndex=660;
 
 // ── 2. TILE DEFS (avant toute utilisation) ──
 const GW='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
@@ -1892,7 +1895,7 @@ function qrUrl(lat,lng){return `https://api.qrserver.com/v1/create-qr-code/?size
 
 function makePt(lat,lng){
   const col=TC.pt;const uid='pt'+Date.now();
-  const mk=L.marker([lat,lng],{icon:ptIcon(col),draggable:false,pane:'annotations'}).addTo(fg);
+  const mk=L.marker([lat,lng],{icon:ptIcon(col),draggable:false,pane:'markers'}).addTo(fg);
   mk._meta={type:'pt',lat,lng,link:'',label:'',resourceName:'',resourceB64:null,resourceType:'',color:col};mk._isAnn=true;
   mk.bindPopup(ptPop(lat,lng,uid,col),{maxWidth:305,minWidth:255});mk.openPopup();
   mk.on('popupopen',()=>setTimeout(()=>{wirePtPop(mk,uid);},60));
@@ -2093,7 +2096,7 @@ function emojiIconFn(em,col){
 
 function placeEmoji(lat,lng,em,col){
   const uid='em'+Date.now();
-  const mk=L.marker([lat,lng],{icon:emojiIconFn(em,col),draggable:false,pane:'annotations'}).addTo(fg);
+  const mk=L.marker([lat,lng],{icon:emojiIconFn(em,col),draggable:false,pane:'markers'}).addTo(fg);
   mk._meta={type:'emoji',emoji:em,label:'',notes:'',phone:'',email:'',link:'',showGps:false,lat,lng,color:col,resourceName:'',resourceB64:null,resourceType:''};mk._isAnn=true;
   mk.bindPopup(emojiPop(lat,lng,uid,em,col),{maxWidth:310,minWidth:260});mk.openPopup();
   mk.on('popupopen',()=>setTimeout(()=>wireEmojiPop(mk,uid,lat,lng),60));
@@ -2254,7 +2257,7 @@ function _endDraw(){
 function placeTxt(e){
   const uid='ta'+Date.now();const col=TC.txt;
   const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
-  const mk=L.marker(e.latlng,{icon,draggable:false,pane:'annotations'}).addTo(fg);
+  const mk=L.marker(e.latlng,{icon,draggable:false,pane:'markers'}).addTo(fg);
   mk._meta={type:'txt',content:'',label:'',notes:'',color:col};mk._isAnn=true;
   mk.bindPopup(txtPop('',col,uid),{maxWidth:280,minWidth:240});
   mk.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(mk._sentinelId);this.openPopup();});
@@ -2661,7 +2664,7 @@ function processMapFiles(files){
   const arr=Array.from(files);
   const imgF=arr.find(f=>/\.(jpg|jpeg|png)$/i.test(f.name));
   const tifF=arr.find(f=>/\.(tif|tiff)$/i.test(f.name));
-  const jgwF=arr.find(f=>/\.jgw$/i.test(f.name));
+  const jgwF=arr.find(f=>/\.(jgw|pgw|tfw|wld)$/i.test(f.name));
   const src=imgF||tifF;
   if(!src){showToast('⚠ Aucun fichier image');return;}
   if(tifF&&tifF.size>80*1024*1024){showToast('⚠ GeoTIFF >80 Mo — Exporter en JPEG depuis QGIS',5000);return;}
@@ -2918,7 +2921,7 @@ function restoreProject(data,fname){
       case 'pt':{
         const uid='ptr'+Date.now()+Math.random().toString(36).slice(2);
         const ll=obj.latlng||[obj.lat,obj.lng];
-        layer=L.marker(ll,{icon:ptIcon(col),draggable:false,pane:'annotations'});
+        layer=L.marker(ll,{icon:ptIcon(col),draggable:false,pane:'markers'});
         const resources=obj.resources||(obj.resourceName?[{name:obj.resourceName,b64:obj.resourceB64||null,type:obj.resourceType||''}]:[]);
         layer._meta={type:'pt',lat:ll[0],lng:ll[1],link:obj.link||'',label:obj.label||'',resources,resourceName:obj.resourceName||'',resourceB64:obj.resourceB64||null,resourceType:obj.resourceType||'',color:col};layer._isAnn=true;
         layer.bindPopup(()=>ptPop(ll[0],ll[1],uid,col),{maxWidth:305,minWidth:255});
@@ -2929,7 +2932,7 @@ function restoreProject(data,fname){
       case 'emoji':{
         const uid='emr'+Date.now()+Math.random().toString(36).slice(2);
         const ll=obj.latlng||[obj.lat,obj.lng];const em=obj.emoji||'🎯';
-        layer=L.marker(ll,{icon:emojiIconFn(em,col),draggable:false,pane:'annotations'});
+        layer=L.marker(ll,{icon:emojiIconFn(em,col),draggable:false,pane:'markers'});
         const resources=obj.resources||(obj.resourceName?[{name:obj.resourceName,b64:obj.resourceB64||null,type:obj.resourceType||''}]:[]);
         layer._meta={type:'emoji',emoji:em,label:obj.label||'',notes:obj.notes||'',phone:obj.phone||'',email:obj.email||'',link:obj.link||'',showGps:!!obj.showGps,lat:ll[0],lng:ll[1],color:col,resources,resourceName:obj.resourceName||'',resourceB64:obj.resourceB64||null,resourceType:obj.resourceType||''};layer._isAnn=true;
         layer.bindPopup(()=>emojiPop(ll[0],ll[1],uid,em,col),{maxWidth:310,minWidth:260});
@@ -2940,7 +2943,7 @@ function restoreProject(data,fname){
       case 'txt':{
         const uid='tar'+Date.now()+Math.random().toString(36).slice(2);
         const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000">T</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]});
-        layer=L.marker(obj.latlng,{icon,draggable:false,pane:'annotations'});
+        layer=L.marker(obj.latlng,{icon,draggable:false,pane:'markers'});
         layer._meta={type:'txt',content:obj.content||'',label:obj.label||'',notes:obj.notes||'',color:col};layer._isAnn=true;
         layer.bindPopup(()=>txtPop(obj.content||'',col,uid),{maxWidth:280,minWidth:240});
         layer.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);highlightAnn(layer._sentinelId);this.openPopup();});
@@ -3093,7 +3096,7 @@ document.addEventListener('drop',e=>{
   const ext=f.name.split('.').pop().toLowerCase();
   if(ext==='json'){const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.version&&d.annotations)restoreProject(d,f.name);else loadGJ(d);}catch(err){showToast('⚠ Fichier invalide');}};r.readAsText(f);}
   else if(ext==='geojson'){const r=new FileReader();r.onload=ev=>{try{loadGJ(JSON.parse(ev.target.result));}catch(e){showToast('⚠ GeoJSON invalide');}};r.readAsText(f);}
-  else if(/\.(jpg|jpeg|png|tif|tiff|jgw)$/i.test(f.name))processMapFiles(e.dataTransfer.files);
+  else if(/\.(jpg|jpeg|png|tif|tiff|jgw|pgw|tfw|wld)$/i.test(f.name))processMapFiles(e.dataTransfer.files);
 });
 function loadGJ(data){const col='#475569';const gj=L.geoJSON(data,{style:{color:col,weight:2,fillOpacity:.1},pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,color:col})});gj.addTo(fg);gj.eachLayer(l=>{l._meta={type:'geojson',color:col};l._isAnn=true;const id=++cnt;l._sentinelId=id;anns.push({id,type:'geojson',layer:l});});try{map.fitBounds(gj.getBounds(),{padding:[30,30]});}catch(e){}updateList();showToast('✓ GeoJSON chargé');}
 
