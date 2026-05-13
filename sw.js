@@ -1,4 +1,4 @@
-const CACHE = 'sentinel-v121';
+const CACHE = 'sentinel-' + '20260513-1840';
 const ASSETS = [
   '/Sentinel-Project/',
   '/Sentinel-Project/index.html'
@@ -18,6 +18,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
