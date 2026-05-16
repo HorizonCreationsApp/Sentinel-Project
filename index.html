@@ -797,7 +797,7 @@ input[type=range]:focus{outline:none}
           <button class="tile-btn" id="tb-cad"  onclick="toggleTile('cad')"><span class="tico">🏠</span>Cadastre<span style="color:var(--t3)">Parcelles</span></button>
           <button class="tile-btn" id="tb-dfci" onclick="toggleTile('dfci')"><span class="tico">🔥</span>DFCI<span style="color:var(--t3)">Zoom 10+</span></button>
         </div>
-        <button class="tile-btn" id="tb-ign-all" onclick="openIgnPanel()" style="width:100%;margin-top:3px;flex-direction:row;gap:6px;justify-content:center;background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border-color:#2563eb;padding:7px 8px"><span class="tico" style="font-size:16px">🇫🇷</span><span style="font-weight:700;font-size:11px">Cartes IGN</span></button>
+        <button class="tile-btn" id="tb-ign-all" onclick="openIgnPanel()" style="width:100%;margin-top:3px;flex-direction:column;gap:2px;justify-content:center;align-items:center;background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border-color:#2563eb;padding:7px 8px"><span style="font-size:13px;line-height:1">🇫🇷  Cartes +</span></button>
         <div class="url-cfg-row">
           <span style="font-size:8px;color:var(--t3);align-self:center">URL :</span>
           <button class="url-cfg-btn" onclick="openUrlEdit('osm')">🗺 OSM</button>
@@ -1079,12 +1079,12 @@ input[type=range]:focus{outline:none}
 <div class="mbg" id="ign-modal" onclick="if(event.target===this)closeIgnPanel()">
   <div class="mbox2" style="width:420px;max-height:calc(100dvh - 80px);display:flex;flex-direction:column">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
-      <span>🇫🇷 Cartes IGN — Géoportail</span>
+      <span>🗺 Cartes + — Fonds thématiques</span>
       <button onclick="closeIgnPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t5);line-height:1">✕</button>
     </div>
     <div style="font-size:11px;color:var(--t5);margin:4px 0 10px;line-height:1.4">Cliquez sur une couche pour l'activer/désactiver sur la carte. Les couches actives s'ajoutent à vos fonds existants.</div>
     <div id="ign-layers-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;padding-right:4px"></div>
-    <div style="margin-top:12px;font-size:10px;color:var(--t3);text-align:center">Source : IGN Géoplateforme · Licence Ouverte Etalab 2.0 · © IGN</div>
+    <div id="ign-panel-attr" style="margin-top:12px;font-size:10px;color:var(--t3);text-align:center">Source : IGN Géoplateforme · Licence Ouverte Etalab 2.0 · © IGN</div>
   </div>
 </div>
 
@@ -2733,6 +2733,7 @@ function renderML(){
   Object.entries(ignActiveLayers).forEach(([id,{layer,ldef}])=>{
     all.push({key:id,type:'ign',label:ldef.name,icon:'🇫🇷',layer,ldef,zIndex:layer.options.zIndex||100});
   });
+
   all.sort((a,b)=>b.zIndex-a.zIndex);
   // Réassigner des zIndex propres et consécutifs
   all.forEach((entry,idx)=>{
@@ -2750,6 +2751,9 @@ function renderML(){
     let actions='';
     if(entry.type==='tile'){
       actions=`<button class="mld" onclick="toggleTile('${entry.key}')">✕</button>`;
+    } else if(entry.ldef&&entry.ldef.proto==='overpass'){
+      actions=`<button class="mlv" onclick="_showDeciInfo()" title="Information" style="font-size:11px">ℹ</button>
+               <button class="mld" onclick="removeIgnLayerById('${entry.key}')">✕</button>`;
     } else {
       actions=`<button class="mlv" onclick="openIgnUrlEdit(ignActiveLayers['${entry.key}']&&ignActiveLayers['${entry.key}'].ldef)" title="URL" style="font-size:11px">⚙</button>
                <button class="mld" onclick="removeIgnLayerById('${entry.key}')">✕</button>`;
@@ -2783,8 +2787,8 @@ function renderML(){
   });
 }
 function setTO(key,v){if(!activeTiles[key])return;activeTiles[key].layer.setOpacity(v);const el=document.getElementById('topv-'+key);if(el)el.textContent=Math.round(v*100)+'%';}
-function setIgnTO(id,v){if(!ignActiveLayers[id])return;ignActiveLayers[id].layer.setOpacity(v);const el=document.getElementById('ign-opv-'+id);if(el)el.textContent=Math.round(v*100)+'%';}
-function removeIgnLayerById(id){if(!ignActiveLayers[id])return;map.removeLayer(ignActiveLayers[id].layer);delete ignActiveLayers[id];renderML();const modal=document.getElementById('ign-modal');if(modal&&modal.classList.contains('on'))openIgnPanel();showToast('✕ Couche IGN retirée');}
+function setIgnTO(id,v){if(!ignActiveLayers[id])return;const lyr=ignActiveLayers[id].layer;if(lyr.setOpacity)lyr.setOpacity(v);else{lyr.options.opacity=v;lyr.eachLayer&&lyr.eachLayer(mk=>{const el=mk.getElement?mk.getElement():null;if(el)el.style.opacity=v;});}const el=document.getElementById('ign-opv-'+id);if(el)el.textContent=Math.round(v*100)+'%';}
+function removeIgnLayerById(id){if(!ignActiveLayers[id])return;if(id==='osm-hydrants'){_removeHydrants();const modal=document.getElementById('ign-modal');if(modal&&modal.classList.contains('on'))openIgnPanel();return;}map.removeLayer(ignActiveLayers[id].layer);delete ignActiveLayers[id];renderML();const modal=document.getElementById('ign-modal');if(modal&&modal.classList.contains('on'))openIgnPanel();showToast('✕ Couche IGN retirée');}
 
 // Déplacement unifié tile + IGN
 function moveBaseLayer(key,type,dir){
@@ -3280,6 +3284,15 @@ const IGN_LAYERS = {
   ],
   '🌊 Données terrain': [
     {
+      id:'osm-hydrants',
+      name:'💧 DECI — Points d\'eau',
+      desc:"Poteaux et bouches incendie, citernes — données collaboratives",
+      proto:'overpass',
+      minZoom:14,
+      badge:{cls:'badge-new',text:'OSM'},
+      opacity:1.0
+    },
+    {
       id:'ign-hydro',
       name:'Réseau hydrographique',
       desc:'Cours d’eau, lacs, réservoirs, zones humides — mise à jour régulière',
@@ -3341,6 +3354,19 @@ const IGN_LAYERS = {
     }
   ]
 };
+// ── COUCHES OSM (Overpass API) ──
+const OSM_LAYERS = [
+  {
+    id: 'osm-hydrants',
+    name: '🔴 Poteaux Incendie',
+    desc: "Poteaux incendie et bouches d'incendie — données OSM collaboratives",
+    minZoom: 14,
+    zoomMsg: 'Zoomez au niveau 14+ pour afficher les poteaux incendie',
+    opacity: 1.0
+  }
+];
+// Stockage de la couche Overpass active
+
 
 // Couches IGN actives : id → { layer, ldef }
 const ignActiveLayers = {};
@@ -3351,6 +3377,8 @@ const IGN_WMTS = 'https://data.geopf.fr/wmts';
 function ignTileUrl(ldef){
   return `${IGN_WMTS}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&LAYER=${ldef.layer}&FORMAT=${ldef.format||'image/png'}`;
 }
+
+//
 
 // Calcule le prochain zIndex disponible dans le pool unifié tiles+ign
 function nextBaseZ(){
@@ -3388,6 +3416,52 @@ function ignMakeLayer(ldef, zIndex){
   });
 }
 
+// ── OVERPASS — Poteaux Incendie ──
+function _hydrantIcon(type){
+  const color = type === 'pillar' ? '#dc2626' : type === 'underground' ? '#2563eb' : '#d97706';
+  const shape = type === 'underground' ? 'rect' : 'circle';
+  const svg = shape === 'circle'
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+        <circle cx="11" cy="11" r="9" fill="${color}" stroke="#fff" stroke-width="2"/>
+        <circle cx="11" cy="11" r="4" fill="#fff" opacity="0.8"/>
+      </svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+        <rect x="3" y="3" width="16" height="16" rx="3" fill="${color}" stroke="#fff" stroke-width="2"/>
+        <rect x="7" y="7" width="8" height="8" rx="1" fill="#fff" opacity="0.8"/>
+      </svg>`;
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:22px;height:22px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))">${svg}</div>`,
+    iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-14]
+  });
+}
+
+function _buildHydrantPopup(node){
+  const p = node.tags || {};
+  const type = p['fire_hydrant:type'] || 'inconnu';
+  const typeLabel = {pillar:'Poteau (aérien)', underground:'Bouche (souterraine)',
+                     wall:'Mural', pond:'Mare/Bassin'};
+  const rows = [
+    ['Type', typeLabel[type] || type],
+    p['fire_hydrant:pressure'] ? ['Pression', p['fire_hydrant:pressure']+' bar'] : null,
+    p['fire_hydrant:diameter'] ? ['Diamètre', p['fire_hydrant:diameter']+' mm'] : null,
+    p['ref'] ? ['Référence', p['ref']] : null,
+    p['operator'] ? ['Gestionnaire', p['operator']] : null,
+    p['check_date'] ? ['Vérifié le', p['check_date']] : null,
+  ].filter(Boolean);
+  return `<div class="pop">
+    <div class="ptt"><span style="color:#dc2626;margin-right:5px">💧</span>DECI — Point d'eau</div>
+    ${rows.map(([k,v])=>`<div class="pr"><span>${k}</span><strong>${v}</strong></div>`).join('')}
+    <a href="https://www.openstreetmap.org/node/${node.id}" target="_blank"
+       style="display:block;margin-top:8px;font-size:11px;color:var(--blue)">
+      Voir sur OpenStreetMap ↗
+    </a>
+    <div style="font-size:9px;color:var(--t3);margin-top:4px">
+      © OpenStreetMap contributors (ODbL)
+    </div>
+  </div>`;
+}
+
 function openIgnPanel(){
   const modal = document.getElementById('ign-modal');
   const list  = document.getElementById('ign-layers-list');
@@ -3401,6 +3475,7 @@ function openIgnPanel(){
     const grid = document.createElement('div');
     grid.className = 'ign-grid';
     layers.forEach(ldef=>{
+      const isOverpass = ldef.proto === 'overpass';
       const isActive = !!ignActiveLayers[ldef.id];
       const wrapper = document.createElement('div');
       wrapper.style.cssText = 'position:relative;display:flex;flex-direction:column;';
@@ -3409,13 +3484,21 @@ function openIgnPanel(){
       btn.innerHTML = `<span class="ign-name">${ldef.name}</span>
         <span class="ign-desc">${ldef.desc}</span>
         ${ldef.badge?`<span class="ign-badge ${ldef.badge.cls}">${ldef.badge.text}</span>`:''}`;
-      btn.onclick = ()=>toggleIgnLayer(ldef, btn);
-      // Bouton engrenage URL
+      if(isOverpass){
+        btn.onclick = ()=>_toggleDeciLayer(ldef, btn);
+      } else {
+        btn.onclick = ()=>toggleIgnLayer(ldef, btn);
+      }
+      // Bouton engrenage : ℹ pour overpass, ⚙ pour IGN
       const gear = document.createElement('button');
-      gear.title = "Modifier l'URL";
+      gear.title = isOverpass ? "Information" : "Modifier l'URL";
       gear.style.cssText = 'position:absolute;top:4px;right:4px;width:20px;height:20px;border:1px solid var(--bdr);background:var(--w);border-radius:4px;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;color:var(--t5);padding:0;';
-      gear.innerHTML = '⚙';
-      gear.onclick = (e)=>{e.stopPropagation();openIgnUrlEdit(ldef);};
+      gear.innerHTML = isOverpass ? 'ℹ' : '⚙';
+      if(isOverpass){
+        gear.onclick = (e)=>{e.stopPropagation(); _showDeciInfo();};
+      } else {
+        gear.onclick = (e)=>{e.stopPropagation();openIgnUrlEdit(ldef);};
+      }
       gear.onmouseenter=()=>{gear.style.borderColor='var(--amber)';gear.style.color='var(--amber)';};
       gear.onmouseleave=()=>{gear.style.borderColor='var(--bdr)';gear.style.color='var(--t5)';};
       wrapper.appendChild(btn);
@@ -3425,8 +3508,145 @@ function openIgnPanel(){
     section.appendChild(grid);
     list.appendChild(section);
   });
+  // Attribution double en bas de modale
+  const attrIGN = document.getElementById('ign-panel-attr');
+  if(attrIGN) attrIGN.innerHTML = 'Source : IGN Géoplateforme · Licence Ouverte Etalab 2.0 · © IGN<br><span style="color:var(--t3)">© <a href="https://www.openstreetmap.org/copyright" target="_blank" style="color:var(--t3)">OpenStreetMap contributors</a> — Licence ODbL (couche DECI)</span>';
   modal.classList.add('on');
 }
+
+function _showDeciInfo(){
+  // Ouvre une petite modale d'information DECI
+  let m=document.getElementById('deci-info-modal');
+  if(!m){
+    m=document.createElement('div');
+    m.id='deci-info-modal';
+    m.className='mbg';
+    m.innerHTML=`<div class="mbox2" style="max-width:340px;padding:20px 22px">
+      <div class="mtit" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:20px">💧</span>
+        <span>DECI — Points d'eau incendie</span>
+      </div>
+      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px">
+        Cette couche affiche les <b>poteaux et bouches incendie</b> référencés dans OpenStreetMap.
+      </p>
+      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px">
+        <b>Zoom requis :</b> niveau 14 ou plus pour charger les données.
+      </p>
+      <p style="font-size:12px;color:var(--t5);line-height:1.6;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:14px">
+        ℹ Si aucun poteau ne s'affiche, le serveur Overpass est peut-être surchargé.
+        Déplacez légèrement la carte ou réessayez dans quelques secondes.
+      </p>
+      <p style="font-size:10px;color:var(--t3);margin-bottom:14px">
+        Source : © <a href="https://www.openstreetmap.org/copyright" target="_blank" style="color:var(--t3)">OpenStreetMap contributors</a> — Licence ODbL
+      </p>
+      <button class="mok" onclick="document.getElementById('deci-info-modal').classList.remove('on')">Fermer</button>
+    </div>`;
+    m.onclick=function(e){if(e.target===m)m.classList.remove('on');};
+    document.body.appendChild(m);
+  }
+  m.classList.add('on');
+}
+
+// ── OVERPASS fetch ──
+async function _fetchHydrants(){
+  const id='osm-hydrants';
+  if(!ignActiveLayers[id])return;
+  const entry=ignActiveLayers[id];
+  const ldef=entry.ldef;
+  if(map.getZoom()<(ldef.minZoom||14)){entry.layer.clearLayers();return;}
+  const b=map.getBounds();
+  const bbox=`${b.getSouth().toFixed(5)},${b.getWest().toFixed(5)},${b.getNorth().toFixed(5)},${b.getEast().toFixed(5)}`;
+  const query=`[out:json][timeout:25];node["emergency"="fire_hydrant"](${bbox});out body;`;
+  const urls=[
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.fr/api/interpreter'
+  ];
+  if(entry.abortCtrl)entry.abortCtrl.abort();
+  entry.abortCtrl=new AbortController();
+  let data=null;
+  for(const url of urls){
+    try{
+      const resp=await fetch(url,{
+        method:'POST',
+        mode:'cors',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'data='+encodeURIComponent(query),
+        signal:entry.abortCtrl.signal
+      });
+      if(!resp.ok){console.warn('DECI: '+url+' → HTTP '+resp.status);continue;}
+      const json=await resp.json();
+      if(json&&json.elements!==undefined){data=json;break;}
+    }catch(e){
+      if(e.name==='AbortError')return;
+      console.warn('DECI: '+url+' → '+e.message);
+    }
+  }
+  if(!data){showToast('DECI : serveur Overpass inaccessible — réessayez',4000);return;}
+  entry.layer.clearLayers();
+  const curOp=entry.layer.options.opacity??1;
+  (data.elements||[]).forEach(node=>{
+    const type=(node.tags||{})['fire_hydrant:type']||'pillar';
+    const mk=L.marker([node.lat,node.lon],{icon:_hydrantIcon(type),pane:'markers'});
+    mk.bindPopup(_buildHydrantPopup(node),{maxWidth:280});
+    entry.layer.addLayer(mk);
+    if(curOp<1)setTimeout(()=>{const el=mk.getElement?mk.getElement():null;if(el)el.style.opacity=curOp;},60);
+  });
+  if(!data.elements.length)showToast('DECI : aucun point d\'eau dans cette zone');
+  try{fg.bringToFront();}catch(e){}
+}
+
+let _hydrantFetchTimer=null;
+function _scheduleHydrantFetch(){
+  if(!ignActiveLayers['osm-hydrants'])return;
+  clearTimeout(_hydrantFetchTimer);
+  _hydrantFetchTimer=setTimeout(_fetchHydrants,800);
+}
+
+function _removeHydrants(){
+  const id='osm-hydrants';
+  if(!ignActiveLayers[id])return;
+  if(ignActiveLayers[id].abortCtrl)ignActiveLayers[id].abortCtrl.abort();
+  map.removeLayer(ignActiveLayers[id].layer);
+  map.off('moveend',_scheduleHydrantFetch);
+  delete ignActiveLayers[id];
+  renderML();
+  const modal=document.getElementById('ign-modal');
+  if(modal&&modal.classList.contains('on'))openIgnPanel();
+  showToast('✕ DECI — Points d\'eau retiré');
+}
+
+function _toggleDeciLayer(ldef, btn){
+  const id = ldef.id;
+  if(ignActiveLayers[id]){
+    _removeHydrants();
+    if(btn) btn.classList.remove('active');
+    return;
+  }
+  // Créer un LayerGroup comme "layer" dans ignActiveLayers
+  const grp = L.layerGroup([], {pane:'markers'});
+  grp.options = grp.options || {};
+  grp.options.opacity = 1;
+  grp.options.zIndex = nextBaseZ();
+  // Override setZIndex/setOpacity pour LayerGroup
+  grp.setZIndex = function(z){ this.options.zIndex=z; };
+  grp.setOpacity = function(v){
+    this.options.opacity=v;
+    this.eachLayer(mk=>{
+      const el=mk.getElement?mk.getElement():null;
+      if(el)el.style.opacity=v;
+    });
+  };
+  grp.addTo(map);
+  try{fg.bringToFront();}catch(e){}
+  ignActiveLayers[id] = {layer:grp, ldef, abortCtrl:null};
+  if(btn) btn.classList.add('active');
+  renderML();
+  map.on('moveend', _scheduleHydrantFetch);
+  _fetchHydrants();
+  showToast("✓ DECI — Points d'eau activé");
+}
+
 
 function closeIgnPanel(){
   document.getElementById('ign-modal').classList.remove('on');
