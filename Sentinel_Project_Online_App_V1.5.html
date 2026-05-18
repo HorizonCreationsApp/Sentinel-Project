@@ -459,7 +459,8 @@ input[type=range]:focus{outline:none}
 .mbg{position:fixed;inset:0;background:rgba(15,23,42,.32);z-index:8000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:48px 8px 16px}
 .mbg.on{display:flex}
 /* Modales à centrer — ID > classe, pas besoin de !important */
-#emoji-modal.on,#legal-modal.on{display:grid;place-items:center;padding:16px 8px;overflow:hidden}
+#emoji-modal.on,#legal-modal.on{display:grid;place-content:center;padding:16px 8px;overflow:hidden}
+#emoji-modal .mbox2,#legal-modal .mbox2{margin:0}
 .mbox2{background:var(--w);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.13),0 0 0 10px #ffffff;padding:20px;width:290px;max-width:92vw;max-height:calc(100dvh - 80px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--blue) rgba(0,0,0,0.08);margin:auto}
 .mtit{font-size:14px;font-weight:600;color:var(--t9);margin-bottom:5px}
 .msub{font-size:12px;color:var(--t5);margin-bottom:13px;line-height:1.5}
@@ -1084,7 +1085,7 @@ input[type=range]:focus{outline:none}
 
 <!-- Mentions légales -->
 <div class="mbg" id="legal-modal">
-  <div class="mbox2" style="width:560px;max-height:88vh">
+  <div class="mbox2" style="width:560px;max-height:min(78dvh,calc(100dvh - 40px))">
     <div class="mtit">⚖ Mentions légales — Sentinel Project</div>
     <div style="font-size:10.5px;color:var(--t7);line-height:1.75;margin-top:10px">
 
