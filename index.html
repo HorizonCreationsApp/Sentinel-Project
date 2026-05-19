@@ -1131,6 +1131,9 @@ input[type=range]:focus{outline:none}
       <b style="color:var(--t9)">9. Droit applicable</b><br>
       Droit français. Tribunal judiciaire de Perpignan (France). Protection mondiale (Convention de Berne + ADPIC/TRIPS).<br><br>
 
+      <b style="color:var(--t9)">10. Données cartographiques tierces — Fonds GeoJSON</b><br>
+      Certaines données cartographiques (fonds GeoJSON) affichées dans cette application sont fournies par les clients ou utilisateurs de Sentinel Project et hébergées sur GitHub Pages (infrastructure publique). En fournissant des données GeoJSON pour intégration dans l'application, le client ou utilisateur reconnaît et accepte expressément que ces données seront rendues publiquement accessibles via l'hébergement GitHub Pages. Il appartient au fournisseur de ces données de s'assurer qu'il dispose des droits nécessaires à leur diffusion publique et que leur publication ne contrevient à aucune réglementation applicable (RGPD, droit de propriété, confidentialité). L'éditeur décline toute responsabilité quant au contenu des données fournies par les utilisateurs ainsi que des usages qui en sont faits.<br><br>
+
       <b>© 2026 Frédéric Ferra — Tous droits réservés.</b>
     </div>
     <button class="mcancel" style="margin-top:12px" onclick="document.getElementById('legal-modal').classList.remove('on')">Fermer</button>
@@ -1258,6 +1261,7 @@ function resetUrlEdit(){
 const fg=new L.FeatureGroup([],{pane:'annotations'}).addTo(map);
 const frozenFg=new L.FeatureGroup([],{pane:'annotations'}).addTo(map);
 let anns=[],frozenAnns=[],mapLayers=[],cnt=0,tool='nav',drawer=null,projName='';
+let geoJsonLayers={};
 let _exportAsBaseMap=false;
 const TC={ruler:'#0891b2',poly:'#d97706',circ:'#059669',pt:'#dc2626',emoji:'#f59e0b',pen:'#7c3aed',txt:'#0f172a'};
 let _globalColor = null;
@@ -3546,6 +3550,7 @@ function confirmReset(){
   Object.keys(ignActiveLayers).forEach(k=>delete ignActiveLayers[k]);
   (window.customLayers||[]).forEach(e=>{try{map.removeLayer(e.layer);}catch(ex){}});
   window.customLayers=[];renderCustomLayers();
+  geoJsonLayers={};
   document.querySelectorAll('.tile-btn').forEach(b=>b.classList.remove('active'));
   try{sessionStorage.removeItem('sentinel_maps');}catch(e){}
   renderML();document.getElementById('proj-label').textContent='Aucun projet';projName='';
@@ -4013,6 +4018,22 @@ function openIgnPanel(){
     section.appendChild(grid);
     list.appendChild(section);
   });
+  // ── Section GeoJSON Hub ──
+  const hubSep=document.createElement('div');
+  hubSep.style.cssText='height:1px;background:var(--bdr);margin:10px 0 8px';
+  list.appendChild(hubSep);
+  const hubBtn=document.createElement('button');
+  hubBtn.id='geojson-hub-btn';
+  hubBtn.style.cssText='width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:8px;background:var(--bg);cursor:pointer;font-family:\'DM Sans\',sans-serif;transition:all .15s;';
+  hubBtn.innerHTML='<span style="font-size:11px;font-weight:600;color:var(--t7)">🗂 Fonds supplémentaires</span><span id="geojson-hub-chevron" style="font-size:10px;color:var(--t3)">▼</span>';
+  hubBtn.onclick=toggleGeoJsonHubSection;
+  hubBtn.onmouseenter=()=>{hubBtn.style.borderColor='var(--blue)';hubBtn.style.background='var(--bluel)';};
+  hubBtn.onmouseleave=()=>{hubBtn.style.borderColor='var(--bdr)';hubBtn.style.background='var(--bg)';};
+  list.appendChild(hubBtn);
+  const hubList=document.createElement('div');
+  hubList.id='geojson-hub-list';
+  hubList.style.display='none';
+  list.appendChild(hubList);
   // Attribution double en bas de modale
   const attrIGN = document.getElementById('ign-panel-attr');
   if(attrIGN) attrIGN.innerHTML = 'Source : IGN Géoplateforme · Licence Ouverte Etalab 2.0 · © IGN<br><span style="color:var(--t3)">© <a href="https://www.openstreetmap.org/copyright" target="_blank" style="color:var(--t3)">OpenStreetMap contributors</a> — Licence ODbL (couche DECI)</span>';
@@ -4152,6 +4173,120 @@ function _toggleDeciLayer(ldef, btn){
 
 function closeIgnPanel(){
   document.getElementById('ign-modal').classList.remove('on');
+}
+
+// ── GEOJSON HUB — Fonds supplémentaires GitHub ──
+async function toggleGeoJsonHubSection(){
+  const listEl=document.getElementById('geojson-hub-list');
+  const chevron=document.getElementById('geojson-hub-chevron');
+  if(!listEl)return;
+  const open=listEl.style.display!=='none';
+  listEl.style.display=open?'none':'block';
+  if(chevron)chevron.textContent=open?'▼':'▲';
+  if(!open)await renderGeoJsonHub(listEl);
+}
+
+async function renderGeoJsonHub(listEl){
+  const CACHE_KEY='sentinel_geojson_index';
+  const TTL=30*60*1000;
+  let files=null,cacheAge=null;
+  try{
+    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+    if(c&&Date.now()-c.timestamp<TTL){files=c.files;cacheAge=Math.floor((Date.now()-c.timestamp)/60000);}
+  }catch(e){}
+  if(!files){
+    listEl.innerHTML='<div style="text-align:center;padding:10px;color:var(--t5);font-size:11px">⏳ Chargement…</div>';
+    try{
+      const r=await fetch('https://api.github.com/repos/horizoncreationsapp/Sentinel-GeoData/contents/geojson');
+      if(r.status===403||r.status===429){
+        listEl.innerHTML=`<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;font-size:10.5px;color:var(--t7);line-height:1.65;margin-top:4px">
+          <b>⏳ Limite temporaire atteinte</b><br>
+          Le serveur limite les requêtes automatiques à 60 par heure par réseau.<br>
+          Vos fonds de carte seront à nouveau accessibles dans quelques minutes.<br>
+          Si vous êtes sur un réseau partagé (bureau, WiFi public), patientez ~1 heure ou rechargez l'application depuis un autre réseau.</div>`;
+        return;
+      }
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const json=await r.json();
+      files=(Array.isArray(json)?json:[]).filter(f=>f.name.toLowerCase().endsWith('.geojson'));
+      try{localStorage.setItem(CACHE_KEY,JSON.stringify({timestamp:Date.now(),files}));}catch(e){}
+      cacheAge=0;
+    }catch(e){
+      listEl.innerHTML='<div style="color:var(--t5);font-size:11px;padding:8px">⚠ Impossible de charger la liste des fonds de carte.</div>';
+      return;
+    }
+  }
+  if(!files||!files.length){
+    listEl.innerHTML='<div style="color:var(--t5);font-size:11px;padding:8px;text-align:center">Aucun fond de carte supplémentaire disponible pour le moment.</div>';
+    return;
+  }
+  let html='<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">';
+  files.forEach(f=>{
+    const key=f.name.replace(/\.geojson$/i,'');
+    const esc=key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const dlEsc=f.download_url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const isActive=!!geoJsonLayers[key];
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 2px">
+      <span style="font-size:11px;color:var(--t7);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${key.replace(/"/g,'&quot;')}">${key}</span>
+      <button class="ign-btn${isActive?' active':''}"
+        onclick="toggleGeoJsonLayer('${esc}','${dlEsc}',this)"
+        style="flex-shrink:0;padding:4px 10px;flex-direction:row;align-items:center;gap:4px;font-size:10px;width:auto;min-width:62px;justify-content:center">
+        ${isActive?'✓ Actif':'Activer'}
+      </button>
+    </div>`;
+  });
+  html+='</div>';
+  if(cacheAge!==null&&cacheAge>0){
+    html+=`<div style="font-size:9px;color:var(--t3);text-align:right;margin-top:4px">Mis à jour il y a ${cacheAge} min</div>`;
+  }
+  listEl.innerHTML=html;
+}
+
+async function toggleGeoJsonLayer(key,downloadUrl,btn){
+  if(geoJsonLayers[key]){
+    const e=geoJsonLayers[key];
+    try{map.removeLayer(e.layer);}catch(ex){}
+    if(window.customLayers){
+      const idx=customLayers.findIndex(c=>c._hubKey===key);
+      if(idx!==-1)customLayers.splice(idx,1);
+    }
+    delete geoJsonLayers[key];
+    if(btn){btn.textContent='Activer';btn.classList.remove('active');}
+    renderML();
+    return;
+  }
+  if(btn){btn.textContent='⏳';btn.disabled=true;}
+  let geojsonData=null;
+  const cacheKey='sentinel_geojson_data_'+key.replace(/[^a-zA-Z0-9_]/g,'_');
+  try{const c=sessionStorage.getItem(cacheKey);if(c)geojsonData=JSON.parse(c);}catch(e){}
+  if(!geojsonData){
+    try{
+      const r=await fetch(downloadUrl);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      geojsonData=await r.json();
+      try{sessionStorage.setItem(cacheKey,JSON.stringify(geojsonData));}catch(e){}
+    }catch(e){
+      showToast('⚠ Impossible de charger '+key);
+      if(btn){btn.textContent='Activer';btn.disabled=false;}
+      return;
+    }
+  }
+  const id=++cnt;
+  const paneName='gjhub_'+id;
+  const zIdx=nextBaseZ();
+  if(!map.getPane(paneName)){map.createPane(paneName);map.getPane(paneName).style.zIndex=zIdx;map.getPane(paneName).style.pointerEvents='auto';}
+  const layer=L.geoJSON(geojsonData,{
+    style:{fillColor:'#3b82f6',fillOpacity:.15,color:'#2563eb',weight:1.5,pane:paneName},
+    pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,color:'#2563eb',fillColor:'#3b82f6',fillOpacity:.8,weight:1.5,pane:paneName})
+  });
+  layer.addTo(map);
+  try{fg.bringToFront();}catch(e){}
+  if(!window.customLayers)window.customLayers=[];
+  customLayers.push({id,name:key,layer,type:'geojson-layer',visible:true,color:'#2563eb',geojsonData,_zIndex:zIdx,_pane:paneName,_fromHub:true,_hubKey:key});
+  geoJsonLayers[key]={id,name:key,layer,geojsonData};
+  if(btn){btn.textContent='✓ Actif';btn.classList.add('active');btn.disabled=false;}
+  renderML();
+  showToast('✓ '+key+' chargé');
 }
 
 // Édition URL IGN — réutilise la modale URL existante
