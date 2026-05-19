@@ -4197,7 +4197,7 @@ async function renderGeoJsonHub(listEl){
   if(!files){
     listEl.innerHTML='<div style="text-align:center;padding:10px;color:var(--t5);font-size:11px">⏳ Chargement…</div>';
     try{
-      const r=await fetch('https://api.github.com/repos/horizoncreationsapp/Sentinel-GeoData/contents/geojson');
+      const r=await fetch('https://api.github.com/repos/HorizonCreationsApp/Sentinel-GeoDataSupp/contents/geojson');
       if(r.status===403||r.status===429){
         listEl.innerHTML=`<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;font-size:10.5px;color:var(--t7);line-height:1.65;margin-top:4px">
           <b>⏳ Limite temporaire atteinte</b><br>
