@@ -2006,7 +2006,7 @@ function _lrMapMove(){
   _lrGuide=L.polyline([_lrPts.at(-1),latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.45,interactive:false,pane:'annotations'}).addTo(map);
   if(_lrGuideLbl){map.removeLayer(_lrGuideLbl);_lrGuideLbl=null;}
   const sd=_lrPts.at(-1).distanceTo(latlng);
-  _lrGuideLbl=L.marker(latlng,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12);white-space:nowrap;margin-left:8px">'+fmtD(sd)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map);
+  _lrGuideLbl=L.marker(latlng,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12);white-space:nowrap;margin-left:26px;margin-top:-32px">'+fmtD(sd)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map);
 }
 function _lrMouseMove(e){
   if(!_lrOn||_lrPts.length===0)return;
