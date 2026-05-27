@@ -1951,6 +1951,13 @@ function _lrStartDesktop(){
   document.addEventListener('keydown',_lrKeyDown);
   _lrShowHint(false);
 }
+// Convertit le centre du viewport en coordonnées carte (correct même si la carte est décalée par l'UI)
+function _lrGetCrosshairLatLng(){
+  const r=map.getContainer().getBoundingClientRect();
+  const cx=window.innerWidth/2-r.left;
+  const cy=window.innerHeight/2-r.top;
+  return map.containerPointToLatLng(L.point(cx,cy));
+}
 function _lrStartMobile(){
   let ch=document.getElementById('lr-crosshair');
   if(!ch){ch=document.createElement('div');ch.id='lr-crosshair';ch.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;pointer-events:none';
@@ -1958,14 +1965,14 @@ function _lrStartMobile(){
     document.body.appendChild(ch);}
   ch.style.display='block';
   _lrShowHint(true);
-  map.once('click',_lrMobileFirstTap);
+  map.on('move',_lrMapMove);
 }
 function _lrShowHint(mobile){
   let h=document.getElementById('lr-hint');
   if(!h){h=document.createElement('div');h.id='lr-hint';h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';document.body.appendChild(h);}
   if(mobile){
-    h.innerHTML='<span id="lr-hint-txt" style="opacity:.7;font-size:11px">Tap → point de départ</span>'
-      +'<button id="lr-add-btn" onclick="_lrAddMobilePoint()" style="display:none;background:#0891b2;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">+ Ajouter un point</button>'
+    h.innerHTML='<span id="lr-hint-txt" style="opacity:.7;font-size:11px">Centrez la cible puis ajoutez un point</span>'
+      +'<button id="lr-add-btn" onclick="_lrAddMobilePoint()" style="background:#0891b2;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">+ Ajouter un point</button>'
       +'<button onclick="_lrEnd()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button>';
   }else{
     h.innerHTML='<span id="lr-hint-txt" style="opacity:.7;font-size:11px">Clic 1 → point de départ</span>'
@@ -1973,17 +1980,16 @@ function _lrShowHint(mobile){
   }
   h.style.display='flex';
 }
-function _lrMobileFirstTap(e){
-  if(!_lrOn)return;
-  _lrPts.push(e.latlng);
-  _lrDots.push(L.circleMarker(e.latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
-  const addBtn=document.getElementById('lr-add-btn');if(addBtn)addBtn.style.display='inline-block';
-  const txt=document.getElementById('lr-hint-txt');if(txt)txt.textContent='Déplacez la carte puis ajoutez des points';
-  map.on('move',_lrMapMove);_lrMapMove();
-}
+function _lrMobileFirstTap(){} // conservé pour compatibilité stopLiveRuler map.off
 function _lrAddMobilePoint(){
-  if(!_lrOn||_lrPts.length===0)return;
-  const ctr=map.getSize().divideBy(2);const latlng=map.containerPointToLatLng(ctr);
+  if(!_lrOn)return;
+  const latlng=_lrGetCrosshairLatLng();
+  if(_lrPts.length===0){
+    _lrPts.push(latlng);
+    _lrDots.push(L.circleMarker(latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
+    const txt=document.getElementById('lr-hint-txt');if(txt)txt.textContent='Déplacez la carte · Ajoutez des points';
+    _lrMapMove();return;
+  }
   const prev=_lrPts.at(-1);_lrPts.push(latlng);
   _lrDots.push(L.circleMarker(latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
   const sd=prev.distanceTo(latlng);
@@ -1995,12 +2001,12 @@ function _lrAddMobilePoint(){
 }
 function _lrMapMove(){
   if(!_lrOn||_lrPts.length===0)return;
-  const ctr=map.getSize().divideBy(2);const latlng=map.containerPointToLatLng(ctr);
+  const latlng=_lrGetCrosshairLatLng();
   if(_lrGuide){map.removeLayer(_lrGuide);_lrGuide=null;}
   _lrGuide=L.polyline([_lrPts.at(-1),latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.45,interactive:false,pane:'annotations'}).addTo(map);
   if(_lrGuideLbl){map.removeLayer(_lrGuideLbl);_lrGuideLbl=null;}
-  const sd=_lrPts.at(-1).distanceTo(latlng);let tot=0;for(let i=1;i<_lrPts.length;i++)tot+=_lrPts[i-1].distanceTo(_lrPts[i]);tot+=sd;
-  _lrGuideLbl=L.marker(latlng,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12);white-space:nowrap;margin-left:8px">'+fmtD(tot)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map);
+  const sd=_lrPts.at(-1).distanceTo(latlng);
+  _lrGuideLbl=L.marker(latlng,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12);white-space:nowrap;margin-left:8px">'+fmtD(sd)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map);
 }
 function _lrMouseMove(e){
   if(!_lrOn||_lrPts.length===0)return;
@@ -2035,7 +2041,7 @@ function _lrKeyDown(e){if(e.key==='Escape'&&_lrOn){_lrClear();stopLiveRuler();se
 function _lrEnd(){
   if(!_lrOn)return;
   if(_lrIsMobile&&_lrPts.length>0){
-    const ctr=map.getSize().divideBy(2);const latlng=map.containerPointToLatLng(ctr);
+    const latlng=_lrGetCrosshairLatLng();
     if(_lrPts.at(-1).distanceTo(latlng)>1)_lrPts.push(latlng);
   }
   stopLiveRuler();
