@@ -969,6 +969,31 @@ input[type=range]:focus{outline:none}
   </div>
 </div>
 
+<!-- Choix mode Règle -->
+<div class="mbg" id="ruler-mode-modal" onclick="if(event.target===this){closeRulerModeModal();tool='nav';}">
+  <div class="mbox2" style="max-width:320px">
+    <div class="mtit">📐 Règle — Mode de mesure</div>
+    <div style="font-size:11px;color:var(--t5);margin:4px 0 14px;line-height:1.5">Choisissez comment vous souhaitez mesurer :</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="closeRulerModeModal();tool='nav';setTimeout(()=>setTool('ruler'),150)" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--bdr);border-radius:12px;background:var(--bg);cursor:pointer;text-align:left;width:100%">
+        <span style="font-size:26px">📐</span>
+        <div>
+          <div style="font-weight:600;color:var(--t9);font-size:13px">Tracé point par point</div>
+          <div style="font-size:11px;color:var(--t5);margin-top:2px">Cliquez pour poser des points · Double-clic pour terminer</div>
+        </div>
+      </button>
+      <button onclick="closeRulerModeModal();setTimeout(()=>startLiveRuler(),150)" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--bdr);border-radius:12px;background:var(--bg);cursor:pointer;text-align:left;width:100%">
+        <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="8" stroke="#374151" stroke-width="1.7"/><circle cx="14" cy="14" r="2.5" fill="#374151"/><line x1="14" y1="1" x2="14" y2="6" stroke="#374151" stroke-width="1.7" stroke-linecap="round"/><line x1="14" y1="22" x2="14" y2="27" stroke="#374151" stroke-width="1.7" stroke-linecap="round"/><line x1="1" y1="14" x2="6" y2="14" stroke="#374151" stroke-width="1.7" stroke-linecap="round"/><line x1="22" y1="14" x2="27" y2="14" stroke="#374151" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+        <div>
+          <div style="font-weight:600;color:var(--t9);font-size:13px">Mesure en direct</div>
+          <div style="font-size:11px;color:var(--t5);margin-top:2px">Le tracé suit votre curseur en temps réel</div>
+        </div>
+      </button>
+    </div>
+    <div class="mgrid" style="margin-top:14px"><button class="mko" onclick="closeRulerModeModal();tool='nav'">Annuler</button></div>
+  </div>
+</div>
+
 <!-- Choix type d'export -->
 <div class="mbg" id="export-choice-modal">
   <div class="mbox2">
@@ -1837,7 +1862,7 @@ function stopAll(){
   }
   if(drawer){try{drawer.disable();}catch(e){}drawer=null;}
   if(_polyCleanup){try{_polyCleanup();}catch(e){}}_polyCleanup=null;
-  stopRuler();stopAzimut();stopArrow();clearRG();clearArrowGuide();stopPen();
+  stopRuler();stopLiveRuler();_lrClear();stopAzimut();stopArrow();clearRG();clearArrowGuide();stopPen();
   map.off('click',placeTxt);map.off('click',_ptVisClick);map.off('click',_emojiClick);
   _hideToolHint('edit-hint');
   _hideToolHint('pt-hint');
@@ -1881,6 +1906,9 @@ function setLI(on){
 
 // ── 8. RÈGLE ──
 let rPts=[],rSegs=[],rDots=[],rSegLabels=[],rOn=false;
+// ── LIVE RULER state ──
+let _lrOn=false,_lrPts=[],_lrGuide=null,_lrSegs=[],_lrDots=[],_lrSegLabels=[],_lrGuideLbl=null,_lrIsMobile=false,_lrLastPt=null,_lrLastPtTime=0;
+
 function startRuler(){
   rOn=true;rPts=[];rSegs=[];rDots=[];rSegLabels=[];_rLastPt=null;_rLastPtTime=0;
   map.doubleClickZoom.disable();
@@ -1889,6 +1917,142 @@ function startRuler(){
 }
 function stopRuler(){if(!rOn)return;rOn=false;map.off('click',rClick);_hideToolHint('ruler-hint');map.doubleClickZoom.enable();}
 function clearRG(){rDots.forEach(d=>map.removeLayer(d));rSegs.forEach(s=>map.removeLayer(s));rSegLabels.forEach(l=>map.removeLayer(l));rDots=[];rSegs=[];rSegLabels=[];}
+
+// ── LIVE RULER functions ──
+function openRulerModeModal(){document.getElementById('ruler-mode-modal').classList.add('on');}
+function closeRulerModeModal(){document.getElementById('ruler-mode-modal').classList.remove('on');}
+
+function startLiveRuler(){
+  _lrIsMobile=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  _lrOn=true;_lrPts=[];_lrGuide=null;_lrSegs=[];_lrDots=[];_lrSegLabels=[];_lrGuideLbl=null;_lrLastPt=null;_lrLastPtTime=0;
+  tool='ruler';
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('main').classList.remove('cross','penmode');
+  document.getElementById('main').classList.add('cross');
+  const ob=document.getElementById('ob-ruler');if(ob)ob.classList.add('on');
+  showCbar(true);setLI(false);map.doubleClickZoom.disable();
+  if(_lrIsMobile){_lrStartMobile();}else{_lrStartDesktop();}
+}
+function stopLiveRuler(){
+  if(!_lrOn)return;_lrOn=false;
+  map.off('click',_lrClick);map.off('mousemove',_lrMouseMove);map.off('move',_lrMapMove);map.off('click',_lrMobileFirstTap);
+  document.removeEventListener('keydown',_lrKeyDown);
+  map.doubleClickZoom.enable();
+  const ch=document.getElementById('lr-crosshair');if(ch)ch.style.display='none';
+  const h=document.getElementById('lr-hint');if(h)h.style.display='none';
+}
+function _lrClear(){
+  _lrDots.forEach(d=>map.removeLayer(d));_lrSegs.forEach(s=>map.removeLayer(s));_lrSegLabels.forEach(l=>map.removeLayer(l));
+  if(_lrGuide){map.removeLayer(_lrGuide);_lrGuide=null;}if(_lrGuideLbl){map.removeLayer(_lrGuideLbl);_lrGuideLbl=null;}
+  _lrDots=[];_lrSegs=[];_lrSegLabels=[];
+}
+function _lrStartDesktop(){
+  map.on('click',_lrClick);map.on('mousemove',_lrMouseMove);
+  document.addEventListener('keydown',_lrKeyDown);
+  _lrShowHint(false);
+}
+function _lrStartMobile(){
+  let ch=document.getElementById('lr-crosshair');
+  if(!ch){ch=document.createElement('div');ch.id='lr-crosshair';ch.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;pointer-events:none';
+    ch.innerHTML='<svg width="44" height="44" viewBox="0 0 44 44"><line x1="22" y1="2" x2="22" y2="42" stroke="#0891b2" stroke-width="2.5" stroke-linecap="round"/><line x1="2" y1="22" x2="42" y2="22" stroke="#0891b2" stroke-width="2.5" stroke-linecap="round"/><circle cx="22" cy="22" r="5" fill="none" stroke="#0891b2" stroke-width="2.5"/></svg>';
+    document.body.appendChild(ch);}
+  ch.style.display='block';
+  _lrShowHint(true);
+  map.once('click',_lrMobileFirstTap);
+}
+function _lrShowHint(mobile){
+  let h=document.getElementById('lr-hint');
+  if(!h){h=document.createElement('div');h.id='lr-hint';h.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(30,30,40,.88);color:#fff;font-size:12px;padding:7px 16px;border-radius:20px;display:flex;align-items:center;gap:10px;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3)';document.body.appendChild(h);}
+  if(mobile){
+    h.innerHTML='<span id="lr-hint-txt" style="opacity:.7;font-size:11px">Tap → point de départ</span>'
+      +'<button id="lr-add-btn" onclick="_lrAddMobilePoint()" style="display:none;background:#0891b2;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">+ Ajouter un point</button>'
+      +'<button onclick="_lrEnd()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button>';
+  }else{
+    h.innerHTML='<span id="lr-hint-txt" style="opacity:.7;font-size:11px">Clic 1 → point de départ</span>'
+      +'<button onclick="_lrEnd()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:11px;cursor:pointer">✓ Terminer</button>';
+  }
+  h.style.display='flex';
+}
+function _lrMobileFirstTap(e){
+  if(!_lrOn)return;
+  _lrPts.push(e.latlng);
+  _lrDots.push(L.circleMarker(e.latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
+  const addBtn=document.getElementById('lr-add-btn');if(addBtn)addBtn.style.display='inline-block';
+  const txt=document.getElementById('lr-hint-txt');if(txt)txt.textContent='Déplacez la carte puis ajoutez des points';
+  map.on('move',_lrMapMove);_lrMapMove();
+}
+function _lrAddMobilePoint(){
+  if(!_lrOn||_lrPts.length===0)return;
+  const ctr=map.getSize().divideBy(2);const latlng=map.containerPointToLatLng(ctr);
+  const prev=_lrPts.at(-1);_lrPts.push(latlng);
+  _lrDots.push(L.circleMarker(latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
+  const sd=prev.distanceTo(latlng);
+  _lrSegs.push(L.polyline([prev,latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.8,pane:'annotations',interactive:false}).addTo(map));
+  const sm=L.latLng((prev.lat+latlng.lat)/2,(prev.lng+latlng.lng)/2);
+  _lrSegLabels.push(L.marker(sm,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12)">'+fmtD(sd)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map));
+  if(_lrGuide){map.removeLayer(_lrGuide);_lrGuide=null;}if(_lrGuideLbl){map.removeLayer(_lrGuideLbl);_lrGuideLbl=null;}
+  _lrMapMove();
+}
+function _lrMapMove(){
+  if(!_lrOn||_lrPts.length===0)return;
+  const ctr=map.getSize().divideBy(2);const latlng=map.containerPointToLatLng(ctr);
+  if(_lrGuide){map.removeLayer(_lrGuide);_lrGuide=null;}
+  _lrGuide=L.polyline([_lrPts.at(-1),latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.45,interactive:false,pane:'annotations'}).addTo(map);
+  if(_lrGuideLbl){map.removeLayer(_lrGuideLbl);_lrGuideLbl=null;}
+  const sd=_lrPts.at(-1).distanceTo(latlng);let tot=0;for(let i=1;i<_lrPts.length;i++)tot+=_lrPts[i-1].distanceTo(_lrPts[i]);tot+=sd;
+  _lrGuideLbl=L.marker(latlng,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12);white-space:nowrap;margin-left:8px">'+fmtD(tot)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map);
+}
+function _lrMouseMove(e){
+  if(!_lrOn||_lrPts.length===0)return;
+  if(_lrGuide){map.removeLayer(_lrGuide);_lrGuide=null;}
+  _lrGuide=L.polyline([_lrPts.at(-1),e.latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.45,interactive:false,pane:'annotations'}).addTo(map);
+  if(_lrGuideLbl){map.removeLayer(_lrGuideLbl);_lrGuideLbl=null;}
+  const sd=_lrPts.at(-1).distanceTo(e.latlng);
+  _lrGuideLbl=L.marker(e.latlng,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12);white-space:nowrap;margin-left:14px;margin-top:-22px">'+fmtD(sd)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map);
+}
+function _lrClick(e){
+  if(!_lrOn)return;
+  const now=Date.now();
+  if(_lrPts.length>0&&_lrLastPt&&(now-_lrLastPtTime)<400){
+    const p1=map.latLngToContainerPoint(_lrLastPt),p2=map.latLngToContainerPoint(e.latlng);
+    if(Math.sqrt(Math.pow(p1.x-p2.x,2)+Math.pow(p1.y-p2.y,2))<20){_lrEnd();return;}
+  }
+  _lrLastPt=e.latlng;_lrLastPtTime=now;
+  if(_lrPts.length===0){
+    _lrPts.push(e.latlng);
+    _lrDots.push(L.circleMarker(e.latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
+    const txt=document.getElementById('lr-hint-txt');if(txt)txt.textContent='Clic → ajouter un point · Dbl-clic → terminer';
+    return;
+  }
+  const prev=_lrPts.at(-1);_lrPts.push(e.latlng);
+  _lrDots.push(L.circleMarker(e.latlng,{radius:5,color:TC.ruler,fillColor:TC.ruler,fillOpacity:1,weight:2,pane:'annotations',interactive:false}).addTo(map));
+  const sd=prev.distanceTo(e.latlng);
+  _lrSegs.push(L.polyline([prev,e.latlng],{color:TC.ruler,weight:5,dashArray:'7,4',opacity:.8,pane:'annotations',interactive:false}).addTo(map));
+  const sm=L.latLng((prev.lat+e.latlng.lat)/2,(prev.lng+e.latlng.lng)/2);
+  _lrSegLabels.push(L.marker(sm,{icon:L.divIcon({className:'',html:'<div class="azlbl" style="color:#0f172a;border:1.5px solid rgba(0,0,0,0.12)">'+fmtD(sd)+'</div>',iconSize:[0,0],iconAnchor:[0,0]}),pane:'segLabels',interactive:false}).addTo(map));
+}
+function _lrKeyDown(e){if(e.key==='Escape'&&_lrOn){_lrClear();stopLiveRuler();setTool('nav');}}
+function _lrEnd(){
+  if(!_lrOn)return;
+  if(_lrIsMobile&&_lrPts.length>0){
+    const ctr=map.getSize().divideBy(2);const latlng=map.containerPointToLatLng(ctr);
+    if(_lrPts.at(-1).distanceTo(latlng)>1)_lrPts.push(latlng);
+  }
+  stopLiveRuler();
+  let total=0;const segs=[];
+  for(let i=1;i<_lrPts.length;i++){const sd=_lrPts[i-1].distanceTo(_lrPts[i]);total+=sd;segs.push({pts:[[_lrPts[i-1].lat,_lrPts[i-1].lng],[_lrPts[i].lat,_lrPts[i].lng]],dist:sd});}
+  if(_lrPts.length<2){_lrClear();setTool('nav');return;}
+  const col=TC.ruler;
+  const vis=L.polyline(_lrPts,{color:col,weight:3,dashArray:'7,4',opacity:.85,interactive:false,pane:'annotations'});
+  const hit=L.polyline(_lrPts,{color:'transparent',weight:24,opacity:0,interactive:true,pane:'annotations'});
+  const segLblLayers=_buildSegLabels(segs);
+  hit._meta={type:'ruler',distance:total,label:'',notes:'',color:col,segLabels:true,segments:segs};hit._isAnn=true;
+  hit._visPair=vis;hit._segLabelLayers=segLblLayers;vis._hitPair=hit;
+  hit.bindPopup(()=>linePop(total,col,'Mesure de distance'),{maxWidth:270,autoPan:false});
+  hit.on('click',function(ev){if(tool!=='nav')return;L.DomEvent.stopPropagation(ev);_openOrPickAnn.call(this,ev);});
+  _lrClear();fg.addLayer(vis);fg.addLayer(hit);segLblLayers.forEach(m=>m.addTo(map));
+  regAnn('ruler',hit);setTool('nav');
+}
 
 // ── 9. AZIMUT ──
 let azOn=false,azPt1=null,azDot=null;
@@ -4481,6 +4645,11 @@ function outilAction(t){
   closeOutilsModal();
   if(t==='imp'){ setTimeout(()=>document.getElementById('map-fi').click(), 150); return; }
   if(t==='edit'){ setTimeout(()=>toggleEdit(), 150); return; }
+  if(t==='ruler'){
+    if(tool==='ruler'){ setTool('nav'); return; }
+    stopAll(); tool='ruler';
+    setTimeout(()=>openRulerModeModal(), 150); return;
+  }
   if(t==='pt'){ if(tool==='pt'){ setTool('nav'); return; } stopAll(); tool='pt'; setTimeout(()=>openPtModal(), 150); return; }
   if(t==='emoji'){
     if(tool==='emoji'){ setTool('nav'); return; }
