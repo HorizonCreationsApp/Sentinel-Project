@@ -1735,13 +1735,25 @@ function buildCustomGrid(){
 }
 function importCustomIcon(){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/png,image/jpeg,image/gif,image/svg+xml,image/webp';
+  inp.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
+  document.body.appendChild(inp);
   inp.onchange=e=>{
-    const file=e.target.files[0];if(!file)return;
+    const file=e.target.files[0];
+    try{document.body.removeChild(inp);}catch(err){}
+    if(!file)return;
     if(file.size>512*1024){showToast('⚠ Image trop grande (max 512 ko)');return;}
     const reader=new FileReader();
-    reader.onload=ev=>{const data=ev.target.result;const icons=_loadCustomIcons();icons.push({name:file.name,data});_saveCustomIcons(icons);buildCustomGrid();};
+    reader.onload=ev=>{
+      const data=ev.target.result;
+      const icons=_loadCustomIcons();
+      icons.push({name:file.name,data});
+      _saveCustomIcons(icons);
+      buildCustomGrid();
+      showToast('✓ Icône ajoutée et sauvegardée');
+    };
     reader.readAsDataURL(file);
-  };inp.click();
+  };
+  inp.click();
 }
 function deleteCustomIcon(idx){
   const icons=_loadCustomIcons();icons.splice(idx,1);_saveCustomIcons(icons);
@@ -6411,6 +6423,10 @@ async function doSetPassword(){
     sessionStorage.setItem('portrait-dismissed','1');
     document.getElementById('portrait-msg').style.display = 'none';
   };
+  // Persistance du stockage localStorage (évite l'éviction par le navigateur)
+  if(navigator.storage&&navigator.storage.persist){
+    navigator.storage.persist().catch(function(){});
+  }
   // Vérifier au chargement et à la rotation
   window.addEventListener('load', checkPortrait);
   window.addEventListener('resize', function(){
