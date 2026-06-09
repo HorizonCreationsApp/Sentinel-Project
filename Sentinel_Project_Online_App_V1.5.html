@@ -36,12 +36,11 @@
 .auth-card::-webkit-scrollbar{display:none}
 
 /* Logo */
-.auth-logo{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:2px;}
-.auth-logo-icon{
-  width:52px;height:52px;
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  border-radius:14px;display:flex;align-items:center;justify-content:center;
-  font-size:26px;box-shadow:0 4px 16px rgba(37,99,235,.4);
+.auth-logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:2px;}
+.auth-logo-img{
+  width:72px;height:72px;border-radius:18px;
+  box-shadow:0 6px 24px rgba(37,99,235,.4);
+  display:block;
 }
 .auth-logo-text{font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:-.3px;}
 .auth-logo-badge{
@@ -543,13 +542,24 @@ input[type=range]:focus{outline:none}
 </head>
 <body>
 
+<!-- ══ SPLASH SCREEN ══ -->
+<div id="splash" style="position:fixed;inset:0;z-index:99999;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity 0.5s ease;">
+  <img src="https://horizoncreationsapp.github.io/Sentinel-Project/android-chrome-512x512.png"
+       style="width:112px;height:112px;border-radius:22px;box-shadow:0 8px 32px rgba(37,99,235,0.35);"
+       onerror="this.style.display='none'" alt=""/>
+  <div style="color:#f8fafc;font-family:'DM Sans',system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:0.3px;">Sentinel Project</div>
+  <div style="color:#475569;font-family:'DM Sans',system-ui,sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;">V 1.5</div>
+</div>
+
 <!-- ══ ÉCRAN DE CONNEXION SUPABASE ══ -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="auth-logo-icon">🛰</div>
+      <img class="auth-logo-img"
+           src="https://horizoncreationsapp.github.io/Sentinel-Project/android-chrome-192x192.png"
+           onerror="this.outerHTML='<div style=\'width:72px;height:72px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;\'>🛰</div>'"
+           alt="Sentinel Project"/>
       <div class="auth-logo-text">Sentinel Project</div>
-      <div class="auth-logo-badge">Accès sécurisé · V1</div>
     </div>
     <div class="auth-sep"></div>
     <div class="auth-field">
@@ -6186,6 +6196,7 @@ try {
 // Masque l'app et montre l'écran de connexion
 function _showAuth(){
   if(document.querySelector('meta[name="vdata"]'))return;
+  if(window._hideSplash) window._hideSplash();
   const as=document.getElementById('auth-screen');if(as)as.classList.remove('hidden');
   const rb=document.getElementById('reset-btn');if(rb)rb.style.display='none';
   const lb=document.getElementById('logout-btn');if(lb)lb.classList.remove('visible');
@@ -6195,6 +6206,7 @@ function _showAuth(){
 
 // Déverrouille l'app et masque l'écran de connexion
 function _showApp(user){
+  if(window._hideSplash) window._hideSplash();
   document.getElementById('auth-screen').classList.add('hidden');
   const rb=document.getElementById('reset-btn');
   if(rb) rb.style.display='';
@@ -6358,19 +6370,25 @@ async function doLogout(){
   showToast('Déconnecté.');
 }
 
-// ── Listener auth state — fonction réutilisable (re-attachée après recréation du client) ──
+// ── Listener auth state ──
+// IMPORTANT : enregistré APRÈS getSession() pour éviter la race condition INITIAL_SESSION.
+// Supabase JS v2 fire INITIAL_SESSION (parfois SIGNED_OUT) avant que le refresh token
+// soit validé sur le réseau — cela déclenchait _showAuth() à tort au rechargement PWA.
 function _registerAuthListener(){
   if(!_supa) return;
   _supa.auth.onAuthStateChange((event, session)=>{
-    if(event === 'SIGNED_OUT' || !session){
+    // INITIAL_SESSION : géré par getSession() dans l'IIFE — ignorer ici
+    if(event === 'INITIAL_SESSION') return;
+    // TOKEN_REFRESHED : autoRefreshToken gère ça en arrière-plan — rien à faire
+    if(event === 'TOKEN_REFRESHED') return;
+
+    if(event === 'SIGNED_OUT'){
       document.getElementById('setpwd-screen').classList.remove('on');
       _showAuth();
     } else if(event === 'PASSWORD_RECOVERY'){
-      // Lien de réinitialisation de mot de passe
       _showAuth();
       document.getElementById('setpwd-screen').classList.add('on');
     } else if(event === 'SIGNED_IN'){
-      // Vérifier si c'est une première connexion via invitation
       const u = session.user;
       const isInvite = u.invited_at && !u.last_sign_in_at
         || (u.app_metadata && u.app_metadata.invited_at)
@@ -6383,7 +6401,6 @@ function _registerAuthListener(){
         _showApp(u);
       }
     } else if(event === 'USER_UPDATED'){
-      // Mot de passe mis à jour → accéder à l'app
       document.getElementById('setpwd-screen').classList.remove('on');
       if(session) _showApp(session.user);
     }
@@ -6391,12 +6408,23 @@ function _registerAuthListener(){
 }
 
 // ── Vérification session au chargement ──
+// getSession() est appelé EN PREMIER — il résout (et refresh si besoin) la session
+// stockée dans localStorage avant d'activer le listener.
+// Cela évite la race condition où INITIAL_SESSION fire SIGNED_OUT avant la fin du refresh.
 (async ()=>{
   if(!_supa){ _showAuth(); return; }
+
+  let session = null;
+  try {
+    const { data } = await _supa.auth.getSession();
+    session = data.session;
+  } catch(e){
+    console.warn('getSession erreur:', e);
+  }
+
+  // Listener activé APRÈS résolution de la session initiale
   _registerAuthListener();
 
-  // Vérifier si une session existe déjà au chargement (PWA relancée, onglet rouvert)
-  const { data:{ session } } = await _supa.auth.getSession();
   if(session && session.user){
     const u = session.user;
     const isInvite = u.invited_at && !u.last_sign_in_at;
@@ -6411,13 +6439,20 @@ function _registerAuthListener(){
   }
 })();
 
-// ── Réveil PWA — vérification session quand la fenêtre repasse au premier plan ──
-// Couvre : PWA suspendue par Chrome, ordinateur en veille, onglet longtemps inactif
+// ── Réveil PWA — refresh silencieux au retour au premier plan ──
+// Couvre : veille PC, suspension Chrome, onglet longtemps inactif.
+// Ne déconnecte PAS sur erreur réseau — uniquement si le token est explicitement révoqué.
 document.addEventListener('visibilitychange', async ()=>{
-  if(document.visibilityState === 'visible' && _supa){
+  if(document.visibilityState !== 'visible' || !_supa) return;
+  // Si l'écran de login est déjà visible, ne rien faire
+  const as = document.getElementById('auth-screen');
+  if(as && !as.classList.contains('hidden')) return;
+  try {
     const { data:{ session } } = await _supa.auth.getSession();
     if(!session){ _showAuth(); }
-    // Si session valide, Supabase a auto-refreshé le token — rien à faire
+    // Session valide → autoRefreshToken a déjà mis à jour le token — rien à faire
+  } catch(e){
+    // Erreur réseau → ne pas déconnecter l'utilisateur
   }
 });
 
@@ -6489,6 +6524,21 @@ async function doSetPassword(){
   if(navigator.storage&&navigator.storage.persist){
     navigator.storage.persist().catch(function(){});
   }
+
+  // ── Splash screen — masquage automatique ──
+  // _hideSplash() est aussi appelé depuis _showAuth() et _showApp() pour une transition immédiate.
+  (function(){
+    var _done = false;
+    window._hideSplash = function(){
+      if(_done) return; _done = true;
+      var s = document.getElementById('splash');
+      if(!s) return;
+      s.style.opacity = '0';
+      setTimeout(function(){ s.style.display = 'none'; }, 500);
+    };
+    // Fallback : masquer après 1.5 s max (si _showAuth/_showApp tardent)
+    setTimeout(window._hideSplash, 1500);
+  })();
   // Vérifier au chargement et à la rotation
   window.addEventListener('load', checkPortrait);
   window.addEventListener('resize', function(){
