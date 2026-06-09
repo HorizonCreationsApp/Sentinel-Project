@@ -6118,7 +6118,7 @@ const SUPA_KEY = 'sb_publishable_0_QwAxwoz6uqsTO8RWoBhQ_oTROvPVv';
 let _supa = null;
 try {
   _supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
-    auth: { persistSession: true, storage: window.localStorage }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage }
   });
 } catch(e) {
   console.error('Supabase SDK non chargé:', e);
@@ -6247,9 +6247,12 @@ async function doLogin(){
     _supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
       auth: {
         persistSession: true,
-        storage: remember ? window.localStorage : window.sessionStorage
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage  // toujours localStorage — sessionStorage tue la session PWA
       }
     });
+    _registerAuthListener();  // re-attacher le listener sur le nouveau client
     console.log('Client Supabase recréé OK');
   } catch(e) {
     console.error('Erreur recréation client:', e);
@@ -6308,22 +6311,19 @@ async function doLogout(){
   showToast('Déconnecté.');
 }
 
-// ── Vérification session au chargement ──
-(async ()=>{
-  if(!_supa){ _showAuth(); return; }
-  // avant que notre code s'exécute. On écoute onAuthStateChange pour détecter le cas.
+// ── Listener auth state — fonction réutilisable (re-attachée après recréation du client) ──
+function _registerAuthListener(){
+  if(!_supa) return;
   _supa.auth.onAuthStateChange((event, session)=>{
     if(event === 'SIGNED_OUT' || !session){
       document.getElementById('setpwd-screen').classList.remove('on');
       _showAuth();
     } else if(event === 'PASSWORD_RECOVERY'){
       // Lien de réinitialisation de mot de passe
-      _showAuth(); // cacher login
+      _showAuth();
       document.getElementById('setpwd-screen').classList.add('on');
     } else if(event === 'SIGNED_IN'){
       // Vérifier si c'est une première connexion via invitation
-      // Supabase marque app_metadata.provider = 'email' et le user n'a pas encore
-      // de mot de passe défini lui-même — on détecte via invited_at sans last_sign_in
       const u = session.user;
       const isInvite = u.invited_at && !u.last_sign_in_at
         || (u.app_metadata && u.app_metadata.invited_at)
@@ -6341,8 +6341,14 @@ async function doLogout(){
       if(session) _showApp(session.user);
     }
   });
+}
 
-  // Vérifier si une session existe déjà au chargement
+// ── Vérification session au chargement ──
+(async ()=>{
+  if(!_supa){ _showAuth(); return; }
+  _registerAuthListener();
+
+  // Vérifier si une session existe déjà au chargement (PWA relancée, onglet rouvert)
   const { data:{ session } } = await _supa.auth.getSession();
   if(session && session.user){
     const u = session.user;
@@ -6356,8 +6362,17 @@ async function doLogout(){
   } else {
     _showAuth();
   }
-
 })();
+
+// ── Réveil PWA — vérification session quand la fenêtre repasse au premier plan ──
+// Couvre : PWA suspendue par Chrome, ordinateur en veille, onglet longtemps inactif
+document.addEventListener('visibilitychange', async ()=>{
+  if(document.visibilityState === 'visible' && _supa){
+    const { data:{ session } } = await _supa.auth.getSession();
+    if(!session){ _showAuth(); }
+    // Si session valide, Supabase a auto-refreshé le token — rien à faire
+  }
+});
 
 // Création du mot de passe après invitation
 async function doSetPassword(){
