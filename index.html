@@ -6171,7 +6171,13 @@ const SUPA_KEY = 'sb_publishable_0_QwAxwoz6uqsTO8RWoBhQ_oTROvPVv';
 let _supa = null;
 try {
   _supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage }
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage,
+      storageKey: 'sentinel-session'  // clé stable et explicite — indépendante du projet ref Supabase
+    }
   });
 } catch(e) {
   console.error('Supabase SDK non chargé:', e);
@@ -6296,19 +6302,7 @@ async function doLogin(){
   btn.disabled = true;
   lbl.innerHTML = '<span class="auth-spinner"></span>';
 
-  try {
-    _supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: window.localStorage  // toujours localStorage — sessionStorage tue la session PWA
-      }
-    });
-    _registerAuthListener();  // re-attacher le listener sur le nouveau client
-    console.log('Client Supabase recréé OK');
-  } catch(e) {
-    console.error('Erreur recréation client:', e);
+  if(!_supa){
     errEl.textContent = 'Erreur de connexion au service. Rechargez la page.';
     errEl.classList.add('show');
     btn.disabled = false;
