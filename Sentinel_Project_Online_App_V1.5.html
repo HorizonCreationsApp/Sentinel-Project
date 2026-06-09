@@ -6525,19 +6525,27 @@ async function doSetPassword(){
     navigator.storage.persist().catch(function(){});
   }
 
-  // ── Splash screen — masquage automatique ──
-  // _hideSplash() est aussi appelé depuis _showAuth() et _showApp() pour une transition immédiate.
+  // ── Splash screen — durée minimale garantie ──
+  // _hideSplash() est appelé depuis _showAuth() et _showApp().
+  // Même si la session est trouvée instantanément, la splash reste visible au moins MIN_MS.
   (function(){
     var _done = false;
+    var _t0 = Date.now();
+    var MIN_MS = 1200; // durée minimale affichage splash (ms)
     window._hideSplash = function(){
-      if(_done) return; _done = true;
-      var s = document.getElementById('splash');
-      if(!s) return;
-      s.style.opacity = '0';
-      setTimeout(function(){ s.style.display = 'none'; }, 500);
+      if(_done) return;
+      var elapsed = Date.now() - _t0;
+      var wait = Math.max(0, MIN_MS - elapsed);
+      setTimeout(function(){
+        if(_done) return; _done = true;
+        var s = document.getElementById('splash');
+        if(!s) return;
+        s.style.opacity = '0';
+        setTimeout(function(){ s.style.display = 'none'; }, 500);
+      }, wait);
     };
-    // Fallback : masquer après 1.5 s max (si _showAuth/_showApp tardent)
-    setTimeout(window._hideSplash, 1500);
+    // Fallback absolu : masquer après 3 s max
+    setTimeout(window._hideSplash, 3000);
   })();
   // Vérifier au chargement et à la rotation
   window.addEventListener('load', checkPortrait);
