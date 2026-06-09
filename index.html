@@ -1310,7 +1310,7 @@ map.getPane('markers').style.zIndex=680;
 map.createPane('geoloc');
 map.getPane('geoloc').style.zIndex=700;
 map.createPane('segLabels');
-map.getPane('segLabels').style.zIndex=695;
+map.getPane('segLabels').style.zIndex=672;
 map.getPane('segLabels').style.pointerEvents='none';
 map.getPane('overlayPane').style.zIndex=661;
 map.getPane('tooltipPane').style.zIndex=675;
@@ -2160,6 +2160,8 @@ function _stopEditMode(){
   if(!_editActive)return;
   _editActive=false;
   if(editH&&editH.enabled()){try{editH.save();editH.disable();}catch(e){}}
+  // Retirer les poignées custom des azimuts
+  _azEditHandles.forEach(m=>{try{map.removeLayer(m);}catch(e){}});_azEditHandles=[];
   fg.eachLayer(function(l){if(l._meta&&l._meta.type==='poly'&&l._meta.bufferDist&&l._meta.bufferEnabled!==false)_recomputePolyBuffer(l);});
   if(delH&&delH.enabled()){try{delH.disable();}catch(e){}}
   _penLayersHidden.forEach(l=>{try{fg.addLayer(l);l._editHidden=false;}catch(e){}});
@@ -2174,6 +2176,9 @@ function _stopEditMode(){
     if(l._meta&&l._meta.type==='azimut'){
       l.setStyle({color:'transparent',opacity:0,weight:24,fillOpacity:0,interactive:true});
       if(l._path){l._path.style.pointerEvents='auto';l._path.style.cursor='';}
+      // Reconstruire les décors à partir des LatLngs actuels du hit (gère drag ET applyAzAngle)
+      const _azPts=l.getLatLngs();
+      if(_azPts.length>=2){const _azBrg=_bearing(_azPts[0],_azPts[_azPts.length-1]);l._meta.bearing=_azBrg;l._meta.distance=_azPts[0].distanceTo(_azPts[_azPts.length-1]);if(l._azimutLayers)l._azimutLayers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});l._azimutLayers=_buildAzimutLayers(_azPts[0],_azPts[_azPts.length-1],l._meta.color||TC.azimut,_azBrg);}
       if(l._visPair){l._visPair.setStyle({opacity:l._visPair._origOpacity||0.9});try{l._visPair.setLatLngs(l.getLatLngs());}catch(e){}try{fg.addLayer(l._visPair);}catch(e){}}
       if(l._azimutLayers)l._azimutLayers.forEach(m=>{try{m.addTo(map);}catch(e){}});
     }
@@ -2413,6 +2418,12 @@ function _bearing(p1,p2){
   const lat1=p1.lat*Math.PI/180,lat2=p2.lat*Math.PI/180,dLng=(p2.lng-p1.lng)*Math.PI/180;
   const y=Math.sin(dLng)*Math.cos(lat2),x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLng);
   return(Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+function _destinationPoint(p1,brg,dist){
+  const R=6371000,d=dist/R,brgR=brg*Math.PI/180,lat1=p1.lat*Math.PI/180,lng1=p1.lng*Math.PI/180;
+  const lat2=Math.asin(Math.sin(lat1)*Math.cos(d)+Math.cos(lat1)*Math.sin(d)*Math.cos(brgR));
+  const lng2=lng1+Math.atan2(Math.sin(brgR)*Math.sin(d)*Math.cos(lat1),Math.cos(d)-Math.sin(lat1)*Math.sin(lat2));
+  return L.latLng(lat2*180/Math.PI,lng2*180/Math.PI);
 }
 function _buildAzimutLayers(p1,p2,col,brg){
   const mid=L.latLng((p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2);
@@ -3371,6 +3382,8 @@ function azPop(){
   return `<div class="pop"><div class="ptt"><span class="pdot" style="background:${col}"></span>Azimut</div>
     <div class="pr"><span>Azimut</span><strong>${(m.bearing||0).toFixed(1)}°</strong></div>
     <div class="pr"><span>Distance</span><strong>${fmtD(m.distance||0)}</strong></div>
+    <div class="pl">Modifier l'angle (°)</div>
+    <div style="display:flex;gap:6px;margin-top:3px"><input class="pin" type="number" id="az-ang-in" value="${(m.bearing||0).toFixed(1)}" min="0" max="360" step="0.1" style="flex:1"/><button class="pb" style="flex:0;padding:0 10px;background:#f97316;border-color:#f97316;color:#fff" onclick="applyAzAngle()">OK</button></div>
     ${colorPickerHtml()}
     <div style="display:flex;align-items:center;gap:7px;margin-top:6px">
       <input type="checkbox" id="az-label-cb" ${showLbl?'checked':''} onchange="toggleAzimutLabel(this.checked,${sid})" style="cursor:pointer"/>
@@ -3799,6 +3812,31 @@ function applyPopupChanges(){
   showToast('✓ Notes sauvegardées');
 }
 function applyR(){const inp=document.getElementById('cr-in');if(!inp)return;const v=parseFloat(inp.value);if(isNaN(v)||v<=0)return;fg.eachLayer(l=>{if(l instanceof L.Circle&&l.isPopupOpen()){l.setRadius(v);l._meta.radius=v;l.setPopupContent(circPop(v,l._meta.color||TC.circ));updateList();showToast('✓ Rayon : '+fmtD(v));}});}
+function applyAzAngle(){
+  const inp=document.getElementById('az-ang-in');if(!inp)return;
+  let v=parseFloat(inp.value);if(isNaN(v))return;
+  v=((v%360)+360)%360;
+  let layer=_openLayer;
+  if(!layer||!layer._meta||layer._meta.type!=='azimut'){fg.eachLayer(l=>{if(l._meta&&l._meta.type==='azimut'&&l.isPopupOpen&&l.isPopupOpen())layer=l;});}
+  if(!layer||!layer._meta||layer._meta.type!=='azimut'){showToast('⚠ Aucun azimut sélectionné');return;}
+  const pts=layer.getLatLngs();const p1=pts[0];
+  const dist=layer._meta.distance||p1.distanceTo(pts[pts.length-1]);
+  const p2=_destinationPoint(p1,v,dist);
+  const newPts=[p1,p2];
+  layer.setLatLngs(newPts);
+  if(layer._visPair)layer._visPair.setLatLngs(newPts);
+  const col=layer._meta.color||TC.azimut;
+  if(layer._azimutLayers)layer._azimutLayers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});
+  layer._azimutLayers=_buildAzimutLayers(p1,p2,col,v);
+  layer._azimutLayers.forEach(m=>m.addTo(map));
+  if(layer._meta.showLabel===false){try{map.removeLayer(layer._azimutLayers[0]);}catch(e){}}
+  layer._meta.bearing=v;
+  // Si le mode édition est actif, repositionner les poignées custom de l'azimut
+  if(_editActive&&_azEditHandles.length){const _h=_azEditHandles.filter(m=>m._azHit===layer);const _h1=_h.find(m=>m._azRole==='p1');const _h2=_h.find(m=>m._azRole==='p2');if(_h1)_h1.setLatLng(p1);if(_h2)_h2.setLatLng(p2);}
+  layer.setPopupContent(azPop());
+  updateList();_markUnsaved();
+  showToast('✓ Angle : '+v.toFixed(1)+'°');
+}
 function _removePolyBuffer(layer){if(layer&&layer._bufferLayer){try{map.removeLayer(layer._bufferLayer);}catch(e){}layer._bufferLayer=null;}}
 function _restorePolyBuffer(layer,latlngs,col){_removePolyBuffer(layer);var buf=L.polygon(latlngs,{color:col||TC.poly,fillColor:col||TC.poly,fillOpacity:.33,weight:2,dashArray:'7,5',opacity:.65,interactive:false,pane:'annotations'});buf.addTo(map);layer._bufferLayer=buf;}
 function _recomputePolyBuffer(layer){
@@ -3863,7 +3901,20 @@ const delH=new L.EditToolbar.Delete(map,{featureGroup:fg});
 
 let _penLayersHidden=[]; // couches crayon temporairement retirées pendant l'édition
 let _zeroOpHidden=[]; // couches à 0 % d'opacité, exclues du mode édition
+let _azEditHandles=[]; // paires de marqueurs draggables pour l'édition des azimuts
 
+function _initAzimutEditHandle(l){
+  const pts=l.getLatLngs();if(pts.length<2)return;
+  const _mkIcon=L.divIcon({iconSize:[8,8],className:'leaflet-div-icon leaflet-editing-icon'});
+  const mk1=L.marker(pts[0],{icon:_mkIcon,draggable:true,zIndexOffset:3000,pane:'markerPane'}).addTo(map);
+  const mk2=L.marker(pts[pts.length-1],{icon:_mkIcon,draggable:true,zIndexOffset:3000,pane:'markerPane'}).addTo(map);
+  function _sync(){l.setLatLngs([mk1.getLatLng(),mk2.getLatLng()]);}
+  mk1.on('drag',_sync);mk2.on('drag',_sync);
+  function _syncFull(){const np1=mk1.getLatLng(),np2=mk2.getLatLng();l.setLatLngs([np1,np2]);l._meta.bearing=_bearing(np1,np2);l._meta.distance=np1.distanceTo(np2);_markUnsaved();updateList();}
+  mk1.on('dragend',_syncFull);mk2.on('dragend',_syncFull);
+  mk1._azHit=l;mk1._azRole='p1';mk2._azHit=l;mk2._azRole='p2';
+  _azEditHandles.push(mk1,mk2);
+}
 function toggleEdit(){
   if(_editActive){
     _stopEditMode();
@@ -3922,6 +3973,8 @@ function toggleEdit(){
     _penLayersHidden.forEach(l=>{try{fg.removeLayer(l);l._editHidden=true;}catch(e){}});
     fg.eachLayer(l=>{try{if(l.dragging)l.dragging.enable();}catch(e){}});
     editH.enable();
+    // Pour les azimuts : remplacer les poignées Leaflet.Draw (midpoints inclus) par 2 poignées custom
+    fg.eachLayer(l=>{if(l._meta&&l._meta.type==='azimut'&&l.editing&&l.editing.enabled()){l.editing.disable();_initAzimutEditHandle(l);}});
     const mp=map.getPane('markerPane');if(mp)mp.style.zIndex='2000';
     const op=map.getPane('overlayPane');if(op)op.style.zIndex='700';
     const obEdit2=document.getElementById('ob-edit');if(obEdit2)obEdit2.classList.add('on');
@@ -6127,11 +6180,11 @@ try {
 // Masque l'app et montre l'écran de connexion
 function _showAuth(){
   if(document.querySelector('meta[name="vdata"]'))return;
-  document.getElementById('auth-screen').classList.remove('hidden');
-  document.getElementById('reset-btn').style.display='none';
-  document.getElementById('logout-btn').classList.remove('visible');
-  document.getElementById('chgpwd-btn').classList.remove('visible');
-  document.getElementById('auth-footer').style.display='none';
+  const as=document.getElementById('auth-screen');if(as)as.classList.remove('hidden');
+  const rb=document.getElementById('reset-btn');if(rb)rb.style.display='none';
+  const lb=document.getElementById('logout-btn');if(lb)lb.classList.remove('visible');
+  const cb=document.getElementById('chgpwd-btn');if(cb)cb.classList.remove('visible');
+  const af=document.getElementById('auth-footer');if(af)af.style.display='none';
 }
 
 // Déverrouille l'app et masque l'écran de connexion
