@@ -543,14 +543,40 @@ input[type=range]:focus{outline:none}
 <body>
 
 <!-- ══ SPLASH SCREEN ══ -->
-<div id="splash" style="position:fixed;inset:0;z-index:99999;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity 0.5s ease;">
+<div id="splash" style="position:fixed;inset:0;z-index:9999999;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity 0.5s ease;">
   <img src="https://horizoncreationsapp.github.io/Sentinel-Project/android-chrome-512x512.png"
        style="width:112px;height:112px;border-radius:22px;box-shadow:0 8px 32px rgba(37,99,235,0.35);"
        onerror="this.style.display='none'" alt=""/>
   <div style="color:#f8fafc;font-family:'DM Sans',system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:0.3px;">Sentinel Project</div>
-  <div style="color:#475569;font-family:'DM Sans',system-ui,sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;">V 1.5</div>
 </div>
-<script>window._splashT0=Date.now();</script>
+<script>
+window._splashT0=Date.now();
+(function(){
+  var _done=false;
+  var MIN_MS=1500;
+  window._showSplash=function(){
+    _done=false;
+    var s=document.getElementById('splash');
+    if(!s)return;
+    s.style.display='flex';s.style.opacity='1';
+    window._splashT0=Date.now();
+  };
+  window._hideSplash=function(){
+    if(_done)return;
+    var t0=window._splashT0||Date.now();
+    var elapsed=Date.now()-t0;
+    var wait=Math.max(0,MIN_MS-elapsed);
+    setTimeout(function(){
+      if(_done)return;_done=true;
+      var s=document.getElementById('splash');
+      if(!s)return;
+      s.style.opacity='0';
+      setTimeout(function(){s.style.display='none';},500);
+    },wait);
+  };
+  setTimeout(window._hideSplash,4000);
+})();
+</script>
 
 <!-- ══ ÉCRAN DE CONNEXION SUPABASE ══ -->
 <div id="auth-screen">
@@ -5386,7 +5412,7 @@ function showToast(msg,ms=2800){const t=document.getElementById('toast');t.textC
 // ── INIT ──
 restoreSession();
 updateList();
-showToast('Sentinel Project V1 — Prêt');
+showToast('Bienvenue sur Sentinel Project');
 
 
 
@@ -6372,45 +6398,36 @@ async function doLogout(){
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// AUTHENTIFICATION — Init (pattern officiel Supabase JS v2)
-// onAuthStateChange est l'unique source de vérité.
-// INITIAL_SESSION fire UNE FOIS après que Supabase a résolu la session
-// (refresh token inclus) — c'est le signal fiable de l'état réel.
+// AUTHENTIFICATION — Init
+// getSession() est la source de vérité initiale : attend la résolution
+// complète (refresh token inclus si JWT expiré) avant de décider.
+// Le listener onAuthStateChange gère tous les événements suivants.
 // ═══════════════════════════════════════════════════════════════════
 (function(){
   if(!_supa){ _showAuth(); return; }
 
-  // Timeout de sécurité si INITIAL_SESSION ne se déclenche jamais (réseau indisponible)
   var _initDone = false;
+
+  // Timeout de sécurité : si getSession() ne répond pas en 8 s (réseau absent)
   var _initTimer = setTimeout(function(){
     if(!_initDone){ _initDone = true; _showAuth(); }
   }, 8000);
 
+  // ── Listener pour tous les événements post-init ──
   _supa.auth.onAuthStateChange(function(event, session){
 
-    // ── Session initiale : chargement page / rechargement PWA ──
-    if(event === 'INITIAL_SESSION'){
-      if(!_initDone){ _initDone = true; clearTimeout(_initTimer); }
+    // TOKEN_REFRESHED : si l'écran de login était affiché à tort (getSession() avait
+    // renvoyé null pendant que le refresh était encore en cours), on passe à l'app.
+    if(event === 'TOKEN_REFRESHED'){
       if(session && session.user){
-        var u = session.user;
-        var isInvite = (u.invited_at && !u.last_sign_in_at)
-          || (u.app_metadata && u.app_metadata.invited_at)
-          || window._sentinelInviteFlow;
-        if(isInvite){
-          window._sentinelInviteFlow = true;
-          if(window._hideSplash) window._hideSplash();
-          document.getElementById('setpwd-screen').classList.add('on');
-        } else {
-          _showApp(u);
-        }
-      } else {
-        _showAuth();
+        var as = document.getElementById('auth-screen');
+        if(as && !as.classList.contains('hidden')){ _showApp(session.user); }
       }
       return;
     }
 
-    // ── Refresh token en arrière-plan : autoRefreshToken gère ça ──
-    if(event === 'TOKEN_REFRESHED') return;
+    // INITIAL_SESSION géré par getSession() ci-dessous — on l'ignore ici
+    if(event === 'INITIAL_SESSION') return;
 
     // ── Déconnexion explicite ──
     if(event === 'SIGNED_OUT'){
@@ -6450,33 +6467,44 @@ async function doLogout(){
       if(session) _showApp(session.user);
     }
   });
+
+  // ── Vérification initiale via getSession() ──
+  // Plus fiable que INITIAL_SESSION : attend le refresh réseau si token expiré,
+  // retourne la session depuis localStorage sinon.
+  _supa.auth.getSession().then(function(r){
+    if(_initDone) return; // timeout a déjà pris la décision
+    _initDone = true;
+    clearTimeout(_initTimer);
+    if(r.data && r.data.session && r.data.session.user){
+      var u = r.data.session.user;
+      var isInvite = (u.invited_at && !u.last_sign_in_at)
+        || (u.app_metadata && u.app_metadata.invited_at)
+        || window._sentinelInviteFlow;
+      if(isInvite){
+        window._sentinelInviteFlow = true;
+        if(window._hideSplash) window._hideSplash();
+        document.getElementById('setpwd-screen').classList.add('on');
+      } else {
+        _showApp(u);
+      }
+    } else {
+      _showAuth();
+    }
+  }).catch(function(){
+    if(!_initDone){ _initDone = true; clearTimeout(_initTimer); _showAuth(); }
+  });
 })();
 
 // ── Réveil PWA — vérification silencieuse au retour au premier plan ──
-// Si l'app a été en arrière-plan plus de 10 s, on réaffiche le splash avant de vérifier la session.
-// Couvre le cas Android où Chrome ressuscite le processus sans recharger la page.
-var _lastHiddenAt = 0;
+// Vérifie uniquement si la session est toujours valide.
+// Pas de splash ici : le splash n'est affiché qu'au rechargement complet de la page.
 document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'hidden'){
-    _lastHiddenAt = Date.now();
-    return;
-  }
   if(document.visibilityState !== 'visible' || !_supa) return;
-  var hiddenFor = _lastHiddenAt > 0 ? Date.now() - _lastHiddenAt : 0;
-  var longAbsence = hiddenFor > 10000; // plus de 10 secondes en arrière-plan
-  // Re-afficher le splash si l'app revient au premier plan après une absence prolongée
-  if(longAbsence && window._showSplash){
-    window._showSplash();
-    setTimeout(window._hideSplash, 4000); // fallback de sécurité
-  }
   var as = document.getElementById('auth-screen');
   if(as && !as.classList.contains('hidden')) return; // login déjà visible
   _supa.auth.getSession().then(function(r){
-    if(!r.data.session){ _showAuth(); }
-    else if(longAbsence && window._hideSplash){ window._hideSplash(); }
-  }).catch(function(){
-    if(longAbsence && window._hideSplash) window._hideSplash();
-  });
+    if(!r.data.session) _showAuth();
+  }).catch(function(){}); // erreur réseau → ne pas déconnecter
 });
 
 // Création du mot de passe après invitation
@@ -6548,37 +6576,6 @@ async function doSetPassword(){
     navigator.storage.persist().catch(function(){});
   }
 
-  // ── Splash screen — durée minimale garantie ──
-  // _splashT0 est capturé inline dès l'affichage du div splash (avant tout script lourd).
-  // _hideSplash() garantit que la splash reste visible au moins MIN_MS depuis _splashT0.
-  // _showSplash() permet de réafficher la splash lors d'un retour au premier plan (PWA résurrection).
-  (function(){
-    var _done = false;
-    var MIN_MS = 1300;
-    window._showSplash = function(){
-      _done = false;
-      var s = document.getElementById('splash');
-      if(!s) return;
-      s.style.display = 'flex';
-      s.style.opacity = '1';
-      window._splashT0 = Date.now();
-    };
-    window._hideSplash = function(){
-      if(_done) return;
-      var t0 = window._splashT0 || Date.now();
-      var elapsed = Date.now() - t0;
-      var wait = Math.max(0, MIN_MS - elapsed);
-      setTimeout(function(){
-        if(_done) return; _done = true;
-        var s = document.getElementById('splash');
-        if(!s) return;
-        s.style.opacity = '0';
-        setTimeout(function(){ s.style.display='none'; }, 500);
-      }, wait);
-    };
-    // Fallback absolu : masquer après 4 s max
-    setTimeout(window._hideSplash, 4000);
-  })();
   // Vérifier au chargement et à la rotation
   window.addEventListener('load', checkPortrait);
   window.addEventListener('resize', function(){
