@@ -465,6 +465,7 @@ input[type=range]:focus{outline:none}
 /* MODALS */
 .mbg{position:fixed;inset:0;background:rgba(15,23,42,.32);z-index:8000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:48px 8px 16px}
 .mbg.on{display:flex}
+@media(max-width:640px){#doc-modal.mbg{padding-top:8px}#doc-modal .mbox2{max-height:calc(100dvh - 20px)}#doc-add-modal.mbg,#doc-pj-edit-modal.mbg{padding-bottom:32px}}
 /* Modales à centrer — ID > classe, pas besoin de !important */
 #emoji-modal.on,#legal-modal.on{display:grid;place-content:center;padding:16px 8px;overflow:hidden}
 #emoji-modal .mbox2,#legal-modal .mbox2{margin:0}
@@ -4732,12 +4733,7 @@ function saveSession(){try{const d={maps:mapLayers.map(ml=>({imgB64:ml.imgB64,jg
 function restoreSession(){try{const raw=sessionStorage.getItem('sentinel_maps');if(!raw)return;const d=JSON.parse(raw);(d.maps||[]).forEach(m=>{if(!m.imgB64||!m.bounds)return;const ol=L.imageOverlay(m.imgB64,m.bounds,{opacity:1,interactive:false,pane:'mapImages',zIndex:200+mapLayers.length});ol.addTo(map);const id=++cnt;mapLayers.push({id,name:m.imgName,layer:ol,imgB64:m.imgB64,jgwText:m.jgwText,imgName:m.imgName,jgwName:m.jgwName,georef:m.georef,visible:true,bounds:m.bounds});});renderML();if(mapLayers.length)map.fitBounds(mapLayers[0].bounds,{padding:[20,20]});}catch(e){}}
 
 // ── 21. EXPORT ──
-function exportProject(){
-  const hasAnns=anns.length>0||frozenAnns.length>0;
-  const hasFreezeable=mapLayers.length>0||(window.customLayers||[]).some(e=>!e._fromHub);
-  if(hasAnns||hasFreezeable){document.getElementById('export-choice-modal').classList.add('on');}
-  else{openNameModal(false);}
-}
+function exportProject(){document.getElementById('export-choice-modal').classList.add('on');}
 function openExportChoice(){document.getElementById('export-choice-modal').classList.add('on');}
 function closeExportChoice(){document.getElementById('export-choice-modal').classList.remove('on');}
 function openNameModal(isBase){
