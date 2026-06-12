@@ -1274,7 +1274,8 @@ window._splashT0=Date.now();
       <b>Architecture locale et sécurité des données :</b> l'ensemble des données cartographiques de l'utilisateur (annotations, tracés, coordonnées, photos, pièces jointes) est conservé <b>exclusivement sur l'appareil de l'utilisateur</b> (localStorage du navigateur ou fichier exporté). Aucune donnée cartographique personnelle n'est transmise à nos serveurs. Cette architecture garantit la confidentialité des informations sensibles traitées dans l'application.<br><br>
 
       <b style="color:var(--t9)">7. Cookies et traceurs</b><br>
-      Aucun cookie publicitaire ni traceur tiers. Un token de session JWT est stocké localement sur l'appareil aux seules fins d'authentification (localStorage ou sessionStorage selon le choix de l'utilisateur). Ce token ne contient aucune donnée de localisation. La préférence d'installation de l'application (ne plus afficher la proposition d'installation) est mémorisée localement sous la clé <code>pwa-no-prompt</code>.<br><br>
+      Aucun cookie publicitaire ni traceur tiers. Un token de session JWT est stocké localement sur l'appareil aux seules fins d'authentification (localStorage ou sessionStorage selon le choix de l'utilisateur). Ce token ne contient aucune donnée de localisation. La préférence d'installation de l'application (ne plus afficher la proposition d'installation) est mémorisée localement sous la clé <code>pwa-no-prompt</code>.<br>
+      Lorsque la case <i>« Se souvenir de moi »</i> est cochée lors de la connexion, l'Application utilise l'<i>API Credential Management</i> (standard W3C) pour stocker les identifiants dans le gestionnaire de mots de passe natif du navigateur (Chrome, Edge). Ces données restent exclusivement locales sur l'appareil et permettent une reconnexion automatique et silencieuse à chaque lancement. Une déconnexion explicite (bouton « Déconnexion ») efface les champs et bloque la reconnexion automatique dans la session navigateur en cours. Les identifiants stockés sont supprimables à tout moment depuis les paramètres du navigateur (Paramètres → Mots de passe).<br><br>
 
       <b style="color:var(--t9)">8. Services météorologiques tiers</b><br>
       Sentinel Project propose des liens vers des services météorologiques externes (<b>Météo-France</b> — meteofrance.com et <b>Windy</b> — windy.com) accessibles via un bouton dédié. Ces liens ouvrent les sites concernés dans un nouvel onglet du navigateur de l'utilisateur.<br>
@@ -6889,8 +6890,8 @@ async function doLogin(){
     return;
   }
   _showApp(data.user);
-  // Mémoriser pour auto-connexion silencieuse au prochain lancement
-  if(window.PasswordCredential){
+  // "Se souvenir de moi" : stocker les identifiants uniquement si case cochée
+  if(window.PasswordCredential&&document.getElementById('auth-remember').checked){
     try{
       const _cred=new PasswordCredential({id:email,password,name:email});
       navigator.credentials.store(_cred);
@@ -6901,19 +6902,26 @@ async function doLogin(){
 // Déconnexion
 async function doLogout(){
   await _supa.auth.signOut();
-  // Empêcher la reconnexion silencieuse au prochain lancement
-  if(navigator.credentials&&navigator.credentials.preventSilentAccess)
-    navigator.credentials.preventSilentAccess();
+  // Bloquer l'auto-login uniquement pour cette session navigateur
+  // (sessionStorage est effacé à la fermeture du navigateur → auto-login
+  //  reprend normalement au prochain lancement sans déconnexion explicite)
+  sessionStorage.setItem('sentinel-just-logged-out','1');
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-err').classList.remove('show');
   _showAuth();
+  // Effacer les champs après l'éventuel auto-remplissage du navigateur
+  setTimeout(function(){
+    var e=document.getElementById('auth-email'),p=document.getElementById('auth-password');
+    if(e)e.value='';if(p)p.value='';
+  },300);
   showToast('Déconnecté.');
 }
 
 // Connexion silencieuse via Credentials Management API (Chrome/Edge)
 async function _tryAutoLogin(){
   if(!_supa||!window.PasswordCredential)return false;
+  if(sessionStorage.getItem('sentinel-just-logged-out'))return false;
   try{
     const cred=await navigator.credentials.get({password:true,mediation:'silent'});
     if(!cred||!cred.id||!cred.password)return false;
