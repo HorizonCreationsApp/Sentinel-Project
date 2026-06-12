@@ -6902,19 +6902,22 @@ async function doLogin(){
 // Déconnexion
 async function doLogout(){
   await _supa.auth.signOut();
-  // Bloquer l'auto-login uniquement pour cette session navigateur
-  // (sessionStorage est effacé à la fermeture du navigateur → auto-login
-  //  reprend normalement au prochain lancement sans déconnexion explicite)
+  // Bloquer l'auto-login dans cette session navigateur
   sessionStorage.setItem('sentinel-just-logged-out','1');
+  // Passer le champ mot de passe en "new-password" AVANT _showAuth()
+  // Chrome ne pré-remplit pas les champs autocomplete=new-password
+  var _pwdF=document.getElementById('auth-password');
+  if(_pwdF)_pwdF.setAttribute('autocomplete','new-password');
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-err').classList.remove('show');
   _showAuth();
-  // Effacer les champs après l'éventuel auto-remplissage du navigateur
-  setTimeout(function(){
+  // Effacement répété 80ms × 10 = 800ms (sécurité vs tout timing Chrome résiduel)
+  var _clrI=setInterval(function(){
     var e=document.getElementById('auth-email'),p=document.getElementById('auth-password');
-    if(e)e.value='';if(p)p.value='';
-  },300);
+    if(e&&e.value)e.value='';if(p&&p.value)p.value='';
+  },80);
+  setTimeout(function(){clearInterval(_clrI);},800);
   showToast('Déconnecté.');
 }
 
