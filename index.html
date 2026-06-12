@@ -6889,16 +6889,38 @@ async function doLogin(){
     return;
   }
   _showApp(data.user);
+  // Mémoriser pour auto-connexion silencieuse au prochain lancement
+  if(window.PasswordCredential){
+    try{
+      const _cred=new PasswordCredential({id:email,password,name:email});
+      navigator.credentials.store(_cred);
+    }catch(e){}
+  }
 }
 
 // Déconnexion
 async function doLogout(){
   await _supa.auth.signOut();
+  // Empêcher la reconnexion silencieuse au prochain lancement
+  if(navigator.credentials&&navigator.credentials.preventSilentAccess)
+    navigator.credentials.preventSilentAccess();
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-err').classList.remove('show');
   _showAuth();
   showToast('Déconnecté.');
+}
+
+// Connexion silencieuse via Credentials Management API (Chrome/Edge)
+async function _tryAutoLogin(){
+  if(!_supa||!window.PasswordCredential)return false;
+  try{
+    const cred=await navigator.credentials.get({password:true,mediation:'silent'});
+    if(!cred||!cred.id||!cred.password)return false;
+    const{data,error}=await _supa.auth.signInWithPassword({email:cred.id,password:cred.password});
+    if(data&&data.session&&data.session.user){_showApp(data.session.user);return true;}
+  }catch(e){}
+  return false;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -6992,7 +7014,8 @@ async function doLogout(){
         _showApp(u);
       }
     } else {
-      _showAuth();
+      // Tenter une reconnexion silencieuse avant d'afficher le login
+      _tryAutoLogin().then(function(ok){if(!ok)_showAuth();});
     }
   }).catch(function(){
     if(!_initDone){ _initDone = true; clearTimeout(_initTimer); _showAuth(); }
