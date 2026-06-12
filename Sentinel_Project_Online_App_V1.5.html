@@ -641,7 +641,7 @@ window._splashT0=Date.now();
     </div>
     <div class="auth-footer">
       Accès réservé aux utilisateurs autorisés.<br>
-      © 2026 Frédéric Ferra — Tous droits réservés<br>
+      Tous droits réservés<br>
       <span onclick="var m=document.getElementById('legal-modal');m.classList.add('on');m.style.zIndex='99999'" style="color:var(--blue);cursor:pointer;font-size:10px;text-decoration:underline">Mentions légales &amp; CGU</span>
     </div>
   </div>
@@ -6926,7 +6926,7 @@ async function _tryAutoLogin(){
   if(!_supa||!window.PasswordCredential)return false;
   if(sessionStorage.getItem('sentinel-just-logged-out'))return false;
   try{
-    const cred=await navigator.credentials.get({password:true,mediation:'silent'});
+    const cred=await navigator.credentials.get({password:true,mediation:'optional'});
     if(!cred||!cred.id||!cred.password)return false;
     const{data,error}=await _supa.auth.signInWithPassword({email:cred.id,password:cred.password});
     if(data&&data.session&&data.session.user){_showApp(data.session.user);return true;}
