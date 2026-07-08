@@ -7606,13 +7606,17 @@ var _OFFLINE_MAX_MS = 30*24*3600*1000; // 30 jours
 function _markAuthChecked(){ try{ localStorage.setItem('sentinel_last_auth_check', String(Date.now())); }catch(e){} }
 function _readCachedSupaSession(){
   try{
+    // Clé de session de l'app (storageKey Supabase = 'sentinel-session'), + repli générique.
+    var keys=['sentinel-session'];
     for(var i=0;i<localStorage.length;i++){
       var k=localStorage.key(i);
-      if(k && /^sb-.*-auth-token$/.test(k)){
-        var v=JSON.parse(localStorage.getItem(k));
-        var s=(v&&v.currentSession)?v.currentSession:v;
-        if(s&&s.user)return s;
-      }
+      if(k && k!=='sentinel-session' && /auth-token$/.test(k)) keys.push(k);
+    }
+    for(var j=0;j<keys.length;j++){
+      var raw=localStorage.getItem(keys[j]); if(!raw)continue;
+      var v=JSON.parse(raw);
+      var s=(v&&v.currentSession)?v.currentSession:v;
+      if(s&&s.user)return s;
     }
   }catch(e){}
   return null;
@@ -7712,23 +7716,26 @@ function _authOfflineFallback(){
       var isInvite = (u.invited_at && !u.last_sign_in_at)
         || (u.app_metadata && u.app_metadata.invited_at)
         || window._sentinelInviteFlow;
-      // Jeton encore valide (émis par le serveur il y a < 1 h) = contrôle serveur récent.
-      var fresh = sess.expires_at && (sess.expires_at*1000 > Date.now());
       if(isInvite){
         window._sentinelInviteFlow = true;
         if(window._hideSplash) window._hideSplash();
         document.getElementById('setpwd-screen').classList.add('on');
-      } else if(fresh){
+      } else if(navigator.onLine){
+        // En ligne : compte confirmable (le SDK rafraîchira/éjectera si supprimé) → on ouvre.
         _markAuthChecked();
         _showApp(u);
       } else {
-        // Jeton expiré : hors ligne → plafond 30 jours ; en ligne, TOKEN_REFRESHED
-        // confirmera (ou SIGNED_OUT éjectera un compte supprimé).
+        // Hors ligne : appliquer le plafond de 30 jours (session en cache).
         _authOfflineFallback();
       }
     } else {
-      // Pas de session : reconnexion silencieuse, sinon tolérance hors-ligne / login.
-      _tryAutoLogin().then(function(ok){if(!ok)_authOfflineFallback();});
+      // Pas de session restaurée : en ligne on tente une reconnexion silencieuse ;
+      // hors ligne on bascule directement sur la tolérance hors-ligne (pas d'appel réseau).
+      if(navigator.onLine){
+        _tryAutoLogin().then(function(ok){if(!ok)_authOfflineFallback();});
+      } else {
+        _authOfflineFallback();
+      }
     }
   }).catch(function(){
     if(!_initDone){ _initDone = true; clearTimeout(_initTimer); _authOfflineFallback(); }
