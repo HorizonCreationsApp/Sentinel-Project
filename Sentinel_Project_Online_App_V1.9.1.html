@@ -7705,10 +7705,42 @@ function _authOfflineFallback(){
     }
   });
 
-  // ── Vérification initiale via getSession() ──
+  // ── Décision IMMÉDIATE (indépendante de navigator.onLine) ──
+  // Si une session est en cache ET validée côté serveur il y a moins de 30 jours,
+  // on ouvre l'app tout de suite (en ligne comme hors ligne). La validation serveur
+  // se fait en arrière-plan : autoRefresh + getUser éjectent un compte supprimé (SIGNED_OUT).
+  (function(){
+    var cached = _readCachedSupaSession();
+    var last = parseInt(localStorage.getItem('sentinel_last_auth_check')||'0',10);
+    if(!(cached && cached.user && last && (Date.now()-last) < _OFFLINE_MAX_MS)) return;
+    _initDone = true; clearTimeout(_initTimer);
+    var u = cached.user;
+    var isInvite = (u.invited_at && !u.last_sign_in_at)
+      || (u.app_metadata && u.app_metadata.invited_at)
+      || window._sentinelInviteFlow;
+    if(isInvite){
+      window._sentinelInviteFlow = true;
+      if(window._hideSplash) window._hideSplash();
+      document.getElementById('setpwd-screen').classList.add('on');
+    } else {
+      _showApp(u);
+      try{ if(typeof _updateOfflineBanner==='function')_updateOfflineBanner(); }catch(e){}
+    }
+    // Validation serveur silencieuse (si le réseau répond) :
+    try{ _supa.auth.getUser().then(function(r){
+      if(r && r.data && r.data.user){ _markAuthChecked(); }
+      else if(r && r.error){
+        var m=(r.error.message||'')+'';
+        // Erreur d'auth claire (compte supprimé / JWT invalide) et NON réseau → éjecter.
+        if(!/network|fetch|failed|timeout|load/i.test(m)) _supa.auth.signOut().catch(function(){});
+      }
+    }).catch(function(){}); }catch(e){}
+  })();
+
+  // ── Vérification initiale via getSession() (seulement si pas déjà ouvert ci-dessus) ──
   // Plus fiable que INITIAL_SESSION : attend le refresh réseau si token expiré,
   // retourne la session depuis localStorage sinon.
-  _supa.auth.getSession().then(function(r){
+  if(!_initDone) _supa.auth.getSession().then(function(r){
     if(_initDone) return; // timeout a déjà pris la décision
     _initDone = true;
     clearTimeout(_initTimer);
