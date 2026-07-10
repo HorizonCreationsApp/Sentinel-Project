@@ -7483,10 +7483,14 @@ function _offlineDiagText(){
   var days=last?((Date.now()-last)/86400000):null;
   var within30=last&&days<30;
   var canOffline=((s&&s.user)||(prof&&prof.email))&&within30;
+  var persistTxt = (window._sentinelStoragePersisted===true) ? 'OUI (le navigateur ne devrait PAS évincer les données)'
+    : (window._sentinelStoragePersisted===false) ? 'NON — REFUSÉ par le navigateur (risque d\'éviction du stockage à la fermeture !)'
+    : 'inconnu pour l\'instant (vérification en cours ou API non supportée)';
   return 'DIAGNOSTIC HORS LIGNE — '+location.hostname+'\n\n'
     +'1. Session en cache : '+((s&&s.user)?('OUI ('+(s.user.email||'?')+')'):'NON')+'\n'
     +'2. Profil hors ligne : '+((prof&&prof.email)?('OUI ('+prof.email+')'):'NON')+'\n'
-    +'3. Dernière validation serveur : '+(last?('il y a '+days.toFixed(1)+' jour(s)'):'JAMAIS')+'\n\n'
+    +'3. Dernière validation serveur : '+(last?('il y a '+days.toFixed(1)+' jour(s)'):'JAMAIS')+'\n'
+    +'4. Stockage persistant accordé : '+persistTxt+'\n\n'
     +'VERDICT : '+(canOffline
       ? 'Accès hors ligne ACTIF — au prochain lancement sans internet, l\'app s\'ouvrira directement.'
       : 'Accès hors ligne IMPOSSIBLE — '+(!last?'aucune validation enregistrée (connectez-vous une fois en ligne, puis re-vérifiez ce diagnostic AVANT de fermer : si les lignes 1-3 sont OUI puis redeviennent NON au prochain lancement, votre navigateur efface les données du site à la fermeture).':(within30?'aucune session ni profil.':'dernière validation > 30 jours.')));
@@ -8329,9 +8333,23 @@ function _syncAttribution(){
     sessionStorage.setItem('portrait-dismissed','1');
     document.getElementById('portrait-msg').style.display = 'none';
   };
-  // Persistance du stockage localStorage (évite l'éviction par le navigateur)
+  // Persistance du stockage (évite l'éviction du localStorage/cache par le navigateur).
+  // IMPORTANT : persist() ne REJETTE PAS en cas de refus, il résout simplement à `false`
+  // silencieusement — on log donc explicitement le résultat pour savoir si Chrome accorde
+  // réellement la persistance à cette origine (sinon le navigateur peut évincer les données
+  // à tout moment, notamment à la fermeture, sans aucun réglage ni extension en cause).
   if(navigator.storage&&navigator.storage.persist){
-    navigator.storage.persist().catch(function(){});
+    navigator.storage.persist().then(function(granted){
+      try{ console.log('[Sentinel] navigator.storage.persist() → '+(granted?'ACCORDÉ':'REFUSÉ par le navigateur')); }catch(e){}
+      window._sentinelStoragePersisted = granted;
+    }).catch(function(e){
+      try{ console.log('[Sentinel] navigator.storage.persist() → ERREUR: '+e); }catch(_e){}
+    });
+  }
+  if(navigator.storage&&navigator.storage.persisted){
+    navigator.storage.persisted().then(function(p){
+      try{ console.log('[Sentinel] navigator.storage.persisted() (état actuel) → '+(p?'OUI':'NON')); }catch(e){}
+    });
   }
   // App locale (sans écran de connexion) : restaurer les couches personnalisées immédiatement
   if(!document.getElementById('auth-screen')&&typeof _restoreCustomPersistedLayers==='function'){
