@@ -3716,13 +3716,23 @@ function openQrScan(mode){
     statusEl.textContent='⚠ Caméra inaccessible (autorisation refusée ou indisponible).';
   });
 }
+let _qrLastDecodeTime=0;
+const _QR_DECODE_INTERVAL_MS=120; // ~8 tentatives/seconde — chaque tentative alloue un gros
+// tableau de pixels (getImageData) ; le faire à 60 im/s (cadence de requestAnimationFrame)
+// sature vite le ramasse-miettes sur mobile ("essoufflement" après quelques secondes).
 function _qrScanLoop(){
   if(!_qrStream)return;
+  const now=performance.now();
+  if(now-_qrLastDecodeTime<_QR_DECODE_INTERVAL_MS){
+    _qrScanRAF=requestAnimationFrame(_qrScanLoop);
+    return;
+  }
   const video=document.getElementById('qr-video');
   if(video.readyState!==video.HAVE_ENOUGH_DATA){
     _qrScanRAF=requestAnimationFrame(_qrScanLoop);
     return;
   }
+  _qrLastDecodeTime=now;
   // Analyser une image RÉDUITE (pas la résolution native de la caméra) : le décodage QR n'a
   // besoin que de quelques centaines de pixels, et ça garde chaque passage rapide et fluide.
   const vw=video.videoWidth,vh=video.videoHeight;
