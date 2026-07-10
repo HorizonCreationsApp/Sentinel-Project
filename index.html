@@ -7823,9 +7823,24 @@ function _pingOnline(){
 // la SESSION en cache (app rouverte sans déconnexion) OU, à défaut, le PROFIL sauvegardé
 // (qui survit à la déconnexion) — mais dans ce dernier cas, uniquement si le serveur est
 // réellement injoignable (sinon → login). En ligne, l'auto-refresh éjecte les comptes révoqués.
-function _authOfflineFallback(){
+// Paliers de réessai (ms écoulés depuis le 1er passage) : couvre aussi bien un ordinateur
+// récent (retrouve les données quasi instantanément) qu'un poste ancien/lent (mairies, services
+// municipaux...) où le moteur de stockage local peut mettre plusieurs secondes à être
+// pleinement disponible après un démarrage à froid complet du navigateur.
+var _OFFLINE_RETRY_STEPS = [300, 700, 1500, 3000];
+function _authOfflineFallback(retryIdx){
+  retryIdx = retryIdx||0;
   var s=_readCachedSupaSession();
   var last=parseInt(localStorage.getItem('sentinel_last_auth_check')||'0',10);
+  var prof=null; try{ prof=JSON.parse(localStorage.getItem('sentinel_offline_profile')||'null'); }catch(e){}
+  // Filet de sécurité : sur un démarrage à froid, le moteur de stockage local peut mettre du
+  // temps à être pleinement disponible. Si RIEN n'est trouvé, on retente à intervalles croissants
+  // (jusqu'à ~3 s au total) avant de conclure à une absence réelle de données.
+  if(!s && !last && !(prof&&prof.email) && retryIdx<_OFFLINE_RETRY_STEPS.length){
+    var _delay = _OFFLINE_RETRY_STEPS[retryIdx] - (retryIdx>0?_OFFLINE_RETRY_STEPS[retryIdx-1]:0);
+    setTimeout(function(){ _authOfflineFallback(retryIdx+1); }, _delay);
+    return;
+  }
   // Session en cache mais jamais horodatée (connexion faite avec une ancienne version) :
   // on amorce le compteur maintenant, sinon l'accès hors ligne serait impossible.
   if(s&&s.user&&!last){ last=Date.now(); _markAuthChecked(); }
