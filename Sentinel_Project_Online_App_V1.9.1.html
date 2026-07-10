@@ -693,7 +693,7 @@ window._splashT0=Date.now();
       Accès réservé aux utilisateurs autorisés.<br>
       Tous droits réservés<br>
       <span onclick="var m=document.getElementById('legal-modal');m.classList.add('on');m.style.zIndex='99999'" style="color:var(--blue);cursor:pointer;font-size:10px;text-decoration:underline">Mentions légales &amp; CGU</span><br>
-      <span id="sentinel-build-stamp" style="font-family:monospace;font-size:9px;color:rgba(148,163,184,0.5)">build 20260709-2134</span>
+      <span id="sentinel-build-stamp" onclick="_showOfflineDiag()" style="font-family:monospace;font-size:9px;color:rgba(148,163,184,0.5);cursor:pointer;text-decoration:underline dotted">build 20260709-2134</span>
     </div>
   </div>
 </div><!-- /auth-screen -->
@@ -7472,6 +7472,32 @@ try {
   console.error('Supabase SDK non chargé:', e);
 }
 
+// ── Diagnostic hors ligne (clic sur le numéro de build de l'écran de login) ──
+// Affiche l'état EXACT de la mémoire hors ligne de CET appareil/navigateur. Si ces données
+// disparaissent entre deux lancements, c'est que le navigateur efface les données du site
+// à la fermeture (réglage Chrome/Edge ou outil de nettoyage) — pas un bug de l'app.
+function _offlineDiagText(){
+  var s=null; try{ s=_readCachedSupaSession(); }catch(e){}
+  var prof=null; try{ prof=JSON.parse(localStorage.getItem('sentinel_offline_profile')||'null'); }catch(e){}
+  var last=parseInt(localStorage.getItem('sentinel_last_auth_check')||'0',10);
+  var days=last?((Date.now()-last)/86400000):null;
+  var within30=last&&days<30;
+  var canOffline=((s&&s.user)||(prof&&prof.email))&&within30;
+  return 'DIAGNOSTIC HORS LIGNE — '+location.hostname+'\n\n'
+    +'1. Session en cache : '+((s&&s.user)?('OUI ('+(s.user.email||'?')+')'):'NON')+'\n'
+    +'2. Profil hors ligne : '+((prof&&prof.email)?('OUI ('+prof.email+')'):'NON')+'\n'
+    +'3. Dernière validation serveur : '+(last?('il y a '+days.toFixed(1)+' jour(s)'):'JAMAIS')+'\n\n'
+    +'VERDICT : '+(canOffline
+      ? 'Accès hors ligne ACTIF — au prochain lancement sans internet, l\'app s\'ouvrira directement.'
+      : 'Accès hors ligne IMPOSSIBLE — '+(!last?'aucune validation enregistrée (connectez-vous une fois en ligne, puis re-vérifiez ce diagnostic AVANT de fermer : si les lignes 1-3 sont OUI puis redeviennent NON au prochain lancement, votre navigateur efface les données du site à la fermeture).':(within30?'aucune session ni profil.':'dernière validation > 30 jours.')));
+}
+function _showOfflineDiag(){
+  var t=_offlineDiagText();
+  try{ console.log(t); }catch(e){}
+  alert(t);
+  return t;
+}
+
 // Masque l'app et montre l'écran de connexion
 function _showAuth(offlineMsg){
   if(document.querySelector('meta[name="vdata"]'))return;
@@ -7837,6 +7863,9 @@ function _authOfflineFallback(){
 
 (function(){
   if(!_supa){ _showAuth(); return; }
+
+  // Trace de l'état hors ligne au démarrage (diagnostic : comparer entre deux lancements).
+  try{ console.log('[Sentinel] État au démarrage :\n'+_offlineDiagText()); }catch(e){}
 
   var _initDone = false;
 
