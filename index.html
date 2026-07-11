@@ -3717,8 +3717,21 @@ function openQrScan(mode){
     }catch(e){_qrImageCapture=null;}
     _qrScanLoop();
   }).catch(function(e){
-    statusEl.textContent='⚠ Caméra inaccessible (autorisation refusée ou indisponible).';
+    console.error('[Sentinel] QR getUserMedia erreur :',e&&e.name,e&&e.message,e);
+    statusEl.textContent='⚠ Caméra inaccessible : '+_qrCameraErrorHint(e)+' ('+((e&&e.name)||'erreur inconnue')+')';
   });
+}
+// Message adapté à la VRAIE cause du rejet de getUserMedia() (DOMException.name) — sans ça,
+// impossible de distinguer à distance un vrai refus de permission d'une caméra absente/déjà
+// utilisée/d'un contexte non sécurisé, qui appellent chacun un correctif totalement différent.
+function _qrCameraErrorHint(e){
+  var n=e&&e.name;
+  if(n==='NotAllowedError')return "autorisation refusée — vérifiez les autorisations caméra de l'app dans les paramètres du téléphone";
+  if(n==='NotFoundError')return 'aucune caméra détectée sur cet appareil';
+  if(n==='NotReadableError')return 'caméra déjà utilisée par une autre application, ou erreur matérielle';
+  if(n==='OverconstrainedError')return 'aucune caméra ne correspond aux réglages demandés';
+  if(n==='SecurityError')return "page non chargée dans un contexte sécurisé (https)";
+  return (e&&e.message)||'cause inconnue';
 }
 let _qrLastDecodeTime=0;
 const _QR_DECODE_INTERVAL_MS=200; // ~5 tentatives/seconde — reste instantané pour l'utilisateur,
