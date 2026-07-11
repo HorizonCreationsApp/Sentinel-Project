@@ -3675,10 +3675,12 @@ function _copyQrInfoLink(){
     }
   }catch(e){fail();}
 }
-// Résolution/fréquence VOLONTAIREMENT BASSES : lire la vidéo en continu via drawImage+
-// getImageData peut, sur certains téléphones, forcer TOUT le pipeline vidéo (pas seulement le
-// décodage QR) vers un mode de rendu plus lent — d'où un flux caméra qui prend plusieurs
-// secondes de retard sur le mouvement réel. Moins on sollicite ce pipeline, plus il reste fluide.
+// Contraintes VOLONTAIREMENT SOUPLES ("ideal" seul, pas de "max"/frameRate imposés) : forcer
+// une taille/cadence qui ne correspond à AUCUN mode natif de la caméra peut obliger le pilote à
+// redimensionner/reformater chaque image en continu — source plausible d'un tampon qui grossit
+// et fait prendre plusieurs secondes de retard à l'affichage par rapport au mouvement réel.
+// resizeMode:'none' désactive en plus tout recadrage interne (on downscale nous-mêmes dans le
+// canvas pour le décodage, pas besoin que le pilote le fasse aussi).
 const _QR_DECODE_MAX_DIM=360; // taille max (px) du cadre réellement analysé par jsQR
 function openQrScan(mode){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
@@ -3691,8 +3693,13 @@ function openQrScan(mode){
   document.getElementById('qr-scan-modal').classList.add('on');
   navigator.mediaDevices.getUserMedia({video:{
     facingMode:{ideal:'environment'},
-    width:{ideal:640,max:960},height:{ideal:480,max:720},
-    frameRate:{ideal:24,max:30}
+    width:{ideal:640},height:{ideal:480},
+    resizeMode:{ideal:'none'},
+    // Mise au point/exposition continues demandées DÈS la négociation initiale (best-effort,
+    // sans danger si le pilote ne les supporte pas) — évite une RENÉGOCIATION du flux après
+    // coup (ancien code : applyConstraints() une fois le flux déjà démarré), elle-même une
+    // cause plausible de tampon/latence supplémentaire.
+    advanced:[{focusMode:'continuous'},{exposureMode:'continuous'}]
   }}).then(function(stream){
     _qrStream=stream;
     const video=document.getElementById('qr-video');
@@ -3700,18 +3707,8 @@ function openQrScan(mode){
     video.play().catch(function(){});
     _qrCanvas=_qrCanvas||document.createElement('canvas');
     _qrCtx=_qrCanvas.getContext('2d',{willReadFrequently:true});
-    // Mise au point/exposition CONTINUES si le pilote de la caméra les propose (accélère
-    // nettement la stabilisation de l'image par rapport au mode par défaut).
     const track=stream.getVideoTracks()[0];
-    try{
-      if(track&&track.getCapabilities){
-        const caps=track.getCapabilities();
-        const advanced=[];
-        if(caps.focusMode&&caps.focusMode.indexOf('continuous')>=0)advanced.push({focusMode:'continuous'});
-        if(caps.exposureMode&&caps.exposureMode.indexOf('continuous')>=0)advanced.push({exposureMode:'continuous'});
-        if(advanced.length)track.applyConstraints({advanced:advanced}).catch(function(){});
-      }
-    }catch(e){}
+    try{ if(track&&track.getSettings)console.log('[Sentinel] QR caméra — réglages négociés :',track.getSettings()); }catch(e){}
     // ImageCapture.grabFrame() lit directement la piste caméra, sans jamais faire de lecture de
     // pixels sur le <video> affiché — celui-ci reste donc sur son chemin d'affichage rapide.
     _qrImageCapture=null;_qrGrabBusy=false;
@@ -3735,8 +3732,8 @@ function _qrDecodeSource(source,sw,sh){
   const cw=Math.max(1,Math.round(sw*scale)),ch=Math.max(1,Math.round(sh*scale));
   if(_qrCanvas.width!==cw)_qrCanvas.width=cw;
   if(_qrCanvas.height!==ch)_qrCanvas.height=ch;
-  _qrCtx.drawImage(source,0,0,cw,ch);
   try{
+    _qrCtx.drawImage(source,0,0,cw,ch);
     const imgData=_qrCtx.getImageData(0,0,cw,ch);
     return jsQR(imgData.data,imgData.width,imgData.height);
   }catch(e){return null;}
