@@ -3684,8 +3684,17 @@ function _copyQrInfoLink(){
 // Depuis qu'ImageCapture.grabFrame() (round 3) a découplé le décodage de l'affichage vidéo, le
 // coût du décodage n'est plus sur le chemin critique de la fluidité perçue — on peut donc analyser
 // une image plus grande (meilleure détection des QR codes petits/inclinés/mal cadrés) sans faire
-// revenir la lenteur d'affichage. Remonté de 360 à 640px (2026-07-11, round 5).
-const _QR_DECODE_MAX_DIM=640; // taille max (px) du cadre réellement analysé par jsQR
+// revenir la lenteur d'affichage. Remonté de 360 à 640px (round 5), puis 640 à 960px (round 6 —
+// un QR code petit dans le champ avait encore besoin de plus de détail que la résolution caméra
+// demandée ne pouvait fournir, voir _hasImageCaptureAPI ci-dessous).
+const _QR_DECODE_MAX_DIM=960; // taille max (px) du cadre réellement analysé par jsQR
+// Résolution SOURCE demandée à la caméra : plus haute UNIQUEMENT si ImageCapture est disponible
+// (vérifié statiquement, avant même d'ouvrir le flux). Sur ce chemin, le décodage est découplé de
+// l'affichage (round 3) — demander plus de pixels à la caméra ne coûte donc rien en fluidité
+// visuelle, mais donne à jsQR une vraie chance sur un QR code petit dans le champ. Sur le repli
+// <video> (navigateurs sans ImageCapture, ex. iOS Safari), on garde une résolution modeste : ce
+// pipeline-là reste potentiellement sensible à la latence identifiée au round 2.
+const _hasImageCaptureAPI=typeof ImageCapture!=='undefined';
 function openQrScan(mode){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     showToast('⚠ Caméra non disponible sur cet appareil/navigateur');
@@ -3697,7 +3706,7 @@ function openQrScan(mode){
   document.getElementById('qr-scan-modal').classList.add('on');
   navigator.mediaDevices.getUserMedia({video:{
     facingMode:{ideal:'environment'},
-    width:{ideal:640},height:{ideal:480},
+    width:{ideal:_hasImageCaptureAPI?1280:640},height:{ideal:_hasImageCaptureAPI?720:480},
     resizeMode:{ideal:'none'},
     // Mise au point/exposition continues demandées DÈS la négociation initiale (best-effort,
     // sans danger si le pilote ne les supporte pas) — évite une RENÉGOCIATION du flux après
