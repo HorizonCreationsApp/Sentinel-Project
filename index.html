@@ -3681,7 +3681,11 @@ function _copyQrInfoLink(){
 // et fait prendre plusieurs secondes de retard à l'affichage par rapport au mouvement réel.
 // resizeMode:'none' désactive en plus tout recadrage interne (on downscale nous-mêmes dans le
 // canvas pour le décodage, pas besoin que le pilote le fasse aussi).
-const _QR_DECODE_MAX_DIM=360; // taille max (px) du cadre réellement analysé par jsQR
+// Depuis qu'ImageCapture.grabFrame() (round 3) a découplé le décodage de l'affichage vidéo, le
+// coût du décodage n'est plus sur le chemin critique de la fluidité perçue — on peut donc analyser
+// une image plus grande (meilleure détection des QR codes petits/inclinés/mal cadrés) sans faire
+// revenir la lenteur d'affichage. Remonté de 360 à 640px (2026-07-11, round 5).
+const _QR_DECODE_MAX_DIM=640; // taille max (px) du cadre réellement analysé par jsQR
 function openQrScan(mode){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     showToast('⚠ Caméra non disponible sur cet appareil/navigateur');
@@ -3715,6 +3719,10 @@ function openQrScan(mode){
     try{
       if(typeof ImageCapture!=='undefined'&&track)_qrImageCapture=new ImageCapture(track);
     }catch(e){_qrImageCapture=null;}
+    // Diagnostic : certains navigateurs/appareils peuvent accepter `new ImageCapture(...)` sans
+    // erreur mais échouer plus tard sur grabFrame() (repli silencieux déjà géré) — ce log permet
+    // de savoir, SANS deviner, quel chemin est réellement actif sur un appareil donné.
+    console.log('[Sentinel] QR scan — chemin utilisé :',_qrImageCapture?'ImageCapture.grabFrame()':'lecture <video> (repli)');
     _qrScanLoop();
   }).catch(function(e){
     console.error('[Sentinel] QR getUserMedia erreur :',e&&e.name,e&&e.message,e);
@@ -3771,8 +3779,9 @@ function _qrScanLoop(){
         closeQrScan();
         _processQrResult(code.data,mode);
       }
-    }).catch(function(){
+    }).catch(function(e){
       // Repli permanent (pour la durée de ce scan) sur la lecture directe du <video>.
+      console.log('[Sentinel] QR scan — grabFrame() a échoué, repli sur <video> :',e&&e.name,e&&e.message);
       _qrGrabBusy=false;
       _qrImageCapture=null;
     });
