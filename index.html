@@ -3674,11 +3674,11 @@ function _copyQrInfoLink(){
     }
   }catch(e){fail();}
 }
-// Résolution/fréquence MODÉRÉES : sans ces indications, le téléphone choisit souvent une
-// résolution très élevée (parfois 4K) — chaque image devient coûteuse à traiter (lenteur) et
-// le pilote caméra peut aussi basculer vers un mode d'exposition plus lent (flou de mouvement).
-// Une résolution modeste suffit largement à décoder un QR code, et se règle beaucoup plus vite.
-const _QR_DECODE_MAX_DIM=480; // taille max (px) du cadre réellement analysé par jsQR
+// Résolution/fréquence VOLONTAIREMENT BASSES : lire la vidéo en continu via drawImage+
+// getImageData peut, sur certains téléphones, forcer TOUT le pipeline vidéo (pas seulement le
+// décodage QR) vers un mode de rendu plus lent — d'où un flux caméra qui prend plusieurs
+// secondes de retard sur le mouvement réel. Moins on sollicite ce pipeline, plus il reste fluide.
+const _QR_DECODE_MAX_DIM=360; // taille max (px) du cadre réellement analysé par jsQR
 function openQrScan(mode){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     showToast('⚠ Caméra non disponible sur cet appareil/navigateur');
@@ -3690,8 +3690,8 @@ function openQrScan(mode){
   document.getElementById('qr-scan-modal').classList.add('on');
   navigator.mediaDevices.getUserMedia({video:{
     facingMode:{ideal:'environment'},
-    width:{ideal:1280},height:{ideal:720},
-    frameRate:{ideal:30,max:30}
+    width:{ideal:640,max:960},height:{ideal:480,max:720},
+    frameRate:{ideal:24,max:30}
   }}).then(function(stream){
     _qrStream=stream;
     const video=document.getElementById('qr-video');
@@ -3717,9 +3717,9 @@ function openQrScan(mode){
   });
 }
 let _qrLastDecodeTime=0;
-const _QR_DECODE_INTERVAL_MS=120; // ~8 tentatives/seconde — chaque tentative alloue un gros
-// tableau de pixels (getImageData) ; le faire à 60 im/s (cadence de requestAnimationFrame)
-// sature vite le ramasse-miettes sur mobile ("essoufflement" après quelques secondes).
+const _QR_DECODE_INTERVAL_MS=200; // ~5 tentatives/seconde — reste instantané pour l'utilisateur,
+// tout en sollicitant beaucoup moins le pipeline vidéo (moins de getImageData = moins de risque
+// que le navigateur bascule le rendu caméra vers un mode plus lent sur les téléphones sensibles).
 function _qrScanLoop(){
   if(!_qrStream)return;
   const now=performance.now();
