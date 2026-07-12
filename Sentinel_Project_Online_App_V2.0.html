@@ -511,7 +511,7 @@ input[type=range]:focus{outline:none}
    boutons se retrouvaient alors inaccessibles hors écran). Titre et boutons restent toujours
    visibles (flex-shrink:0) ; seul le texte défile (mbox2-tall-body). */
 .mbox2-tall{display:flex;flex-direction:column;overflow:hidden;max-height:min(calc(100dvh - 40px),calc(100svh - 24px))}
-@media(max-width:640px){.mbox2-tall{margin:0 auto}}
+@media(max-width:640px),(max-height:640px){.mbox2-tall{margin:0 auto}}
 .mbox2-tall>.mtit{flex-shrink:0}
 .mbox2-tall>.mbox2-tall-body{flex:1 1 auto;overflow-y:auto;min-height:0}
 .mbox2-tall>.mbox2-tall-footer{flex-shrink:0}
@@ -8798,7 +8798,19 @@ function _restoreCustomPersistedLayers(){
 // ─ Afficher les fonds personnalisés dans la modale Fond+
 function openGeoCaptureModal(){
   const m=document.getElementById('geo-capture-modal');
-  if(m)m.classList.add('on');
+  if(!m)return;
+  // window.innerHeight reflète la VRAIE hauteur de viewport mesurée par le moteur de rendu à cet
+  // instant précis — plus fiable que les unités CSS dvh/svh, mal estimées sur certains
+  // navigateurs/contextes mobiles (cause du débordement observé malgré le plafond CSS dvh/svh).
+  // On retire aussi le padding haut/bas RÉEL du conteneur .mbg (mesuré, pas supposé) pour que la
+  // hauteur autorisée corresponde à l'espace vraiment disponible, quelle que soit l'orientation.
+  const box=m.querySelector('.mbox2');
+  if(box){
+    const cs=getComputedStyle(m);
+    const padV=(parseFloat(cs.paddingTop)||48)+(parseFloat(cs.paddingBottom)||16);
+    box.style.maxHeight=Math.max(200,window.innerHeight-padV)+'px';
+  }
+  m.classList.add('on');
 }
 function closeGeoCaptureModal(){
   const m=document.getElementById('geo-capture-modal');
