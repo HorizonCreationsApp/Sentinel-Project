@@ -506,6 +506,14 @@ input[type=range]:focus{outline:none}
 #emoji-modal.on,#legal-modal.on{display:grid;place-content:center;padding:16px 8px;overflow:hidden}
 #emoji-modal .mbox2,#legal-modal .mbox2{margin:0}
 .mbox2{background:var(--w);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.13),0 0 0 10px #ffffff;padding:20px;width:290px;max-width:92vw;max-height:calc(100dvh - 80px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--blue) rgba(0,0,0,0.08);margin:auto}
+/* Modales hautes (titre + long texte + boutons) : max-height bornée par le plus petit de dvh/svh
+   (dvh peut, sur certains navigateurs mobiles, surestimer l'espace réellement visible — les
+   boutons se retrouvaient alors inaccessibles hors écran). Titre et boutons restent toujours
+   visibles (flex-shrink:0) ; seul le texte défile (mbox2-tall-body). */
+.mbox2-tall{display:flex;flex-direction:column;overflow:hidden;max-height:min(calc(100dvh - 40px),calc(100svh - 24px))}
+.mbox2-tall>.mtit{flex-shrink:0}
+.mbox2-tall>.mbox2-tall-body{flex:1 1 auto;overflow-y:auto;min-height:0}
+.mbox2-tall>.mbox2-tall-footer{flex-shrink:0}
 .mtit{font-size:14px;font-weight:600;color:var(--t9);margin-bottom:5px}
 .msub{font-size:12px;color:var(--t5);margin-bottom:13px;line-height:1.5}
 .mbtns{display:flex;flex-direction:column;gap:7px}
@@ -865,9 +873,9 @@ window._splashT0=Date.now();
 
 <!-- ══ MODALE TÉLÉCHARGEMENT HORS LIGNE ══ -->
 <div class="mbg" id="offline-download-modal">
-  <div class="mbox2" style="width:400px;max-width:92vw;max-height:min(85dvh,calc(100dvh - 32px));display:flex;flex-direction:column">
+  <div class="mbox2 mbox2-tall" style="width:400px;max-width:92vw">
     <div class="mtit">📥 Téléchargement hors ligne</div>
-    <div style="font-size:11.5px;color:var(--t7);line-height:1.65;margin-top:8px;overflow-y:auto;flex:1">
+    <div class="mbox2-tall-body" style="font-size:11.5px;color:var(--t7);line-height:1.65;margin-top:8px">
       <p style="margin:0 0 10px">Cette fonctionnalité permet d'enregistrer une copie de l'application directement sur votre appareil, pour continuer à l'utiliser <b>même en cas de coupure réseau prolongée</b> (situation de crise, zone blanche, panne prolongée…).</p>
 
       <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:10px">
@@ -884,7 +892,7 @@ window._splashT0=Date.now();
       <p style="font-size:11.5px;color:var(--t7);line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin:0 0 8px">⚠ <b>Hors connexion, les fonds de carte en ligne (IGN, OpenStreetMap…) restent indisponibles.</b> N'importez pas de capture d'écran ou de photo comme fond de substitution sans fichier de calage (JGW/PGW) : les mesures, points GPS et icônes positionnés dessus seraient inexacts. Préparez plutôt <b>à l'avance</b>, pendant que vous avez internet, un fond de carte géoréférencé des lieux que vous prévoyez d'annoter (plan de commune, d'ERP, de département…), à importer avec son fichier de calage.</p>
       <p style="margin:0;font-size:10.5px;color:var(--t5)">Pensez à retélécharger une copie après chaque mise à jour de l'application, pour disposer de la dernière version. Voir les <span onclick="document.getElementById('legal-modal').classList.add('on')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Mentions légales &amp; CGU</span> (article 18-ter et 18-quater) pour le détail des conditions d'utilisation et des limitations (notamment la géolocalisation, moins fiable dans ce mode sur smartphone).</p>
     </div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-shrink:0">
+    <div class="mbox2-tall-footer" style="display:flex;gap:8px;margin-top:14px">
       <button class="mcancel" style="margin-top:0" onclick="document.getElementById('offline-download-modal').classList.remove('on')">Annuler</button>
       <button onclick="downloadOfflineCopy()" style="flex:1;padding:8px;border:none;border-radius:6px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">📥 Télécharger</button>
     </div>
@@ -956,7 +964,7 @@ window._splashT0=Date.now();
         <span>Fond de carte non géoréférencé</span>
       </div>
       <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px">Hors connexion, les fonds de carte en ligne (IGN, OpenStreetMap…) sont indisponibles. Il peut être tentant d'importer à la place une capture d'écran, une photo ou un plan scanné comme repère visuel.</p>
-      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px"><b>Attention :</b> sans fichier de calage (JGW/PGW/TFW/WLD), une telle image est positionnée de façon purement approximative. Les mesures de distance/surface, les points GPS et les icônes que vous placerez dessus <b>ne correspondent à aucune coordonnée géographique réelle</b>.</p>
+      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px"><b>Attention :</b> sans fichier de calage (JGW/PGW/TFW/WLD), une telle image est positionnée de façon purement approximative. <b>Aucune annotation positionnée sur ce fond (mesure, point GPS, icône, ou tout autre élément) ne correspondra à une coordonnée géographique réelle.</b></p>
       <p style="font-size:12px;color:var(--t5);line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:14px">ℹ Pour anticiper une coupure réseau, préparez et enregistrez À L'AVANCE un fond de carte géoréférencé (avec son fichier de calage) des lieux que vous prévoyez d'annoter (plan de commune, d'ERP, de département…). Vous pouvez générer ces 2 fichiers (JPEG + JGW) directement depuis Sentinel Project : panneau Fonds+, onglet « Fonds personnalisés ».</p>
       <p style="font-size:10px;color:var(--t3);margin-bottom:14px">Détails : <span onclick="document.getElementById('nogeoref-warn-modal').classList.remove('on');document.getElementById('legal-modal').classList.add('on')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Mentions légales &amp; CGU</span> (article 18-quater).</p>
       <button class="mok" onclick="document.getElementById('nogeoref-warn-modal').classList.remove('on')">J'ai compris</button>
@@ -966,10 +974,10 @@ window._splashT0=Date.now();
     <div class="mbox2" style="max-width:360px;padding:20px 22px">
       <div class="mtit" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
         <span style="font-size:20px">⚠️</span>
-        <span>Fond importé non géoréférencé</span>
+        <span>Média importé non géoréférencé</span>
       </div>
-      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px">L'image que vous venez d'importer n'est pas géoréférencée (aucun fichier de calage JGW/PGW/TFW/WLD associé). Elle est positionnée de façon purement approximative, à titre de repère visuel, autour de la zone actuellement affichée.</p>
-      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px"><b>En conséquence, toute mesure de distance/surface, tout point GPS et toute icône que vous positionnerez sur ce fond ne correspondront à aucune coordonnée géographique réelle.</b></p>
+      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px">L'image que vous venez d'importer n'est pas géoréférencée (aucun fichier de calage JGW/PGW/TFW/WLD associé). Elle est positionnée de façon purement approximative.</p>
+      <p style="font-size:13px;color:var(--t7);line-height:1.65;margin-bottom:10px"><b>En conséquence, aucune annotation positionnée sur ce fond (mesure, point GPS, icône, ou tout autre élément) ne correspondra à une coordonnée géographique réelle.</b> Nous vous recommandons d'importer un fichier géoréférencé pour un positionnement fiable.</p>
       <p style="font-size:10px;color:var(--t3);margin-bottom:14px">Détails : <span onclick="document.getElementById('geo-import-warn-modal').classList.remove('on');document.getElementById('legal-modal').classList.add('on')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Mentions légales &amp; CGU</span> (article 18-quater).</p>
       <button class="mok" onclick="document.getElementById('geo-import-warn-modal').classList.remove('on')">J'ai compris</button>
     </div>
@@ -1591,12 +1599,12 @@ window._splashT0=Date.now();
 
 <!-- ── SOUS-MODALE CAPTURE FOND EN JPEG+JGW ── -->
 <div class="mbg" id="geo-capture-modal" onclick="if(event.target===this)closeGeoCaptureModal()">
-  <div class="mbox2" style="width:400px;max-width:92vw;max-height:calc(100dvh - 40px);overflow-y:auto">
+  <div class="mbox2 mbox2-tall" style="width:400px;max-width:92vw">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
       <span>📸 Capturer la carte</span>
       <button onclick="closeGeoCaptureModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t5);line-height:1">✕</button>
     </div>
-    <div style="font-size:11.5px;color:var(--t7);line-height:1.65;margin-top:8px">
+    <div class="mbox2-tall-body" style="font-size:11.5px;color:var(--t7);line-height:1.65;margin-top:8px">
       <p style="margin:0 0 10px">Génère <b>2 fichiers séparés</b>, chacun dans un format propre (1 fichier au format JPEG + 1 fichier de calage au format JGW), représentant exactement la carte telle qu'elle est affichée en ce moment — la combinaison de fonds actuellement visible (IGN, satellite, couches actives, opacités…), sans vos annotations.</p>
       <p style="margin:0 0 10px">Plus tard, importez ces <b>2 fichiers ensemble</b> (bouton « Importer » du panneau Outils) : cette vue sera affichée de façon géoréférencée, même hors connexion.</p>
       <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:10px">
@@ -1605,7 +1613,7 @@ window._splashT0=Date.now();
       </div>
       <p style="font-size:12px;color:var(--t5);line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:14px">ℹ Pour un rendu net, capturez à un niveau de zoom proche de celui que vous utiliserez sur le terrain — l'export se fait en haute résolution quand votre écran le permet, mais ne peut pas ajouter de détail au-delà de ce que les fonds chargés contiennent déjà à ce zoom.</p>
     </div>
-    <div style="display:flex;gap:8px;margin-top:6px;flex-shrink:0">
+    <div class="mbox2-tall-footer" style="display:flex;gap:8px;margin-top:6px">
       <button class="mcancel" style="margin-top:0" onclick="closeGeoCaptureModal()">Annuler</button>
       <button id="geo-capture-go-btn" onclick="captureGeoreffedMap()" style="flex:1;padding:8px;border:none;border-radius:6px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">📸 Générer le JPEG + JGW</button>
     </div>
