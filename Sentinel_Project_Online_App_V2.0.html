@@ -511,6 +511,7 @@ input[type=range]:focus{outline:none}
    boutons se retrouvaient alors inaccessibles hors écran). Titre et boutons restent toujours
    visibles (flex-shrink:0) ; seul le texte défile (mbox2-tall-body). */
 .mbox2-tall{display:flex;flex-direction:column;overflow:hidden;max-height:min(calc(100dvh - 40px),calc(100svh - 24px))}
+@media(max-width:640px){.mbox2-tall{margin:0 auto}}
 .mbox2-tall>.mtit{flex-shrink:0}
 .mbox2-tall>.mbox2-tall-body{flex:1 1 auto;overflow-y:auto;min-height:0}
 .mbox2-tall>.mbox2-tall-footer{flex-shrink:0}
@@ -1599,19 +1600,19 @@ window._splashT0=Date.now();
 
 <!-- ── SOUS-MODALE CAPTURE FOND EN JPEG+JGW ── -->
 <div class="mbg" id="geo-capture-modal" onclick="if(event.target===this)closeGeoCaptureModal()">
-  <div class="mbox2 mbox2-tall" style="width:400px;max-width:92vw">
+  <div class="mbox2 mbox2-tall" style="width:460px;max-width:95vw">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
       <span>📸 Capturer la carte</span>
       <button onclick="closeGeoCaptureModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t5);line-height:1">✕</button>
     </div>
-    <div class="mbox2-tall-body" style="font-size:11.5px;color:var(--t7);line-height:1.65;margin-top:8px">
-      <p style="margin:0 0 10px">Génère <b>2 fichiers séparés</b>, chacun dans un format propre (1 fichier au format JPEG + 1 fichier de calage au format JGW), représentant exactement la carte telle qu'elle est affichée en ce moment — la combinaison de fonds actuellement visible (IGN, satellite, couches actives, opacités…), sans vos annotations.</p>
-      <p style="margin:0 0 10px">Plus tard, importez ces <b>2 fichiers ensemble</b> (bouton « Importer » du panneau Outils) : cette vue sera affichée de façon géoréférencée, même hors connexion.</p>
-      <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:10px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t5);margin-bottom:6px">Si vous avez des annotations en cours</div>
-        <p style="margin:0;font-size:11px;color:var(--t7);line-height:1.6">Exportez aussi votre <b>projet</b>. Plus tard, en chargeant ce projet puis en important le JPEG+JGW généré ici, vos annotations et mesures se repositionneront correctement — le zoom utilisé n'a pas d'importance, tout est ancré sur de vraies coordonnées GPS.</p>
+    <div class="mbox2-tall-body" style="font-size:11px;color:var(--t7);line-height:1.5;margin-top:6px">
+      <p style="margin:0 0 8px">Génère <b>2 fichiers séparés</b> (1 JPEG + 1 fichier de calage JGW) représentant la carte telle qu'affichée en ce moment (fonds actifs, opacités…), sans vos annotations.</p>
+      <p style="margin:0 0 8px">Plus tard, importez ces <b>2 fichiers ensemble</b> (bouton « Importer » du panneau Outils) : cette vue s'affichera géoréférencée, même hors connexion.</p>
+      <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;margin-bottom:8px">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t5);margin-bottom:4px">Si vous avez des annotations en cours</div>
+        <p style="margin:0;font-size:10.5px;color:var(--t7);line-height:1.45">Exportez aussi votre <b>projet</b>. En le rechargeant plus tard avec ce JPEG+JGW, vos annotations et mesures se repositionneront correctement, quel que soit le zoom utilisé (tout est ancré sur de vraies coordonnées GPS).</p>
       </div>
-      <p style="font-size:12px;color:var(--t5);line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:14px">ℹ Pour un rendu net, capturez à un niveau de zoom proche de celui que vous utiliserez sur le terrain — l'export se fait en haute résolution quand votre écran le permet, mais ne peut pas ajouter de détail au-delà de ce que les fonds chargés contiennent déjà à ce zoom.</p>
+      <p style="font-size:10.5px;color:var(--t5);line-height:1.45;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin-bottom:8px">ℹ Pour un rendu net, capturez à un zoom proche de l'usage prévu — l'export ne pourra pas contenir plus de détail que ce que les fonds affichent à cet instant.</p>
     </div>
     <div class="mbox2-tall-footer" style="display:flex;gap:8px;margin-top:6px">
       <button class="mcancel" style="margin-top:0" onclick="closeGeoCaptureModal()">Annuler</button>
