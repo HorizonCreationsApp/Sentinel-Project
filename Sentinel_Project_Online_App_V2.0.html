@@ -8917,7 +8917,10 @@ async function captureGeoreffedMap(){
     const stamp=new Date().toISOString().slice(0,10);
     const base='sentinel_capture_'+stamp;
     const aImg=document.createElement('a');aImg.href=jpegUrl;aImg.download=base+'.jpg';document.body.appendChild(aImg);aImg.click();document.body.removeChild(aImg);
-    const jgwUrl=URL.createObjectURL(new Blob([jgwText],{type:'text/plain'}));
+    // type:'application/octet-stream' plutôt que 'text/plain' : certains navigateurs mobiles
+    // (Chrome Android notamment) ajoutent ".txt" au nom de fichier téléchargé quand le type MIME
+    // est du texte brut et que l'extension (.jgw) ne figure pas dans leur liste connue.
+    const jgwUrl=URL.createObjectURL(new Blob([jgwText],{type:'application/octet-stream'}));
     const aJgw=document.createElement('a');aJgw.href=jgwUrl;aJgw.download=base+'.jgw';document.body.appendChild(aJgw);aJgw.click();document.body.removeChild(aJgw);
     setTimeout(function(){try{URL.revokeObjectURL(jgwUrl);}catch(e){}},2000);
     showToast('✓ Capture générée : '+base+'.jpg + '+base+'.jgw');
