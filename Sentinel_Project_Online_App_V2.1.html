@@ -6771,6 +6771,11 @@ function _tbDelCol(c){
 }
 function _tbSetCellStyle(kind,c){
   if(!_tbLastFocusEl||!_tbLastFocusEl.dataset||_tbLastFocusEl.dataset.r===undefined)return;
+  if(!_tbLastFocusEl.isConnected){
+    const liveTd=document.querySelector('#tb-edit-grid-wrap td[data-r="'+_tbLastFocusEl.dataset.r+'"][data-c="'+_tbLastFocusEl.dataset.c+'"]');
+    if(!liveTd)return;
+    _tbLastFocusEl=liveTd;
+  }
   const r=+_tbLastFocusEl.dataset.r,cc=+_tbLastFocusEl.dataset.c;
   if(kind==='bg'){_editingTableGrid.rows[r][cc].bg=c;_tbLastFocusEl.style.background=c;}
   else{
