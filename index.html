@@ -955,11 +955,11 @@ window._splashT0=Date.now();
       <button class="outil-btn" id="ob-imp"   onclick="outilAction('imp')"><span>🗺</span><b>Importer</b><small>JPEG/PNG + JGW/PGW</small></button>
       <button class="outil-btn" id="ob-ruler"  onclick="outilAction('ruler')"><span>📐</span><b>Règle</b><small>Distance · Dbl-clic fin</small></button>
       <button class="outil-btn" id="ob-azimut" onclick="outilAction('azimut')"><span>🧭</span><b>Azimut</b><small>1er clic origine · 2e direction</small></button>
-      <button class="outil-btn" id="ob-arrow" onclick="outilAction('arrow')"><span>➡</span><b>Flèche</b><small>Clics · Dbl-clic fin</small></button>
+      <button class="outil-btn" id="ob-arrow" onclick="outilAction('arrow')"><span>➡</span><b>Flèche</b><small>Direction · Dbl-clic fin</small></button>
       <button class="outil-btn" id="ob-poly"  onclick="outilAction('poly')"><span>⬟</span><b>Surface</b><small>Polygone · Dbl-clic fin</small></button>
       <button class="outil-btn" id="ob-circ"  onclick="outilAction('circ')"><span>◎</span><b>Cercle</b><small>Rayon</small></button>
       <button class="outil-btn" id="ob-pt"    onclick="outilAction('pt')"><span>📍</span><b>Point GPS</b><small>Lien + ressource</small></button>
-      <button class="outil-btn" id="ob-emoji" onclick="outilAction('emoji')"><span>🏷</span><b>Icône</b><small>234 marqueurs</small></button>
+      <button class="outil-btn" id="ob-emoji" onclick="outilAction('emoji')"><span>🏷</span><b>Icône</b><small>324 marqueurs</small></button>
       <button class="outil-btn" id="ob-pen"   onclick="outilAction('pen')"><span>✏</span><b>Crayon</b><small>Dessin libre</small></button>
       <button class="outil-btn" id="ob-txt"   onclick="outilAction('txt')"><span>T</span><b>Texte</b><small>Annotation</small></button>
       <button class="outil-btn" id="ob-edit"  onclick="outilAction('edit')" style="grid-column:1/-1"><span>⚙</span><b>Éditer</b><small>Modifier les formes tracées</small></button>
@@ -1889,6 +1889,12 @@ const EMOJI_CATS=[
     ['🦠','virus bactérie microbe épidémie pandémie maladie infection covid biohazard'],
     ['⛰️','montagne terrain relief géologie altitude zone falaise rocher'],
     ['🏜️','désert aride sécheresse chaleur territoire vide canicule'],
+    ['🌀','cyclone tourbillon tempête tropicale'],
+    ['🕳️','effondrement gouffre trou affaissement'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNOCAxN2EyIDIgMCAxIDAgNCAwYTIgMiAwIDEgMCAtNCAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PHBhdGggZD0iTTcgNmw0IDVoMWEyIDIgMCAwIDEgMiAydjRoLTJtLTQgMGgtNW0wIC02aDhtLTYgMHYtNW0yIDBoLTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNCA4di0yIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTkgMTJoMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE3LjUgMTUuNWwxLjUgMS41IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcuNSA4LjVsMS41IC0xLjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==','accident collision choc circulation'],
+    ['🦟','moustique risque sanitaire épidémie'],
+    ['🐍','serpent risque animal morsure'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNSA4aDguNWEyLjUgMi41IDAgMSAwIC0yLjM0IC0zLjI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMyAxMmgxNS41YTIuNSAyLjUgMCAxIDEgLTIuMzQgMy4yNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTQgMTZoNS41YTIuNSAyLjUgMCAxIDEgLTIuMzQgMy4yNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','vent fort rafale bourrasque'],
   ]},
   {cat:'Secours & Santé',items:[
     ['🏥','hôpital santé médecin urgences soins clinique établissement CHU CHR centre hospitalier'],
@@ -1903,6 +1909,12 @@ const EMOJI_CATS=[
     ['🆘','SOS urgence détresse secours appel aide signal mayday'],
     ['⛑️','casque protection chantier secours travaux sécurité'],
     ['💉','injection vaccin piqûre seringue traitement médical vaccination'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiw1IEwxMCw1IEwxMSwxMyBMMywxMyBaIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE0LDUgTDE4LDUgTDIxLDEzIEwxMywxMyBaIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLDYgTDE0LDYgTDE0LDggTDEwLDggWiIgZmlsbD0iIzAwMCIvPjxjaXJjbGUgY3g9IjciIGN5PSIxNyIgcj0iNC4zIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PGNpcmNsZSBjeD0iMTciIGN5PSIxNyIgcj0iNC4zIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PC9zdmc+','jumelles zone recherche observation'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48bGluZSB4MT0iMTAiIHkxPSIxMCIgeDI9IjcuNSIgeTI9IjcuNSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjMuNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjE0IiB5MT0iMTAiIHgyPSIxNi41IiB5Mj0iNy41IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMy40IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTAiIHkxPSIxNCIgeDI9IjcuNSIgeTI9IjE2LjUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIzLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxsaW5lIHgxPSIxNCIgeTE9IjE0IiB4Mj0iMTYuNSIgeTI9IjE2LjUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIzLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjYiIGN5PSI2IiByPSIzLjYiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48Y2lyY2xlIGN4PSIxOCIgY3k9IjYiIHI9IjMuNiIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuOCIvPjxjaXJjbGUgY3g9IjYiIGN5PSIxOCIgcj0iMy42IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PGNpcmNsZSBjeD0iMTgiIGN5PSIxOCIgcj0iMy42IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PHJlY3QgeD0iOS41IiB5PSI5LjUiIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIHJ4PSIxIiBmaWxsPSIjMDAwIi8+PC9zdmc+','drone surveillance aérienne'],
+    ['🚓','voiture police gendarmerie patrouille'],
+    ['🚔','voiture police intervention urgence'],
+    ['🚤','vedette bateau secours nautique'],
+    ['🛟','bouée sauvetage flottaison urgence'],
   ]},
   {cat:'Nature & Environnement',items:[
     ['🌲','arbre forêt bois verdure nature environnement écologie sylviculture plantation'],
@@ -1917,6 +1929,12 @@ const EMOJI_CATS=[
     ['♻️','recyclage tri écologie environnement durable déchet déchetterie collecte'],
     ['🌍','terre monde planète globe environnement écologie'],
     ['🌵','cactus désert aride zone végétation sèche'],
+    ['🦋','papillon biodiversité insecte'],
+    ['🍄','champignon forêt sous-bois'],
+    ['🌰','châtaigne gland forêt automne'],
+    ['🦔','hérisson faune discrète'],
+    ['🐝','abeille pollinisation biodiversité'],
+    ['🌊','vague houle mer environnement'],
   ]},
   {cat:'Bâtiments & Lieux',items:[
     ['🏠','maison habitation résidentiel domicile logement individuel pavillon'],
@@ -1931,6 +1949,12 @@ const EMOJI_CATS=[
     ['🏚️','bâtiment abandonné taudis dégradé démolition ruine insalubre'],
     ['🏨','hôtel hébergement logement tourisme accueil gîte chambre'],
     ['🏰','château monument patrimoine historique forteresse tour'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiA1bDAgMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xOCA1bDAgMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yIDE1bDIwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zIDhhNy41IDcuNSAwIDAgMCAzIC0yYTYuNSA2LjUgMCAwIDAgMTIgMGE3LjUgNy41IDAgMCAwIDMgMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEyIDEwbDAgNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','pont ouvrage infrastructure'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAyMWwxOCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNCAyMXYtMTFsMi41IC00LjVsNS41IC0yLjVsNS41IDIuNWwyLjUgNC41djExIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTAgOWEyIDIgMCAxIDAgNCAwYTIgMiAwIDEgMCAtNCAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PHBhdGggZD0iTTkgMjF2LTVhMSAxIDAgMCAxIDEgLTFoNGExIDEgMCAwIDEgMSAxdjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==','chalet gîte maison secondaire'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMjIgNWgtNXY1aC01djVoLTV2NWgtNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','escalier accès étage'],
+    ['🏘️','lotissement quartier résidentiel'],
+    ['🏙️','centre-ville skyline urbain'],
+    ['🛕','temple lieu de culte'],
   ]},
   {cat:'Transport',items:[
     ['🚗','voiture automobile véhicule route circulation mobilité covoiturage'],
@@ -1951,6 +1975,12 @@ const EMOJI_CATS=[
     ['⛵','voilier nautique plaisance mer rivière loisir'],
     ['🏍️','moto motocycle deux-roues véhicule rapide'],
     ['🚌','bus transport commun urbain réseau voyageurs'],
+    ['🚡','téléphérique transport aérien montagne'],
+    ['🚠','télécabine transport câble'],
+    ['🛺','tuk-tuk véhicule léger'],
+    ['🚝','métro automatique transport urbain'],
+    ['🛵','scooter deux-roues rapide'],
+    ['🚙','SUV véhicule tout-terrain'],
   ]},
   {cat:'Énergie & Télécoms',items:[
     ['⚡','électricité énergie courant tension réseau foudre alimentation'],
@@ -1965,6 +1995,12 @@ const EMOJI_CATS=[
     ['🔌','prise électrique branchement alimentation raccordement réseau'],
     ['📶','réseau wifi signal connectivité internet téléphonie mobile'],
     ['💻','ordinateur informatique numérique technologie bureau'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAxNWEyIDIgMCAwIDEgMiAtMmgxNGEyIDIgMCAwIDEgMiAydjRhMiAyIDAgMCAxIC0yIDJoLTE0YTIgMiAwIDAgMSAtMiAtMmwwIC00IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcgMTdsMCAuMDEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMyAxN2wwIC4wMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE1IDEzbDAgLTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMS43NSA4Ljc1YTQgNCAwIDAgMSA2LjUgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTguNSA2LjVhOCA4IDAgMCAxIDEzIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==','routeur réseau connexion internet'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNSA0YTEgMSAwIDAgMSAxIC0xaDEyYTEgMSAwIDAgMSAxIDF2MTZhMSAxIDAgMCAxIC0xIDFoLTEyYTEgMSAwIDAgMSAtMSAtMXYtMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMSAxN2ExIDEgMCAxIDAgMiAwYTEgMSAwIDAgMCAtMiAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','tablette numérique terrain'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAxMmE5IDkgMCAxIDAgMTggMGE5IDkgMCAxIDAgLTE4IDAiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48cGF0aCBkPSJNMTEgMTJhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuOCIvPjxwYXRoIGQ9Ik0xMy40MSAxMC41OWwyLjU5IC0yLjU5IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNyAxMmE1IDUgMCAwIDEgNSAtNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','jauge compteur niveau'],
+    ['📟','pager bipeur communication urgence'],
+    ['🛰️','satellite communication réseau'],
+    ['🔊','haut-parleur diffusion sonore alerte'],
   ]},
   {cat:'Logistique & Org.',items:[
     ['🎯','cible objectif point précis localisation target repère'],
@@ -1985,6 +2021,12 @@ const EMOJI_CATS=[
     ['🔭','télescope observation surveillance lointain vigile'],
     ['🗺️','carte plan territoire navigation cartographie'],
     ['🎪','chapiteau tente événement spectacle cirque festival braderie marché foire salle polyvalente'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNCA4di0yYTIgMiAwIDAgMSAyIC0yaDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDE2djJhMiAyIDAgMCAwIDIgMmgyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTYgNGgyYTIgMiAwIDAgMSAyIDJ2MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE2IDIwaDJhMiAyIDAgMCAwIDIgLTJ2LTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik05IDEybDYgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEyIDlsMCA2IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','précision visée coordination'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMuNzY3IDE1LjEyYTQuOTgzIDQuOTgzIDAgMCAxIC0xLjc2NyAtMS4xMmE1IDUgMCAwIDAgLTcgMHYtOWE1IDUgMCAwIDEgNyAwYTUgNSAwIDAgMCA3IDB2OC41IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNSAyMXYtNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE1IDE5bDIgMmw0IC00IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','validation vérification confirmation'],
+    ['📊','graphique statistique tableau de bord'],
+    ['🗒️','bloc-notes mémo rapide'],
+    ['🧮','calcul estimation chiffrage'],
+    ['🪧','pancarte signalétique affichage'],
   ]},
   {cat:'Industrie & Sites',items:[
     ['🏭','usine industrie production manufacture site industriel fabrique'],
@@ -2005,6 +2047,12 @@ const EMOJI_CATS=[
     ['⚒️','outils marteau pic construction démolition travaux'],
     ['🚰','robinet eau plomberie réseau hydraulique potable'],
     ['🔐','cadenas sécurité verrouillage accès restreint'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAyMXYtMTNsOSAtNGw5IDR2MTMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMyAxM2g0djhoLTEwdi02aDYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMyAyMXYtOWExIDEgMCAwIDAgLTEgLTFoLTJhMSAxIDAgMCAwIC0xIDF2MyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','entrepôt stockage logistique'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAxN2EyIDIgMCAxIDAgNCAwYTIgMiAwIDEgMCAtNCAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PHBhdGggZD0iTTEyIDE3YTIgMiAwIDEgMCA0IDBhMiAyIDAgMSAwIC00IDAiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48cGF0aCBkPSJNNyAxN2w1IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zIDE3di02aDEzdjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik01IDExdi00aDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik05IDExdi02aDRsMyA2IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjIgMTVoLTN2LTEwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTYgMTNsMyAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','chariot élévateur manutention'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiAyMWg2IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNOSAyMXYtMThsLTYgNmgxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTkgM2wxMCA2IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcgOXY0YTIgMiAwIDEgMSAtMiAyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','grue chantier levage'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNSA0aDE0YTEgMSAwIDAgMSAxIDF2NWExIDEgMCAwIDEgLTEgMWgtN2ExIDEgMCAwIDAgLTEgMXY3YTEgMSAwIDAgMSAtMSAxaC01YTEgMSAwIDAgMSAtMSAtMXYtMTRhMSAxIDAgMCAxIDEgLTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDhsMiAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNCAxMmwzIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDE2bDIgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTggNGwwIDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMiA0bDAgMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE2IDRsMCAyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','règle mesure dimension'],
+    ['🛠️','outils réparation maintenance'],
+    ['🪓','hache outil coupe bois'],
   ]},
   {cat:'Administration & Commune',items:[
     ['📮','boîte lettres courrier poste correspondance mairie commune'],
@@ -2019,6 +2067,12 @@ const EMOJI_CATS=[
     ['🏣','bureau succursale poste service public agence'],
     ['🖥️','ordinateur informatique numérique service en ligne guichet'],
     ['🔔','notification alerte sonnerie annonce information cloche avertissement'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTQgM3Y0YTEgMSAwIDAgMCAxIDFoNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTUgOHYtM2EyIDIgMCAwIDEgMiAtMmg3bDUgNXYxMWEyIDIgMCAwIDEgLTIgMmgtNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTMgMTRhMyAzIDAgMSAwIDYgMGEzIDMgMCAxIDAgLTYgMCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuOCIvPjxwYXRoIGQ9Ik00LjUgMTdsLTEuNSA1bDMgLTEuNWwzIDEuNWwtMS41IC01IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','certificat document officiel'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTUgMjFoLTlhMyAzIDAgMCAxIC0zIC0zdi0xaDEwdjJhMiAyIDAgMCAwIDQgMHYtMTRhMiAyIDAgMSAxIDIgMmgtMm0yIC00aC0xMWEzIDMgMCAwIDAgLTMgM3YxMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTkgN2w0IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik05IDExbDQgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','licence autorisation permis'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNyAyMGwxMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNiA2bDYgLTFsNiAxIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgM2wwIDE3IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNOSAxMmwtMyAtNmwtMyA2YTMgMyAwIDAgMCA2IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMSAxMmwtMyAtNmwtMyA2YTMgMyAwIDAgMCA2IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==','balance justice équité'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNOCAyMWgtMmEzIDMgMCAwIDEgLTMgLTN2LTFoNS41IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTcgOC41di0zLjVhMiAyIDAgMSAxIDIgMmgtMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE5IDNoLTExYTMgMyAwIDAgMCAtMyAzdjExIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNOSA3aDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik05IDExaDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xOC40MiAxMi42MWEyLjEgMi4xIDAgMCAxIDIuOTcgMi45N2wtNi4zOSA2LjQyaC0zdi0zbDYuNDIgLTYuMzkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==','contrat accord engagement'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAxN2MzLjMzMyAtMy4zMzMgNSAtNiA1IC04YzAgLTMgLTEgLTMgLTIgLTNzLTIuMDMyIDEuMDg1IC0yIDNjLjAzNCAyLjA0OCAxLjY1OCA0Ljg3NyAyLjUgNmMxLjUgMiAyLjUgMi41IDMuNSAxbDIgLTNjLjMzMyAyLjY2NyAxLjMzMyA0IDMgNGMuNTMgMCAyLjYzOSAtMiAzIC0yYy41MTcgMCAxLjUxNyAuNjY3IDMgMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','signature validation officielle'],
+    ['🏦','banque établissement financier public'],
   ]},
   {cat:'Événements & Culture',items:[
     ['🎭','théâtre spectacle culture représentation masque scène cinéma film arts'],
@@ -2033,6 +2087,12 @@ const EMOJI_CATS=[
     ['🎆','feux artifice fête nationale célébration spectacle pyrotechnie'],
     ['🎈','ballon fête animation événement célébration enfant'],
     ['🎺','trompette musique fanfare orchestre festival cuivre'],
+    ['🎇','cierge magique fête nocturne'],
+    ['🎼','partition musique composition'],
+    ['🖼️','tableau exposition art'],
+    ['🎨','peinture art créativité'],
+    ['🎬','cinéma tournage projection'],
+    ['🩰','danse spectacle ballet'],
   ]},
   {cat:'Sport & Loisirs',items:[
     ['⚽','football sport terrain match compétition ballon équipe foot'],
@@ -2047,6 +2107,12 @@ const EMOJI_CATS=[
     ['🤿','plongée sport nautique mer snorkeling sous-marin'],
     ['🛶','canot pagaie bateau rivière sport kayak nautique'],
     ['🏸','badminton sport raquette volant loisir'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAxMmE5IDkgMCAxIDAgMTggMGE5IDkgMCAxIDAgLTE4IDAiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48cGF0aCBkPSJNMTIgN2w0Ljc2IDMuNDVsLTEuNzYgNS41NWgtNmwtMS43NiAtNS41NWw0Ljc2IC0zLjQ1IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgN3YtNG0zIDEzbDIuNSAzbS0uNzQgLTguNTVsMy43NCAtMS40NW0tMTEuNDQgNy4wNWwtMi41NiAyLjk1bS43NCAtOC41NWwtMy43NCAtMS40NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','football ballon équipe'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTUgOWExIDEgMCAxIDAgMiAwYTEgMSAwIDEgMCAtMiAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PHBhdGggZD0iTTYgMTFsNCAtMmwzLjUgM2wtMS41IDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zIDE2Ljc1YTIuNCAyLjQgMCAwIDAgMSAuMjVhMi40IDIuNCAwIDAgMCAyIC0xYTIuNCAyLjQgMCAwIDEgMiAtMWEyLjQgMi40IDAgMCAxIDIgMWEyLjQgMi40IDAgMCAwIDIgMWEyLjQgMi40IDAgMCAwIDIgLTFhMi40IDIuNCAwIDAgMSAyIC0xYTIuNCAyLjQgMCAwIDEgMiAxYTIuNCAyLjQgMCAwIDAgMiAxYTIuNCAyLjQgMCAwIDAgMSAtLjI1IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','natation piscine sport'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTEuMDA3IDVhMiAyIDAgMSAwIDQgMGEyIDIgMCAxIDAgLTQgMCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuOCIvPjxwYXRoIGQ9Ik00IDE3bDUgMWwuNzUgLTEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE1IDIxdi00bC00IC0zbDEgLTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik03IDEydi0zbDUgLTFsMyAzbDMgMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','course running jogging'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMiAxOGEzIDMgMCAxIDAgNiAwYTMgMyAwIDAgMCAtNiAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTYgMThhMyAzIDAgMSAwIDYgMGEzIDMgMCAwIDAgLTYgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEyIDE5di00bC0zIC0zbDUgLTRsMiAzaDMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMy4wMDcgNWEyIDIgMCAxIDAgNCAwYTIgMiAwIDEgMCAtNCAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PC9zdmc+','vélo cyclisme sport'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNCAyMGg0bDEuNSAtMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE3IDIwbC0xIC01aC01bDEgLTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDEwbDQgLTFsNCAtMWw0IDEuNWw0IDEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjAwNyA1YTIgMiAwIDEgMCA0IDBhMiAyIDAgMSAwIC00IDAiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48L3N2Zz4=','yoga étirement détente'],
+    ['🏀','basketball sport ballon'],
   ]},
   {cat:'Commerce & Restauration',items:[
     ['🛒','magasin commerce courses marché achat supermarché hypermarché grande surface épicerie'],
@@ -2061,6 +2127,12 @@ const EMOJI_CATS=[
     ['💳','paiement carte bancaire transaction commerce'],
     ['🎁','cadeau offre présent promotion événement commerce'],
     ['🍺','brasserie café bar restaurant boisson établissement pub'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAyMWwxOCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMyA3djFhMyAzIDAgMCAwIDYgMHYtMW0wIDFhMyAzIDAgMCAwIDYgMHYtMW0wIDFhMyAzIDAgMCAwIDYgMHYtMWgtMThsMiAtNGgxNGwyIDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik01IDIxbDAgLTEwLjE1IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTkgMjFsMCAtMTAuMTUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik05IDIxdi00YTIgMiAwIDAgMSAyIC0yaDJhMiAyIDAgMCAxIDIgMnY0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','magasin boutique local'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAxNGMuODMgLjY0MiAyLjA3NyAxLjAxNyAzLjUgMWMxLjQyMyAuMDE3IDIuNjcgLS4zNTggMy41IC0xYy44MyAtLjY0MiAyLjA3NyAtMS4wMTcgMy41IC0xYzEuNDIzIC0uMDE3IDIuNjcgLjM1OCAzLjUgMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTggM2EyLjQgMi40IDAgMCAwIC0xIDJhMi40IDIuNCAwIDAgMCAxIDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMiAzYTIuNCAyLjQgMCAwIDAgLTEgMmEyLjQgMi40IDAgMCAwIDEgMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTMgMTBoMTR2NWE2IDYgMCAwIDEgLTYgNmgtMmE2IDYgMCAwIDEgLTYgLTZ2LTUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNi43NDYgMTYuNzI2YTMgMyAwIDEgMCAuMjUyIC01LjU1NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','café boisson pause'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTcgOHYtM2ExIDEgMCAwIDAgLTEgLTFoLTEwYTIgMiAwIDAgMCAwIDRoMTJhMSAxIDAgMCAxIDEgMXYzbTAgNHYzYTEgMSAwIDAgMSAtMSAxaC0xMmEyIDIgMCAwIDEgLTIgLTJ2LTEyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjAgMTJ2NGgtNGEyIDIgMCAwIDEgMCAtNGg0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=','portefeuille argent paiement'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNi41IDcuNWExIDEgMCAxIDAgMiAwYTEgMSAwIDEgMCAtMiAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PHBhdGggZD0iTTMgNnY1LjE3MmEyIDIgMCAwIDAgLjU4NiAxLjQxNGw3LjcxIDcuNzFhMi40MSAyLjQxIDAgMCAwIDMuNDA4IDBsNS41OTIgLTUuNTkyYTIuNDEgMi40MSAwIDAgMCAwIC0zLjQwOGwtNy43MSAtNy43MWEyIDIgMCAwIDAgLTEuNDE0IC0uNTg2aC01LjE3MmEzIDMgMCAwIDAgLTMgMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','étiquette prix promotion'],
+    ['🍔','fast-food restauration rapide'],
+    ['🥖','boulangerie pain artisan'],
   ]},
   {cat:'Agriculture & Ruralité',items:[
     ['🌱','semis plantation pousse graine agriculture culture maraîchage jardinage potager'],
@@ -2075,6 +2147,12 @@ const EMOJI_CATS=[
     ['🐴','cheval équin élevage haras équestre ranch pâturage cavalier'],
     ['🌾','blé céréale champ moisson agriculture récolte campagne'],
     ['🪨','pierre rocher carrière géologie terrain rural caillou'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNyAxNWgxMHY0YTIgMiAwIDAgMSAtMiAyaC02YTIgMiAwIDAgMSAtMiAtMnYtNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEyIDlhNiA2IDAgMCAwIC02IC02aC0zdjJhNiA2IDAgMCAwIDYgNmgzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgMTFhNiA2IDAgMCAxIDYgLTZoM3YxYTYgNiAwIDAgMSAtNiA2aC0zIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgMTVsMCAtNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','plante pousse jeune culture'],
+    ['🐐','chèvre élevage caprin ferme'],
+    ['🐇','lapin élevage cunicole ferme'],
+    ['🌶️','piment culture maraîchage'],
+    ['🍅','tomate culture potager'],
+    ['🐝','abeille apiculture rucher'],
   ]},
   {cat:'Personnes & Métiers',items:[
     ['👷','ouvrier chantier construction BTP casque travaux maçon'],
@@ -2089,6 +2167,12 @@ const EMOJI_CATS=[
     ['🎓','diplômé étudiant formation qualification expertise université'],
     ['🧑‍🚒','pompier secours incendie sapeur intervention urgence SDIS'],
     ['👨‍💻','développeur informaticien numérique IT technicien programmeur'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiAyMXYtMmE0IDQgMCAwIDEgNCAtNGgyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjIgMTZjMCA0IC0yLjUgNiAtMy41IDZzLTMuNSAtMiAtMy41IC02YzEgMCAyLjUgLS41IDMuNSAtMS41YzEgMSAyLjUgMS41IDMuNSAxLjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDdhNCA0IDAgMSAwIDggMGE0IDQgMCAwIDAgLTggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+','agent sécurité protection'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiA0aC0xYTIgMiAwIDAgMCAtMiAydjMuNWE1LjUgNS41IDAgMCAwIDExIDB2LTMuNWEyIDIgMCAwIDAgLTIgLTJoLTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDE1YTYgNiAwIDEgMCAxMiAwdi0zIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTEgM3YyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNiAzdjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xOCAxMGEyIDIgMCAxIDAgNCAwYTIgMiAwIDEgMCAtNCAwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PC9zdmc+','médecin auscultation'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNOCA4di0yYTIgMiAwIDAgMSAyIC0yaDRhMiAyIDAgMCAxIDIgMnYyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNCAxMGEyIDIgMCAwIDEgMiAtMmgxMmEyIDIgMCAwIDEgMiAydjhhMiAyIDAgMCAxIC0yIDJoLTEyYTIgMiAwIDAgMSAtMiAtMmwwIC04IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTAgMTRoNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEyIDEydjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==','secouriste kit premiers secours'],
+    ['🧑‍✈️','pilote aviateur transport aérien'],
+    ['🕵️','enquêteur détective investigation'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgNHYzbS00IC0zdjZtOCAtNnY2IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgMTguNWwtMyAxLjVsLjUgLTMuNWwtMiAtMmwzIC0uNWwxLjUgLTNsMS41IDNsMyAuNWwtMiAybC41IDMuNWwtMyAtMS41IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS44Ii8+PC9zdmc+','médaille récompense distinction'],
   ]},
   {cat:'Symboles',items:[
     ['🔴','rouge cercle couleur point signal danger'],
@@ -2133,6 +2217,12 @@ const EMOJI_CATS=[
     ['↖️','flèche nord-ouest direction diagonale sens'],
     ['🔰','hexagone zone réglementée badge statut'],
     ['⚜️','fleur de lys patrimoine emblème commune'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTkuODc1IDYuMjdhMi4yMjUgMi4yMjUgMCAwIDEgMS4xMjUgMS45NDh2Ny4yODRjMCAuODA5IC0uNDQzIDEuNTU1IC0xLjE1OCAxLjk0OGwtNi43NSA0LjI3YTIuMjY5IDIuMjY5IDAgMCAxIC0yLjE4NCAwbC02Ljc1IC00LjI3YTIuMjI1IDIuMjI1IDAgMCAxIC0xLjE1OCAtMS45NDh2LTcuMjg1YzAgLS44MDkgLjQ0MyAtMS41NTQgMS4xNTggLTEuOTQ3bDYuNzUgLTMuOThhMi4zMyAyLjMzIDAgMCAxIDIuMjUgMGw2Ljc1IDMuOThoLS4wMzMiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48L3N2Zz4=','hexagone forme géométrique'],
+    ['data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMuMTYzIDIuMTY4bDguMDIxIDUuODI4Yy42OTQgLjUwNCAuOTg0IDEuMzk3IC43MTkgMi4yMTJsLTMuMDY0IDkuNDNhMS45NzggMS45NzggMCAwIDEgLTEuODgxIDEuMzY3aC05LjkxNmExLjk3OCAxLjk3OCAwIDAgMSAtMS44ODEgLTEuMzY3bC0zLjA2NCAtOS40M2ExLjk3OCAxLjk3OCAwIDAgMSAuNzE5IC0yLjIxMmw4LjAyMSAtNS44MjhhMS45NzggMS45NzggMCAwIDEgMi4zMjYgMCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuOCIvPjwvc3ZnPg==','pentagone forme géométrique'],
+    ['🔳','carré noir texturé zone'],
+    ['➕','croix plus symbole ajout'],
+    ['➖','moins symbole retrait'],
+    ['〰️','ligne ondulée séparation'],
   ]},
 ];
 const EMOJIS=EMOJI_CATS.flatMap(c=>c.items.map(i=>i[0]));
@@ -2171,7 +2261,7 @@ const _normQ=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/
 function buildEmojiGrid(filter=''){
   const g=document.getElementById('emoji-grid');g.innerHTML='';
   const q=_normQ(filter).trim();
-  const pick=(em)=>{const b=document.createElement('button');b.className='emoji-pick';b.textContent=em;b.onclick=()=>{selectedEmoji=em;document.querySelectorAll('.emoji-pick').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');document.getElementById('emoji-ok-btn').disabled=false;};return b;};
+  const pick=(em)=>{const b=document.createElement('button');b.className='emoji-pick';b.dataset.em=em;if(em.startsWith('data:image')){const img=document.createElement('img');img.src=em;img.style.cssText='width:26px;height:26px;object-fit:contain;pointer-events:none';b.appendChild(img);}else{b.textContent=em;}b.onclick=()=>{selectedEmoji=em;document.querySelectorAll('.emoji-pick').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');document.getElementById('emoji-ok-btn').disabled=false;};return b;};
   if(q){
     let found=false;
     EMOJI_CATS.forEach(({items})=>{
@@ -2192,7 +2282,7 @@ function buildEmojiGrid(filter=''){
 function filterEmojiGrid(val){
   buildEmojiGrid(val);
   if(selectedEmoji){
-    document.querySelectorAll('.emoji-pick').forEach(b=>{if(b.textContent===selectedEmoji)b.classList.add('sel');});
+    document.querySelectorAll('.emoji-pick').forEach(b=>{if(b.dataset.em===selectedEmoji)b.classList.add('sel');});
     if(!document.querySelector('.emoji-pick.sel')){document.getElementById('emoji-ok-btn').disabled=true;selectedEmoji=null;}
   }
 }
