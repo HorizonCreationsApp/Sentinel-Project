@@ -5625,6 +5625,7 @@ function savePH(inp,key){fg.eachLayer(l=>{if(l._meta&&l._meta.type==='photo'&&l.
 // ── 19. FONDS DE CARTE TOGGLE / RENDU ──
 function toggleTile(key){
   const btn=document.getElementById('tb-'+key);
+  if(typeof _markUnsaved==='function')_markUnsaved();
   if(activeTiles[key]){map.removeLayer(activeTiles[key].layer);delete activeTiles[key];if(btn)btn.classList.remove('active');renderML();return;}
   const def=TILE_DEFS[key];if(!def||!def.url)return;
   const paneName='tile_'+key;
@@ -7826,6 +7827,9 @@ setTimeout(function(){ try{
   if(document.querySelector('meta[name="vdata"]'))return;                 // jamais dans l'Explorateur
   if(Object.keys(activeTiles).length||Object.keys(ignActiveLayers).length||(window.customLayers&&window.customLayers.length))return; // un fond est déjà présent
   if(TILE_DEFS.plan) toggleTile('plan');
+  // Ce chargement automatique ne compte pas comme une action de l'utilisateur : on annule le
+  // marquage "non sauvegardé" que toggleTile() vient de déclencher (rien n'a réellement été fait).
+  if(typeof _markSaved==='function')_markSaved();
 }catch(e){} },0);
 showToast('Bienvenue sur Sentinel Project');
 
@@ -7836,12 +7840,12 @@ let _hasUnsaved = false;
 function _markUnsaved(){ _hasUnsaved = true; }
 function _markSaved(){ _hasUnsaved = false; }
 function _hasRealUnsavedWork(){
-  return _hasUnsaved && (anns.length > 0 || mapLayers.length > 0 || logbookNotes.length > 0 || logbookTables.length > 0);
+  return _hasUnsaved && (anns.length > 0 || mapLayers.length > 0 || logbookNotes.length > 0 || logbookTables.length > 0
+    || Object.keys(activeTiles).length > 0 || Object.keys(ignActiveLayers).length > 0 || Object.keys(customTileLayers).length > 0);
 }
 
 // Interception bouton "Précédent" Android
-history.pushState({sentinel: true}, '');
-window.addEventListener('popstate', function(e){
+function _onPopStateGuard(e){
   if(_hasRealUnsavedWork()){
     history.pushState({sentinel: true}, '');
     if(confirm('Des modifications non exportées seront perdues.\nQuitter quand même ?')){
@@ -7850,16 +7854,22 @@ window.addEventListener('popstate', function(e){
   } else {
     history.go(-1);
   }
-});
+}
+history.pushState({sentinel: true}, '');
+window.addEventListener('popstate', _onPopStateGuard);
 // Filet de sécurité : sur mobile, un passage en arrière-plan (bouton Accueil) puis un retour peut
 // restaurer la page depuis un instantané du navigateur (bfcache) sans que la pile d'historique
 // JS soit fidèlement reconstituée — la sentinelle ci-dessus peut alors être perdue, et un second
-// appui sur Précédent fermerait l'app sans aucun avertissement. Plutôt que de vérifier si elle est
-// encore là (peu fiable après ce type de cycle), on la réarme de façon INCONDITIONNELLE à chaque
-// retour au premier plan : ainsi l'avertissement se redéclenche systématiquement, autant de fois
-// que nécessaire, tant que l'utilisateur n'a ni exporté ni cliqué explicitement sur "Quitter".
+// appui sur Précédent fermerait l'app sans aucun avertissement. Deux mesures redondantes à chaque
+// retour au premier plan, sans savoir laquelle des deux causes exactement la perte : on réarme
+// INCONDITIONNELLEMENT l'état d'historique, ET on retire/réajoute l'écouteur popstate lui-même,
+// au cas où ce serait le lien écouteur↔état qui se perdrait plutôt que l'état seul.
 function _rearmBackGuard(){
-  try{ history.pushState({sentinel: true}, ''); }catch(e){}
+  try{
+    window.removeEventListener('popstate', _onPopStateGuard);
+    window.addEventListener('popstate', _onPopStateGuard);
+    history.pushState({sentinel: true}, '');
+  }catch(e){}
 }
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible') _rearmBackGuard();
@@ -8847,6 +8857,7 @@ function openIgnUrlEdit(ldef){
 }
 
 function toggleIgnLayer(ldef, btn){
+  if(typeof _markUnsaved==='function')_markUnsaved();
   if(ignActiveLayers[ldef.id]){
     map.removeLayer(ignActiveLayers[ldef.id].layer);
     delete ignActiveLayers[ldef.id];
@@ -9527,6 +9538,7 @@ function addCustomTileDef(){
 
 // ─ Activer/désactiver une tuile XYZ personnalisée
 function toggleCustomTile(id){
+  if(typeof _markUnsaved==='function')_markUnsaved();
   id=Number(id);
   const defs=_loadCTileDefs();
   const def=defs.find(d=>d.id===id);
