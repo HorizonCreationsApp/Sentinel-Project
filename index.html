@@ -1129,6 +1129,10 @@ window._splashT0=Date.now();
       <div style="background:#f0fdf4;border-left:3px solid #059669;padding:8px 10px;border-radius:0 6px 6px 0;font-size:10px;color:#065f46">
         💡 Vous pouvez installer Sentinel Project comme une application : depuis le menu (icône ⋮ ou ☰) de votre navigateur, choisissez « Ajouter à l'écran d'accueil » ou « Installer l'application ». Sur ordinateur, une icône d'installation peut aussi apparaître directement dans la barre d'adresse (si votre navigateur est compatible).
       </div>
+      <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:8px 10px;border-radius:0 6px 6px 0;font-size:10px;color:#7a4a00;margin-top:10px">
+        ⚠️ <b>iOS (iPhone/iPad) — pensez à exporter avant de fermer</b><br>
+        Sur iOS, aucun message d'avertissement ne peut s'afficher avant une fermeture de l'application, quel que soit le navigateur utilisé (Safari, Chrome, Edge… tous reposent sur le même moteur sur iPhone). Un travail non exporté avant fermeture peut donc être perdu sans aucun avertissement. Pensez systématiquement à exporter avant de quitter l'application.
+      </div>
     </div>
     <button class="mcancel" style="margin-top:14px" onclick="document.getElementById('mobile-tuto').classList.remove('on')">Fermer</button>
   </div>
@@ -1525,8 +1529,8 @@ window._splashT0=Date.now();
       — <b>Fonds GeoJSON Sentinel (dépôt public) :</b> L'Éditeur maintient un dépôt GitHub public contenant des couches cartographiques GeoJSON thématiques accessibles depuis la fonctionnalité <i>Fonds supplémentaires</i> (modale Fonds+). Ces données sont hébergées sur GitHub Pages (infrastructure Microsoft Corporation, États-Unis) sous la responsabilité éditoriale exclusive de l'Éditeur. L'Éditeur s'assure qu'il dispose des droits nécessaires à la diffusion publique de ces données. L'Éditeur décline toute responsabilité quant aux usages qui sont faits de ces fonds cartographiques par les utilisateurs de l'Application.<br><br>
 
       <b style="color:var(--t9)">10-bis. Données stockées localement sur l'appareil de l'utilisateur</b><br>
-      Sentinel Project utilise le stockage local du navigateur (<b>localStorage</b>) pour conserver certaines données de configuration directement sur l'appareil de l'utilisateur, sans transmission à l'éditeur ni à aucun serveur tiers. Ces données comprennent notamment : les <b>fonds de carte personnalisés</b> ajoutés par l'utilisateur (URL de flux XYZ/WMTS et leurs paramètres d’affichage), les <b>icônes personnalisées</b> éventuellement importées dans l'outil Icône, les <b>identifiants des fonds GeoJSON Sentinel activés</b> par l'utilisateur depuis les Fonds supplémentaires (clé <code>sentinel_geojson_index</code>) ainsi que leurs <b>attributions cartographiques</b> associées (clé <code>sentinel_geojson_attribution</code>), ainsi qu'une <b>sauvegarde de secours automatique</b> du travail en cours — annotations, notes et tableaux, à l'exclusion du contenu des pièces jointes dont seul le nom est conservé à titre de rappel — écrite silencieusement lorsque l'application est mise en arrière-plan ou fermée sans export préalable, à seule fin de permettre sa récupération au lancement suivant (clé <code>sentinel_autosave_snapshot</code>). Cette information est fournie en application du principe de transparence prévu par l'article 82 de la loi n° 78-17 du 6 janvier 1978 modifiée (LCEN, transposant la directive ePrivacy), qui impose d'informer les utilisateurs de toute donnée déposée et lue sur leur appareil, même lorsque son traitement ne nécessite pas de consentement.<br>
-      <b>Persistance et suppression :</b> ces données sont conservées jusqu'à ce que l'utilisateur les supprime depuis l'application (bouton supprimer dans Fond + ou Icône), ou jusqu'à ce qu'il efface les données de site de son navigateur (Paramètres du navigateur → Confidentialité / Historique → Données de site ou localStorage). La sauvegarde de secours automatique suit un cycle de vie distinct : elle est effacée dès qu'un export réussit, ou dès que l'utilisateur répond à la proposition de récupération présentée au lancement suivant, qu'il l'accepte ou la décline.<br>
+      Sentinel Project utilise le stockage local du navigateur (<b>localStorage</b>) pour conserver certaines données de configuration directement sur l'appareil de l'utilisateur, sans transmission à l'éditeur ni à aucun serveur tiers. Ces données comprennent notamment : les <b>fonds de carte personnalisés</b> ajoutés par l'utilisateur (URL de flux XYZ/WMTS et leurs paramètres d’affichage), les <b>icônes personnalisées</b> éventuellement importées dans l'outil Icône, les <b>identifiants des fonds GeoJSON Sentinel activés</b> par l'utilisateur depuis les Fonds supplémentaires (clé <code>sentinel_geojson_index</code>) ainsi que leurs <b>attributions cartographiques</b> associées (clé <code>sentinel_geojson_attribution</code>). Cette information est fournie en application du principe de transparence prévu par l'article 82 de la loi n° 78-17 du 6 janvier 1978 modifiée (LCEN, transposant la directive ePrivacy), qui impose d'informer les utilisateurs de toute donnée déposée et lue sur leur appareil, même lorsque son traitement ne nécessite pas de consentement.<br>
+      <b>Persistance et suppression :</b> ces données sont conservées jusqu'à ce que l'utilisateur les supprime depuis l'application (bouton supprimer dans Fond + ou Icône), ou jusqu'à ce qu'il efface les données de site de son navigateur (Paramètres du navigateur → Confidentialité / Historique → Données de site ou localStorage).<br>
       <b>Responsabilité de l'utilisateur :</b> L'utilisateur est seul responsable du choix des sources cartographiques tierces qu'il configure et de la conformité de ces sources aux conditions d'utilisation du fournisseur concerné. L'éditeur de Sentinel Project décline toute responsabilité quant à la légalité, l'exactitude ou la disponibilité des sources importées par l'utilisateur.<br><br>
 
       <b style="color:var(--t9)">11. Précision de la géolocalisation et des mesures cartographiques</b><br>
@@ -7830,7 +7834,7 @@ showToast('Bienvenue sur Sentinel Project');
 // Avertissement fermeture si modifications non exportées
 let _hasUnsaved = false;
 function _markUnsaved(){ _hasUnsaved = true; }
-function _markSaved(){ _hasUnsaved = false; try{ localStorage.removeItem('sentinel_autosave_snapshot'); }catch(e){} }
+function _markSaved(){ _hasUnsaved = false; }
 function _hasRealUnsavedWork(){
   return _hasUnsaved && (anns.length > 0 || mapLayers.length > 0 || logbookNotes.length > 0 || logbookTables.length > 0);
 }
@@ -7850,15 +7854,20 @@ window.addEventListener('popstate', function(e){
 // Filet de sécurité : sur mobile, un passage en arrière-plan (bouton Accueil) puis un retour peut
 // restaurer la page depuis un instantané du navigateur (bfcache) sans que la pile d'historique
 // JS soit fidèlement reconstituée — la sentinelle ci-dessus peut alors être perdue, et un second
-// appui sur Précédent fermerait l'app sans aucun avertissement. On revérifie donc systématiquement
-// à chaque retour au premier plan, et on réarme au besoin.
+// appui sur Précédent fermerait l'app sans aucun avertissement. Plutôt que de vérifier si elle est
+// encore là (peu fiable après ce type de cycle), on la réarme de façon INCONDITIONNELLE à chaque
+// retour au premier plan : ainsi l'avertissement se redéclenche systématiquement, autant de fois
+// que nécessaire, tant que l'utilisateur n'a ni exporté ni cliqué explicitement sur "Quitter".
 function _rearmBackGuard(){
-  try{
-    if(!history.state || !history.state.sentinel) history.pushState({sentinel: true}, '');
-  }catch(e){}
+  try{ history.pushState({sentinel: true}, ''); }catch(e){}
 }
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible') _rearmBackGuard();
+});
+window.addEventListener('pageshow', _rearmBackGuard);
 
-// Avertissement fermeture standard (desktop)
+// Avertissement fermeture standard (desktop) — pas de portée sur iOS (voir modale Conseils
+// d'utilisation) : Safari/WebKit ne déclenche pas beforeunload de façon fiable sur mobile.
 window.addEventListener('beforeunload', e => {
   if(_hasRealUnsavedWork()){
     e.preventDefault();
@@ -7866,75 +7875,6 @@ window.addEventListener('beforeunload', e => {
     return e.returnValue;
   }
 });
-
-// ── Sauvegarde de secours (hors ligne, silencieuse) ──
-// Contrairement à l'export standard, ne conserve PAS le contenu des pièces jointes (photos,
-// documents, fonds importés) : uniquement leur nom, à titre de rappel. Objectif : rester légère
-// et quasi instantanée pour avoir une vraie chance d'aboutir dans la courte fenêtre disponible
-// avant qu'un navigateur mobile ne suspende ou ne tue la page en arrière-plan. localStorage est
-// utilisé plutôt qu'IndexedDB car son écriture est synchrone — pas de promesse qui pourrait ne
-// pas avoir le temps de se résoudre.
-function _stripHeavyForAutosave(project){
-  const lostFiles = [];
-  const stripAnn = a => {
-    if(!a.resourceB64) return a;
-    if(a.resourceName) lostFiles.push(a.resourceName);
-    return {...a, resourceB64: null};
-  };
-  const maps = (project.maps||[]).map(m=>{
-    if(m.imgB64) lostFiles.push(m.imgName || 'fond de carte importé');
-    return {...m, imgB64: null};
-  });
-  const docs = (project.projectDocuments||[]).map(d=>{
-    if(d.b64) lostFiles.push(d.filename || d.name || 'document');
-    return {...d, b64: null};
-  });
-  return {
-    stripped: {
-      ...project,
-      annotations: (project.annotations||[]).map(stripAnn),
-      frozenAnnotations: (project.frozenAnnotations||[]).map(stripAnn),
-      maps, projectDocuments: docs,
-    },
-    lostFiles,
-  };
-}
-function _tryAutosaveOnHide(){
-  try{
-    if(!_hasRealUnsavedWork()) return;
-    const {stripped, lostFiles} = _stripHeavyForAutosave(_buildProjectData());
-    localStorage.setItem('sentinel_autosave_snapshot', JSON.stringify({
-      project: stripped, lostFiles, savedAt: new Date().toISOString(),
-    }));
-  }catch(e){ /* quota dépassé ou autre — tant pis, pas de sauvegarde de secours cette fois */ }
-}
-function _checkAutosaveRecovery(){
-  try{
-    const raw = localStorage.getItem('sentinel_autosave_snapshot');
-    if(!raw) return;
-    const snap = JSON.parse(raw);
-    localStorage.removeItem('sentinel_autosave_snapshot');
-    if(!snap || !snap.project) return;
-    const d = new Date(snap.savedAt);
-    const dateStr = d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-    let msg = 'Votre dernière session s\'est terminée sans exportation, le ' + dateStr + '.\nVoulez-vous récupérer vos annotations, notes et tableaux ?';
-    if(snap.lostFiles && snap.lostFiles.length){
-      msg += '\n\nCes pièces jointes faisaient partie du projet mais n\'ont pas pu être conservées automatiquement — vous devrez les rejoindre manuellement si besoin :\n- ' + snap.lostFiles.join('\n- ');
-    }
-    if(confirm(msg)){
-      restoreProject(snap.project, projName || 'Récupération automatique');
-      _markUnsaved();
-      showToast('✓ Session précédente récupérée');
-    }
-  }catch(e){}
-}
-
-document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'hidden'){ _tryAutosaveOnHide(); }
-  else if(document.visibilityState === 'visible'){ _rearmBackGuard(); }
-});
-window.addEventListener('pagehide', _tryAutosaveOnHide);
-window.addEventListener('pageshow', _rearmBackGuard);
 
 // ── MÉTÉO ──
 function openMeteoModal(){
@@ -9020,10 +8960,6 @@ function _showApp(user){
   if(!window._cpfRestored&&typeof _restoreCustomPersistedLayers==='function'){
     window._cpfRestored=true;
     _restoreCustomPersistedLayers();
-  }
-  if(!window._autosaveChecked&&typeof _checkAutosaveRecovery==='function'){
-    window._autosaveChecked=true;
-    _checkAutosaveRecovery();
   }
 }
 
@@ -10445,12 +10381,6 @@ function _syncAttribution(){
   // App locale (sans écran de connexion) : restaurer les couches personnalisées immédiatement
   if(!document.getElementById('auth-screen')&&typeof _restoreCustomPersistedLayers==='function'){
     _restoreCustomPersistedLayers();
-  }
-  // App locale : pas d'écran de connexion pour porter le déclenchement (contrairement à _showApp
-  // côté Online) — on vérifie donc directement ici une éventuelle sauvegarde de secours.
-  if(!document.getElementById('auth-screen')&&!window._autosaveChecked&&typeof _checkAutosaveRecovery==='function'){
-    window._autosaveChecked=true;
-    _checkAutosaveRecovery();
   }
 
   // Vérifier au chargement et à la rotation
