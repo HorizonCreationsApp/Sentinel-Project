@@ -7868,7 +7868,10 @@ function _rearmBackGuard(){
   try{
     window.removeEventListener('popstate', _onPopStateGuard);
     window.addEventListener('popstate', _onPopStateGuard);
-    history.pushState({sentinel: true}, '');
+    // On ne repousse un état que s'il n'y en a pas déjà un en place : évite d'empiler une
+    // entrée d'historique à chaque retour au premier plan (ce qui obligerait, à la longue,
+    // à appuyer plusieurs fois sur Précédent pour quitter normalement quand rien n'est en jeu).
+    if(!history.state || !history.state.sentinel) history.pushState({sentinel: true}, '');
   }catch(e){}
 }
 document.addEventListener('visibilitychange', function(){
