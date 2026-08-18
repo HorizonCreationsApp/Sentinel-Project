@@ -5353,6 +5353,11 @@ function _sortAnnsSVG(){
   // anns[0] = dessous, anns[last] = dessus
   anns.forEach(({layer})=>{
     if(layer._meta&&layer._meta._visible===false)return;
+    // La zone tampon est un calque à part (ajouté directement à map, pas suivi dans anns[]) :
+    // la replacer juste avant le path principal pour qu'elle reste sous sa propre surface,
+    // mais au niveau de celle-ci dans l'empilement global (sinon elle retombe au fond du pane).
+    if(layer._bufferLayer&&layer._bufferLayer._path&&layer._bufferLayer._path.parentNode)
+      layer._bufferLayer._path.parentNode.appendChild(layer._bufferLayer._path);
     if(layer._path&&layer._path.parentNode)layer._path.parentNode.appendChild(layer._path);
     if(layer._visPair&&layer._visPair._path&&layer._visPair._path.parentNode)
       layer._visPair._path.parentNode.appendChild(layer._visPair._path);
@@ -5366,6 +5371,8 @@ function _sortAnnsSVG(){
 function _sortFrozenAnnsSVG(){
   frozenAnns.forEach(({layer})=>{
     if(layer._meta&&layer._meta._visible===false)return;
+    if(layer._bufferLayer&&layer._bufferLayer._path&&layer._bufferLayer._path.parentNode)
+      layer._bufferLayer._path.parentNode.appendChild(layer._bufferLayer._path);
     if(layer._path&&layer._path.parentNode)layer._path.parentNode.appendChild(layer._path);
     if(layer._visPair&&layer._visPair._path&&layer._visPair._path.parentNode)
       layer._visPair._path.parentNode.appendChild(layer._visPair._path);
@@ -8843,7 +8850,7 @@ function _pickerSelect(idx){
     L.popup({maxWidth:280}).setLatLng(_pickerLatLng).setContent(h.html).openOn(map);
   }else if(h.type==='ann'){
     _openLayer=h.layer;
-    if(!h.layer._frozen&&h.layer._sentinelId)highlightAnn(h.layer._sentinelId);
+    if(h.layer._sentinelId)highlightAnn(h.layer._sentinelId);
     h.layer.openPopup(_pickerLatLng);
   }
 }
