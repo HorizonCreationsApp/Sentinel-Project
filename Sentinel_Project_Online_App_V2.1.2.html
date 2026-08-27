@@ -665,11 +665,11 @@ tr.lb-colctrl td:hover{color:var(--red)}
   <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Sentinel">
-  <!-- Pas de <link rel="manifest">/mobile-web-app-capable ici : aucun fichier manifest.json ne
-       fait partie de cette application mono-fichier, et sous file:// (mode d'ouverture réel des
-       utilisateurs) cette balise déclenchait des erreurs console (fetch bloqué par CORS + tentative
-       de chargement de trame jugée non sûre) sans apporter aucune fonctionnalité réelle — retirée
-       pour un comportement identique à l'App Locale, qui ne l'a jamais eue. -->
+  <!-- Manifest PWA : uniquement ici (App Online, servie en https:// sur GitHub Pages).
+       L'App Locale (file://) n'a volontairement pas cette balise : sous file://, un fetch du
+       manifest est bloqué par CORS et génère une erreur console sans apporter de fonctionnalité
+       réelle (aucune installation possible depuis un fichier local). -->
+  <link rel="manifest" href="https://horizoncreationsapp.github.io/Sentinel-Project/manifest.json">
 </head>
 <body>
 
