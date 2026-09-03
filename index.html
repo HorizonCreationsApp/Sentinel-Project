@@ -1284,7 +1284,7 @@ window._splashT0=Date.now();
 </div>
 
 <!-- Choix mode Règle -->
-<div class="mbg" id="ruler-mode-modal" onclick="if(event.target===this){closeRulerModeModal();tool='nav';}">
+<div class="mbg" id="ruler-mode-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this){closeRulerModeModal();tool='nav';}">
   <div class="mbox2" style="max-width:320px">
     <div class="mtit">📐 Règle — Mode de mesure</div>
     <div style="font-size:11px;color:var(--t5);margin:4px 0 14px;line-height:1.5">Choisissez comment vous souhaitez mesurer :</div>
@@ -1381,7 +1381,7 @@ window._splashT0=Date.now();
 </div>
 
 <!-- ── Modal GeoJSON/CSV ── -->
-<div class="mbg" id="geojson-modal" onclick="if(event.target===this)closeGeoJsonModal()">
+<div class="mbg" id="geojson-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeGeoJsonModal()">
   <div class="mbox2" style="width:320px">
     <div class="mtit">🌐 GeoJSON / CSV</div>
     <div style="font-size:11px;color:var(--t5);margin:5px 0 16px;line-height:1.5">Exporter les annotations en GeoJSON, ou importer un fichier GeoJSON / CSV comme fond de carte.</div>
@@ -1651,7 +1651,7 @@ window._splashT0=Date.now();
 <div id="toast"></div>
 
 <!-- ── PANNEAU CARTES IGN ── -->
-<div class="mbg" id="ign-modal" style="align-items:center;padding:16px 8px" onclick="if(event.target===this)closeIgnPanel()">
+<div class="mbg" id="ign-modal" style="align-items:center;padding:16px 8px" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeIgnPanel()">
   <div class="mbox2" style="width:min(95vw,720px);max-width:none;max-height:calc(100dvh - 32px);display:flex;flex-direction:column">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
       <span>🗺 Cartes + et Fonds thématiques</span>
@@ -1673,7 +1673,7 @@ window._splashT0=Date.now();
 </div>
 
 <!-- ── SOUS-MODALE AJOUT FOND PERSONNALISÉ ── -->
-<div class="mbg" id="cpf-add-modal" onclick="if(event.target===this)closeCpfModal()">
+<div class="mbg" id="cpf-add-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeCpfModal()">
   <div class="mbox2" style="width:380px;max-height:calc(100dvh - 40px);overflow-y:auto">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
       <span>✚ Ajouter un fond de carte</span>
@@ -1691,7 +1691,7 @@ window._splashT0=Date.now();
 </div>
 
 <!-- ── SOUS-MODALE CAPTURE FOND EN JPEG+JGW ── -->
-<div class="mbg" id="geo-capture-modal" onclick="if(event.target===this)closeGeoCaptureModal()">
+<div class="mbg" id="geo-capture-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeGeoCaptureModal()">
   <div class="mbox2 mbox2-tall" style="width:460px;max-width:95vw">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
       <span>📸 Capturer la carte</span>
@@ -1714,7 +1714,7 @@ window._splashT0=Date.now();
 </div>
 
 <!-- ── SOUS-MODALE VUE 3D (bâtiments + relief) ── -->
-<div class="mbg" id="vue3d-modal" style="align-items:center;padding:16px 8px" onclick="if(event.target===this)closeVue3DModal()">
+<div class="mbg" id="vue3d-modal" style="align-items:center;padding:16px 8px" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeVue3DModal()">
   <div class="mbox2 mbox2-tall" id="vue3d-box" style="width:min(96vw,1100px)">
     <div class="mtit" style="display:flex;align-items:center;justify-content:space-between">
       <span>🧊 Vue 3D — Bâtiments &amp; reliefs</span>
@@ -7895,7 +7895,22 @@ document.addEventListener('selectionchange',function(){
 });
 
 // ── Journal de bord — Notes ──
-let _editingNoteId=null,_editingNoteColor='#2563eb',_pendingDelNoteId=null,_noteModalReadOnly=false;
+let _mbgMouseDownTarget=null;
+document.addEventListener('mousedown',function(e){_mbgMouseDownTarget=e.target;},true);
+document.addEventListener('touchstart',function(e){_mbgMouseDownTarget=e.target;},true);
+// Avertissement partagé « quitter sans enregistrer » — Notes et Tableur seulement, puisque ce sont
+// les seuls écrans avec un bouton Valider explicite et un état modifiable avant validation. Ne se
+// déclenche que si un changement RÉEL a eu lieu depuis l'ouverture (ou depuis le dernier Valider) —
+// voir _noteModalDirty/_tbModalDirty.
+let _discardConfirmAction=null;
+function _showDiscardConfirm(forceCloseFn){
+  _discardConfirmAction=forceCloseFn;
+  document.getElementById('discard-confirm-modal').classList.add('on');
+}
+function _closeDiscardConfirm(){document.getElementById('discard-confirm-modal').classList.remove('on');_discardConfirmAction=null;}
+function _confirmDiscardYes(){const fn=_discardConfirmAction;_closeDiscardConfirm();if(fn)fn();}
+// ── Journal de bord — Notes ──
+let _editingNoteId=null,_editingNoteColor='#2563eb',_pendingDelNoteId=null,_noteModalReadOnly=false,_noteModalSnapshot=null;
 function _lbFmtDate(ts){
   const d=new Date(ts);
   return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
@@ -7935,6 +7950,23 @@ function openNoteModal(id){
   _renderNoteColorRow();
   document.getElementById('note-modal').classList.add('on');
   setTimeout(()=>document.getElementById('note-title-in').focus(),50);
+  _noteModalSnapshot=_noteModalCurrentState();
+}
+function _noteModalCurrentState(){
+  return {
+    title:document.getElementById('note-title-in').value.trim(),
+    category:document.getElementById('note-cat-in').value,
+    color:_editingNoteColor,
+    html:document.getElementById('note-body-in').innerHTML.replace(/​/g,'')
+  };
+}
+// Une note nouvellement créée sans rien y avoir tapé, ou une note existante rouverte et laissée
+// telle quelle, ne doit jamais déclencher l'avertissement de fermeture — seul un VRAI changement
+// depuis l'ouverture (ou depuis le dernier Valider) compte comme non enregistré.
+function _noteModalDirty(){
+  if(!_noteModalSnapshot||_noteModalReadOnly)return false;
+  const cur=_noteModalCurrentState();
+  return cur.title!==_noteModalSnapshot.title||cur.category!==_noteModalSnapshot.category||cur.color!==_noteModalSnapshot.color||cur.html!==_noteModalSnapshot.html;
 }
 function _renderNoteSwRow(){
   const row=document.getElementById('note-sw-row');if(!row)return;
@@ -7949,7 +7981,11 @@ function _renderNoteColorRow(){
   row.style.opacity=_noteModalReadOnly?'.5':'';
   row.innerHTML=SWCOLS.map(c=>`<div class="lb-sw" style="background:${c};border-color:${c==='#ffffff'?'var(--bdr)':'transparent'}" onmousedown="event.preventDefault()" onclick="_rtSetColor('${c}')" title="Couleur du texte : ${c}"></div>`).join('');
 }
-function closeNoteModal(){document.getElementById('note-modal').classList.remove('on');_editingNoteId=null;}
+function closeNoteModal(){
+  if(_noteModalDirty()){_showDiscardConfirm(_closeNoteModalForce);return;}
+  _closeNoteModalForce();
+}
+function _closeNoteModalForce(){document.getElementById('note-modal').classList.remove('on');_editingNoteId=null;_noteModalSnapshot=null;}
 function _saveNoteModal(){
   const titleEl=document.getElementById('note-title-in');
   const title=titleEl.value.trim();
@@ -7963,7 +7999,7 @@ function _saveNoteModal(){
     logbookNotes.unshift({id:++cnt,ts:Date.now(),mod:Date.now(),color:_editingNoteColor,category,title,html});
   }
   _markUnsaved();
-  closeNoteModal();
+  _closeNoteModalForce();
   _renderLogbookNotes();
 }
 function _confirmDeleteNote(id){_pendingDelNoteId=id;document.getElementById('note-del-confirm-modal').classList.add('on');}
@@ -8097,8 +8133,26 @@ function openTableEditModal(id,presetGrid){
   _renderTableEditGrid();
   document.getElementById('table-edit-modal').classList.add('on');
   setTimeout(()=>document.getElementById('tb-title-in').focus(),50);
+  _tbModalSnapshot=_tbModalCurrentState();
 }
-function closeTableEditModal(){document.getElementById('table-edit-modal').classList.remove('on');_editingTableId=null;_editingTableGrid=null;}
+function _tbModalCurrentState(){
+  return {
+    title:document.getElementById('tb-title-in').value.trim(),
+    category:document.getElementById('tb-cat-in').value,
+    color:_editingTableColor,
+    grid:JSON.stringify(_editingTableGrid)
+  };
+}
+function _tbModalDirty(){
+  if(!_tbModalSnapshot||_tbModalReadOnly)return false;
+  const cur=_tbModalCurrentState();
+  return cur.title!==_tbModalSnapshot.title||cur.category!==_tbModalSnapshot.category||cur.color!==_tbModalSnapshot.color||cur.grid!==_tbModalSnapshot.grid;
+}
+function closeTableEditModal(){
+  if(_tbModalDirty()){_showDiscardConfirm(_closeTableEditModalForce);return;}
+  _closeTableEditModalForce();
+}
+function _closeTableEditModalForce(){document.getElementById('table-edit-modal').classList.remove('on');_editingTableId=null;_editingTableGrid=null;_tbModalSnapshot=null;}
 function _renderTbSwRow(){
   const row=document.getElementById('tb-sw-row');if(!row)return;
   row.style.pointerEvents=_tbModalReadOnly?'none':'';
@@ -8118,7 +8172,7 @@ function _saveTableModal(){
     logbookTables.unshift({id:++cnt,ts:Date.now(),mod:Date.now(),title,category,color:_editingTableColor,cols:_editingTableGrid.cols,rows:_editingTableGrid.rows,colWidths:_editingTableGrid.colWidths});
   }
   _markUnsaved();
-  closeTableEditModal();
+  _closeTableEditModalForce();
   _renderTablesList();
 }
 function _tbDelTable(id){
@@ -12093,7 +12147,7 @@ function dismissPWAPrompt(permanent){
 
 
 <!-- ======== DOCUMENTS MODAL ======== -->
-<div class="mbg" id="doc-modal" onclick="if(event.target===this)closeDocModal()">
+<div class="mbg" id="doc-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeDocModal()">
   <div class="mbox2" style="width:min(96vw,420px);padding:16px 16px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <span style="font-size:15px">📁</span>
@@ -12139,7 +12193,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- ======== NOUVEAU TABLEAU — CHOIX MODÈLE ======== -->
-<div class="mbg" id="table-new-modal" onclick="if(event.target===this)closeTableNewModal()">
+<div class="mbg" id="table-new-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeTableNewModal()">
   <div class="mbox2" style="width:min(94vw,340px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">📊 Nouveau tableau</span>
@@ -12174,7 +12228,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- ======== TABLEAU — CRÉATION / ÉDITION ======== -->
-<div class="mbg" id="table-edit-modal" onclick="if(event.target===this)closeTableEditModal()">
+<div class="mbg" id="table-edit-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeTableEditModal()">
   <div class="mbox2 mbox2-tall" style="width:min(96vw,420px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">📊 Tableau</span>
@@ -12219,7 +12273,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- ======== TABLEUR — CHOIX FORMAT TÉLÉCHARGEMENT ======== -->
-<div class="mbg" id="table-dl-choice-modal" onclick="if(event.target===this)closeTableDlChoice()">
+<div class="mbg" id="table-dl-choice-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeTableDlChoice()">
   <div class="mbox2" style="width:min(96vw,300px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">Format de téléchargement</span>
@@ -12232,7 +12286,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- ======== NOTE — CRÉATION / ÉDITION ======== -->
-<div class="mbg" id="note-modal" onclick="if(event.target===this)closeNoteModal()">
+<div class="mbg" id="note-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeNoteModal()">
   <div class="mbox2" style="width:min(94vw,420px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">📝 Note</span>
@@ -12284,8 +12338,16 @@ function dismissPWAPrompt(permanent){
     <div class="mgrid"><button class="mko" onclick="closeNoteDelConfirm()">Non, annuler</button><button class="mok" style="background:var(--red)" onclick="_doDeleteNoteConfirmed()">Oui, supprimer</button></div>
   </div>
 </div>
+<div class="mbg" id="discard-confirm-modal">
+  <div class="mbox2">
+    <div style="font-size:26px;text-align:center;margin-bottom:8px">⚠️</div>
+    <div class="mtit" style="text-align:center">Quitter sans enregistrer ?</div>
+    <div style="font-size:12px;color:var(--t5);text-align:center;margin:9px 0 18px;line-height:1.6">Les modifications non validées seront perdues.</div>
+    <div class="mgrid"><button class="mko" onclick="_closeDiscardConfirm()">Non, revenir</button><button class="mok" style="background:var(--red)" onclick="_confirmDiscardYes()">Oui, quitter</button></div>
+  </div>
+</div>
 <!-- ======== DOC ADD/EDIT MODAL ======== -->
-<div class="mbg" id="doc-add-modal" onclick="if(event.target===this)closeDocAddModal()">
+<div class="mbg" id="doc-add-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeDocAddModal()">
   <div class="mbox2" style="width:min(96vw,360px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)" id="doc-add-title">Ajouter un document</span>
@@ -12338,7 +12400,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- ======== DOC INFO MODAL ======== -->
-<div class="mbg" id="doc-info-modal" onclick="if(event.target===this)closeDocInfoModal()">
+<div class="mbg" id="doc-info-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeDocInfoModal()">
   <div class="mbox2" style="width:min(96vw,380px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">ℹ Informations du document</span>
@@ -12352,7 +12414,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- PJ INFO MODAL -->
-<div class="mbg" id="doc-pj-info-modal" onclick="if(event.target===this)closeDocPJInfoModal()">
+<div class="mbg" id="doc-pj-info-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeDocPJInfoModal()">
   <div class="mbox2" style="width:min(96vw,380px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">ℹ Informations du fichier joint</span>
@@ -12366,7 +12428,7 @@ function dismissPWAPrompt(permanent){
   </div>
 </div>
 <!-- PJ EDIT MODAL -->
-<div class="mbg" id="doc-pj-edit-modal" onclick="if(event.target===this)closeDocPJEditModal()">
+<div class="mbg" id="doc-pj-edit-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeDocPJEditModal()">
   <div class="mbox2" style="width:min(96vw,400px)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <span style="font-size:13px;font-weight:700;color:var(--t9)">✏ Modifier les informations</span>
