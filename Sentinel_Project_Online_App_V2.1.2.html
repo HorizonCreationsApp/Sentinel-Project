@@ -11363,16 +11363,34 @@ var _vue3DLibsPromise=null;
 function _loadGlobalLib(src,test,label,integrity){
   return new Promise((resolve,reject)=>{
     if(test())return resolve();
-    var settled=false;
-    var done=function(ok,err){if(settled)return;settled=true;clearInterval(poll);clearTimeout(to);ok?resolve():reject(err||new Error(label+' indisponible'));};
-    var s=document.createElement('script');
-    s.src=src;
-    if(integrity){s.integrity=integrity;s.crossOrigin='anonymous';}
-    s.onload=function(){done(test());};
-    s.onerror=function(){done(false);};
-    document.head.appendChild(s);
-    var poll=setInterval(function(){if(test())done(true);},120);
-    var to=setTimeout(function(){done(test());},20000);
+    // Premier essai AVEC intégrité (SRI) — c'est le chemin sécurisé et celui qui doit rester la
+    // norme : il garantit que le fichier chargé depuis le CDN est bien celui attendu, octet pour
+    // octet. Un échec de CE seul essai (onerror, ou délai dépassé sans que le test passe) ne
+    // prouve pas que le CDN est inaccessible — un simple GET direct sur la même URL fonctionnait
+    // pourtant (constaté en conditions réelles, utilisateur mobile) : seul l'essai avec
+    // crossOrigin+integrity échouait, signature typique d'un intermédiaire (proxy de l'appareil,
+    // logiciel de sécurité) qui altère les en-têtes ou le contenu sans casser une navigation
+    // normale. On retente donc UNE fois sans intégrité, en dernier recours seulement — la
+    // fonctionnalité reste alors disponible plutôt que silencieusement bloquée, avec une garantie
+    // d'intégrité en moins pour ce seul cas de repli.
+    function attempt(secure){
+      var settled=false;
+      var done=function(ok){
+        if(settled)return;settled=true;clearInterval(poll);clearTimeout(to);
+        if(ok)return resolve();
+        if(secure)return attempt(false);
+        reject(new Error(label+' indisponible'));
+      };
+      var s=document.createElement('script');
+      s.src=src;
+      if(secure&&integrity){s.integrity=integrity;s.crossOrigin='anonymous';}
+      s.onload=function(){done(test());};
+      s.onerror=function(){done(false);};
+      document.head.appendChild(s);
+      var poll=setInterval(function(){if(test())done(true);},120);
+      var to=setTimeout(function(){done(test());},20000);
+    }
+    attempt(true);
   });
 }
 function _ensureVue3DLibs(){
@@ -11449,7 +11467,13 @@ function openVue3DModal(){
       const rebuilding=_syncVue3DBasemap();
       if(!rebuilding)_syncVue3DAnnotations();
     }
-  }).catch(e=>{console.warn('Vue 3D — chargement librairies échoué :',e);showToast('⚠ Vue 3D indisponible (connexion requise)');});
+  }).catch(e=>{
+    // Message initial « connexion requise » ambigu en français (compris comme « vous n'êtes pas
+    // connecté à l'app » plutôt que « la ressource externe n'a pas pu être chargée ») — constaté
+    // en usage réel sur mobile. Reformulé pour ne plus laisser croire à un problème de session.
+    console.warn('Vue 3D — chargement librairies échoué :',e);
+    showToast('⚠ Vue 3D indisponible : échec du chargement d’une ressource cartographique externe (réseau, bloqueur de contenu ou mode économie de données peuvent en être la cause)');
+  });
 }
 function closeVue3DModal(){
   const m=document.getElementById('vue3d-modal');
