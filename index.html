@@ -7808,7 +7808,7 @@ function _selectExportSheet(){
   // QR Code : 150px (~3,97cm) de colonne pour un carré affiché à 2,6cm (voir _QR_DISPLAY_CM) —
   // large marge par rapport à l'image pour ne jamais la faire déborder de la cellule.
   _tableDlChoiceObj({title:'Points GPS et Icônes',cols:['Nom','Notes libres','Maps','Coordonnées GPS','QR Code'],
-    colWidths:[null,null,null,null,150],rows,canPdf:true,
+    colWidths:[null,null,null,null,150],rows,
     exportDesc:'Les Points GPS, Icônes et Photos GPS sélectionnés (ou tous, si aucune sélection) seront téléchargés (tableur ou PDF), avec leur nom (étiquette), leurs notes libres, un lien Maps cliquable, leurs coordonnées GPS et le QR code de localisation correspondant. Classés par proximité géographique (itinéraire de terrain, en partant du 1ᵉʳ créé) plutôt que par ordre de création.'});
 }
 
@@ -9025,7 +9025,7 @@ function _renderLogbookNotes(){
     const title=(n.title||'Sans titre').replace(/</g,'&lt;');
     return `<div class="lb-note-row">
       <button class="lb-note-btn" onclick="openNoteModal(${n.id})" title="${title}"><span class="lb-cat-sw" style="background:${n.color||'#2563eb'}"></span><span class="lb-note-title">${title}</span></button>
-      <button class="doc-btn-icon" onclick="event.stopPropagation();_noteDl(${n.id})" title="Télécharger (.odt)">⬇</button>
+      <button class="doc-btn-icon" onclick="event.stopPropagation();_noteDlChoice(${n.id})" title="Télécharger">⬇</button>
       <button class="doc-btn-icon" onclick="event.stopPropagation();_noteMail(${n.id})" title="Envoyer par mail">✉</button>
       ${n._frozen?'<span style="font-size:10px;color:#92400e;padding:1px 4px;border:1px solid #fde68a;border-radius:3px;flex-shrink:0" title="Note figée — Carte de référence">🔒</span>':`<button class="lb-note-del" onclick="_confirmDeleteNote(${n.id})" title="Supprimer">✕</button>`}
     </div>`;
@@ -9526,6 +9526,58 @@ ${bodyParas}
   zip.file('meta.xml',meta);
   return zip.generateAsync({type:'blob',mimeType:'application/vnd.oasis.opendocument.text'});
 }
+// ── Notes — Export PDF natif (jsPDF, voir bloc vendé en tête de fichier) ──
+function _hexToRgbArr(hex){
+  const h=(hex||'').replace('#','');
+  const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
+  return isNaN(n)?[30,41,59]:[(n>>16)&255,(n>>8)&255,n&255];
+}
+async function _noteToPDF(note){
+  const doc=new jspdf.jsPDF({unit:'mm',format:'a4'});
+  const PW=doc.internal.pageSize.getWidth(),PH=doc.internal.pageSize.getHeight();
+  const ML=18,MT=20,MB=18,usableW=PW-ML*2;
+  let y=MT;
+  function ensureSpace(h){if(y+h>PH-MB){doc.addPage();y=MT;}}
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(30,41,59);
+  doc.splitTextToSize(note.title||'Sans titre',usableW).forEach(l=>{ensureSpace(7);doc.text(l,ML,y);y+=7;});
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100,116,139);
+  const catLabel=NOTE_CATS[note.category]||note.category||'';
+  ensureSpace(6);doc.text((catLabel?catLabel+' — ':'')+_lbFmtDate(note.ts),ML,y);y+=9;
+  const LH=5.3;
+  // Rendu mot-à-mot (pas doc.splitTextToSize sur le texte à plat) pour conserver gras/italique/
+  // souligné/couleur PAR PORTION de texte comme dans l'odt — un texte à plat perdrait cette mise en
+  // forme fine à l'intérieur d'un même paragraphe. Simplification assumée : alignement centré/droit
+  // non repris (flux gauche uniquement) — les notes de terrain sont très majoritairement en aligné
+  // à gauche, et gérer l'alignement en flux mot-à-mot demanderait un calcul en deux passes par ligne.
+  _lbHtmlToParas(note.html).forEach(p=>{
+    if(!p.runs.some(r=>r.text)){y+=LH*0.6;return;}
+    let x=ML,atStart=true;
+    ensureSpace(LH);
+    p.runs.forEach(r=>{
+      if(!r.text)return;
+      const style=(r.b&&r.i)?'bolditalic':r.b?'bold':r.i?'italic':'normal';
+      const size=r.size||11;
+      const color=r.color?_hexToRgbArr(r.color):[30,41,59];
+      doc.setFont('helvetica',style);doc.setFontSize(size);
+      (r.text.match(/\S+|\s+/g)||[]).forEach(tok=>{
+        const isSpace=/^\s+$/.test(tok);
+        const w=doc.getTextWidth(tok);
+        if(isSpace){
+          if(atStart)return;
+          if(x+w>ML+usableW){y+=LH;ensureSpace(LH);x=ML;atStart=true;return;}
+          x+=w;return;
+        }
+        if(x+w>ML+usableW&&!atStart){y+=LH;ensureSpace(LH);x=ML;}
+        doc.setTextColor(color[0],color[1],color[2]);
+        doc.text(tok,x,y);
+        if(r.u){doc.setDrawColor(color[0],color[1],color[2]);doc.line(x,y+0.7,x+w,y+0.7);}
+        x+=w;atStart=false;
+      });
+    });
+    y+=LH;
+  });
+  return doc.output('blob');
+}
 let _lbMeasureCtx=null;
 // Simule le retour à la ligne automatique par mesure réelle du texte (Canvas) plutôt que par une
 // approximation caractères/pixel : tient compte de la largeur variable de chaque caractère dans
@@ -9745,6 +9797,22 @@ async function _noteDl(id){
   const n=logbookNotes.find(x=>x.id===id);if(!n)return;
   try{const blob=await _noteToODT(n);_lbTriggerDl(blob,_lbSanitizeFilename(n.title)+'.odt');}
   catch(e){console.error('Export ODT échoué :',e);showToast('⚠ Échec de l\'export .odt');}
+}
+async function _noteDlPdf(id){
+  const n=logbookNotes.find(x=>x.id===id);if(!n)return;
+  try{const blob=await _noteToPDF(n);_lbTriggerDl(blob,_lbSanitizeFilename(n.title)+'.pdf');}
+  catch(e){console.error('Export PDF échoué :',e);showToast('⚠ Échec de l\'export .pdf');}
+}
+let _pendingDlNoteId=null;
+function _noteDlChoice(id){
+  _pendingDlNoteId=id;
+  document.getElementById('note-dl-choice-modal').classList.add('on');
+}
+function closeNoteDlChoice(){document.getElementById('note-dl-choice-modal').classList.remove('on');_pendingDlNoteId=null;}
+async function _noteDlChosen(fmt){
+  const id=_pendingDlNoteId;closeNoteDlChoice();
+  if(id==null)return;
+  if(fmt==='pdf')await _noteDlPdf(id);else await _noteDl(id);
 }
 async function _tableDl(id){
   const t=logbookTables.find(x=>x.id===id);if(!t)return;
@@ -10013,7 +10081,6 @@ let _pendingDlTableObj=null; // table {title,cols,rows,exportDesc?} construite e
 function _tableDlChoice(id){
   _pendingDlTableId=id;
   const descEl=document.getElementById('table-dl-choice-desc');if(descEl)descEl.style.display='none';
-  const pdfBtn=document.getElementById('table-dl-choice-pdf-btn');if(pdfBtn)pdfBtn.style.display='none';
   document.getElementById('table-dl-choice-modal').classList.add('on');
 }
 function _tableDlChoiceObj(table){
@@ -10023,10 +10090,14 @@ function _tableDlChoiceObj(table){
     if(table.exportDesc){descEl.textContent=table.exportDesc;descEl.style.display='';}
     else descEl.style.display='none';
   }
-  const pdfBtn=document.getElementById('table-dl-choice-pdf-btn');if(pdfBtn)pdfBtn.style.display=table.canPdf?'':'none';
   document.getElementById('table-dl-choice-modal').classList.add('on');
 }
 function closeTableDlChoice(){document.getElementById('table-dl-choice-modal').classList.remove('on');_pendingDlTableId=null;_pendingDlTableObj=null;}
+async function _tableDlPdf(id){
+  const t=logbookTables.find(x=>x.id===id);if(!t)return;
+  try{const blob=await _tableToPDF(t);_lbTriggerDl(blob,_lbSanitizeFilename(t.title)+'.pdf');}
+  catch(e){console.error('Export PDF échoué :',e);showToast('⚠ Échec de l\'export .pdf');}
+}
 async function _tableDlChosen(fmt){
   if(_pendingDlTableObj){
     const t=_pendingDlTableObj;closeTableDlChoice();
@@ -10038,7 +10109,7 @@ async function _tableDlChosen(fmt){
   }
   const id=_pendingDlTableId;closeTableDlChoice();
   if(id==null)return;
-  if(fmt==='xlsx')await _tableDlXlsx(id);else await _tableDl(id);
+  if(fmt==='xlsx')await _tableDlXlsx(id);else if(fmt==='pdf')await _tableDlPdf(id);else await _tableDl(id);
 }
 function _noteMail(id){
   const n=logbookNotes.find(x=>x.id===id);if(!n)return;
@@ -13722,7 +13793,20 @@ function dismissPWAPrompt(permanent){
     <div class="mgrid">
       <button class="mko" onclick="_tableDlChosen('ods')">.ods<div style="font-size:9px;font-weight:400;color:var(--t4);margin-top:2px">OpenDocument</div></button>
       <button class="mko" onclick="_tableDlChosen('xlsx')">.xlsx<div style="font-size:9px;font-weight:400;color:var(--t4);margin-top:2px">Excel</div></button>
-      <button class="mko" id="table-dl-choice-pdf-btn" style="display:none" onclick="_tableDlChosen('pdf')">.pdf<div style="font-size:9px;font-weight:400;color:var(--t4);margin-top:2px">Liens cliquables</div></button>
+      <button class="mko" onclick="_tableDlChosen('pdf')">.pdf<div style="font-size:9px;font-weight:400;color:var(--t4);margin-top:2px">Portable</div></button>
+    </div>
+  </div>
+</div>
+<!-- ======== NOTE — CHOIX FORMAT TÉLÉCHARGEMENT ======== -->
+<div class="mbg" id="note-dl-choice-modal" onclick="if(event.target===this&&_mbgMouseDownTarget===this)closeNoteDlChoice()">
+  <div class="mbox2" style="width:min(96vw,260px)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:700;color:var(--t9)">Format de téléchargement</span>
+      <button onclick="closeNoteDlChoice()" style="margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;color:var(--t5);line-height:1;padding:0 2px">✕</button>
+    </div>
+    <div class="mgrid">
+      <button class="mko" onclick="_noteDlChosen('odt')">.odt<div style="font-size:9px;font-weight:400;color:var(--t4);margin-top:2px">OpenDocument</div></button>
+      <button class="mko" onclick="_noteDlChosen('pdf')">.pdf<div style="font-size:9px;font-weight:400;color:var(--t4);margin-top:2px">Portable</div></button>
     </div>
   </div>
 </div>
