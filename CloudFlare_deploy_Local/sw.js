@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   Service Worker — Sentinel Project (version Online, GitHub Pages)
+   Service Worker — Sentinel Project (version Online, Cloudflare)
    Objectif : permettre le LANCEMENT HORS LIGNE de l'application.
    - Pré-cache le "shell" : la page de l'app + les bibliothèques + les polices + icônes.
    - Page de l'app : réseau d'abord (toujours la dernière version en ligne), cache en
@@ -10,7 +10,7 @@
    NB : incrémenter CACHE (v3, v4…) à chaque changement pour forcer la mise à jour.
    ══════════════════════════════════════════════════════════════════════════ */
 
-const CACHE = 'sentinel-v7';
+const CACHE = 'sentinel-v13';
 const BASE  = '/';
 
 // Le "shell" pré-chargé à l'installation (première visite EN LIGNE requise pour remplir le cache)
@@ -30,9 +30,7 @@ const PRECACHE = [
 // Hôtes dont les ressources peuvent être mises en cache (libs + polices)
 const CACHEABLE_HOSTS = [
   'cdnjs.cloudflare.com',
-  'cdn.jsdelivr.net',
-  'fonts.googleapis.com',
-  'fonts.gstatic.com'
+  'cdn.jsdelivr.net'
 ];
 
 self.addEventListener('install', e => {
