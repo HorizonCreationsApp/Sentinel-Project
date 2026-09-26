@@ -12772,6 +12772,7 @@ function _showAuth(offlineMsg){
 const CGU_VERSION='2026-09-26b';
 const CGU_MAX_AGE_DAYS=90;
 let _cguGateResolve=null;
+let _cguGatePending=null; // promesse de la modale actuellement affichée : une seule à la fois, partagée par tous les appels
 function _showCguGateModal(cb){
   _cguGateResolve=cb;
   // Le splash (#splash, z-index 9999999) recouvre cette modale (z-index 999999) : sans lever le
@@ -12782,7 +12783,7 @@ function _showCguGateModal(cb){
 }
 async function _cguGateRespond(accepted){
   document.getElementById('cgu-gate-modal').style.display='none';
-  const cb=_cguGateResolve;_cguGateResolve=null;
+  const cb=_cguGateResolve;_cguGateResolve=null;_cguGatePending=null;
   if(!accepted){
     try{ await _supa.auth.signOut({scope:'local'}); }catch(e){}
     try{ document.getElementById('auth-screen').classList.remove('hidden'); }catch(e){}
@@ -12803,22 +12804,40 @@ function _cguMetaOk(meta){
   const ageDays=acceptedAt?(Date.now()-acceptedAt.getTime())/86400000:Infinity;
   return !!acceptedAt&&ageDays<CGU_MAX_AGE_DAYS&&_cguVersionOk(meta.cgu_version);
 }
+// Acceptation confirmée : si la modale était déjà affichée par un appel concurrent (plusieurs chemins
+// d'entrée peuvent appeler _showApp en même temps : session restaurée, événement de connexion,
+// reconnexion automatique du navigateur), on la ferme et on libère les appels en attente — sans quoi
+// elle resterait affichée par-dessus l'application déjà ouverte.
+function _cguGateClose(){
+  if(_cguGateResolve){
+    document.getElementById('cgu-gate-modal').style.display='none';
+    const cb=_cguGateResolve;_cguGateResolve=null;_cguGatePending=null;
+    cb(true);
+  }
+  return true;
+}
 async function _ensureCguAccepted(user){
   const online=await _pingOnline();
   if(!online)return true;
   let meta=(user&&user.user_metadata)||{};
-  if(_cguMetaOk(meta))return true;
+  if(_cguMetaOk(meta))return _cguGateClose();
   // Les métadonnées de la session en cache peuvent être périmées (acceptation faite depuis un autre
   // appareil ou une autre copie de l'application) : on relit le compte sur le serveur avant de
-  // redemander quoi que ce soit à l'utilisateur.
-  try{
-    const r=await _supa.auth.getUser();
-    if(r&&r.data&&r.data.user){
-      meta=r.data.user.user_metadata||{};
-      if(_cguMetaOk(meta))return true;
-    }
-  }catch(e){}
-  return new Promise(resolve=>{ _showCguGateModal(resolve); });
+  // redemander quoi que ce soit à l'utilisateur. Si cette lecture échoue (réseau instable au
+  // démarrage d'un mobile), un second essai est fait avant de déranger l'utilisateur.
+  for(let i=0;i<2;i++){
+    try{
+      const r=await _supa.auth.getUser();
+      if(r&&r.data&&r.data.user){
+        meta=r.data.user.user_metadata||{};
+        if(_cguMetaOk(meta))return _cguGateClose();
+        break; // lecture réussie : l'acceptation manque réellement
+      }
+    }catch(e){}
+    if(i===0)await new Promise(r=>setTimeout(r,1200));
+  }
+  if(!_cguGatePending)_cguGatePending=new Promise(resolve=>{ _showCguGateModal(resolve); });
+  return _cguGatePending;
 }
 async function _showApp(user){
   const okMfa=await _ensureMfaVerified();
